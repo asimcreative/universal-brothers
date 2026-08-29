@@ -95,6 +95,31 @@ class PackageManagementTest extends TestCase
         $this->assertSoftDeleted($package);
     }
 
+    public function test_admin_can_create_a_package_leaving_inclusions_and_exclusions_blank(): void
+    {
+        // Regression test: a real browser submits a blank <textarea> as an
+        // empty string, which Laravel's ConvertEmptyStringsToNull middleware
+        // converts to null — and $request->input('key', 'default') does NOT
+        // fall back to 'default' when the key is present-but-null, only when
+        // the key is absent entirely. Passing an explicit empty string here
+        // (not omitting the key) reproduces that real-world request shape,
+        // which a PHPUnit test omitting the key entirely would not catch.
+        $category = PackageCategory::factory()->create();
+
+        $response = $this->actingAs($this->admin)->post('/admin/packages', [
+            'package_category_id' => $category->id,
+            'name' => 'Bare Package',
+            'slug' => 'bare-package',
+            'currency' => 'USD',
+            'status' => 'draft',
+            'inclusions_text' => '',
+            'exclusions_text' => '',
+        ]);
+
+        $response->assertRedirect(route('admin.packages.index'));
+        $this->assertDatabaseHas('packages', ['slug' => 'bare-package']);
+    }
+
     public function test_package_creation_requires_a_unique_slug(): void
     {
         $category = PackageCategory::factory()->create();

@@ -15,8 +15,25 @@ export default defineConfig({
         screenshot: 'only-on-failure',
     },
     projects: [
-        { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-        { name: 'mobile-chrome', use: { ...devices['Pixel 7'] } },
+        { name: 'setup', testMatch: /auth\.setup\.js/ },
+
+        {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+            testMatch: /(public|admin-auth|journeys-visitor)\.spec\.js/,
+        },
+        {
+            name: 'admin-chromium',
+            use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/admin.json' },
+            testMatch: /(admin|journeys-admin)\.spec\.js/,
+            testIgnore: /admin-auth\.spec\.js/,
+            dependencies: ['setup'],
+        },
+        {
+            name: 'mobile-chrome',
+            use: { ...devices['Pixel 7'] },
+            testMatch: /public\.spec\.js/,
+        },
     ],
     webServer: {
         command: `"${PHP_BIN}" artisan serve --port=${PORT}`,

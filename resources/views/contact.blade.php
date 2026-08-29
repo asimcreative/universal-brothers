@@ -34,20 +34,20 @@
                         <form method="POST" action="{{ route('contact.store') }}">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                                <label for="contact-name" class="form-label">Full Name</label>
+                                <input type="text" name="name" id="contact-name" class="form-control" value="{{ old('name') }}" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                                <label for="contact-email" class="form-label">Email</label>
+                                <input type="email" name="email" id="contact-email" class="form-control" value="{{ old('email') }}" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Phone</label>
-                                <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" required>
+                                <label for="contact-phone" class="form-label">Phone</label>
+                                <input type="text" name="phone" id="contact-phone" class="form-control" value="{{ old('phone') }}" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Message</label>
-                                <textarea name="message" rows="4" class="form-control" required>{{ old('message') }}</textarea>
+                                <label for="contact-message" class="form-label">Message</label>
+                                <textarea name="message" id="contact-message" rows="4" class="form-control" required>{{ old('message') }}</textarea>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Send Message</button>
                         </form>

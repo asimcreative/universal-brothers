@@ -147,10 +147,10 @@ class PackageController extends Controller
         }
 
         $package->inclusions()->delete();
-        $this->createFeatureLines($package, $request->input('inclusions_text', ''), 'inclusion');
+        $this->createFeatureLines($package, $request->input('inclusions_text') ?? '', 'inclusion');
 
         $package->exclusions()->delete();
-        $this->createFeatureLines($package, $request->input('exclusions_text', ''), 'exclusion');
+        $this->createFeatureLines($package, $request->input('exclusions_text') ?? '', 'exclusion');
 
         $allPrices = $package->priceTiers()->with('roomPrices')->get()
             ->flatMap(fn ($t) => $t->roomPrices->pluck('price'))

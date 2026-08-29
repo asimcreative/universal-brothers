@@ -9,45 +9,45 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Title</label>
-                    <input type="text" name="title" class="form-control" value="{{ old('title', $slider->title) }}" required>
+                    <label for="slider-title" class="form-label">Title</label>
+                    <input type="text" name="title" id="slider-title" class="form-control" value="{{ old('title', $slider->title) }}" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Subtitle</label>
-                    <input type="text" name="subtitle" class="form-control" value="{{ old('subtitle', $slider->subtitle) }}">
+                    <label for="slider-subtitle" class="form-label">Subtitle</label>
+                    <input type="text" name="subtitle" id="slider-subtitle" class="form-control" value="{{ old('subtitle', $slider->subtitle) }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Image {{ $slider->exists ? '(leave blank to keep current)' : '' }}</label>
-                    <input type="file" name="image" class="form-control" accept="image/*" {{ $slider->exists ? '' : 'required' }}>
+                    <label for="slider-image" class="form-label">Image {{ $slider->exists ? '(leave blank to keep current)' : '' }}</label>
+                    <input type="file" name="image" id="slider-image" class="form-control" accept="image/*" {{ $slider->exists ? '' : 'required' }}>
                     @if($slider->image)<img src="{{ Storage::url($slider->image) }}" class="mt-2" style="height:60px;">@endif
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Page</label>
-                    <select name="page_context" class="form-select">
+                    <label for="slider-page-context" class="form-label">Page</label>
+                    <select name="page_context" id="slider-page-context" class="form-select">
                         @foreach(['home', 'hajj', 'umrah', 'tourism'] as $ctx)
                             <option value="{{ $ctx }}" {{ old('page_context', $slider->page_context) === $ctx ? 'selected' : '' }}>{{ ucfirst($ctx) }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Sort Order</label>
-                    <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', $slider->sort_order) }}">
+                    <label for="slider-sort-order" class="form-label">Sort Order</label>
+                    <input type="number" name="sort_order" id="slider-sort-order" class="form-control" value="{{ old('sort_order', $slider->sort_order) }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">CTA Label</label>
-                    <input type="text" name="cta_label" class="form-control" value="{{ old('cta_label', $slider->cta_label) }}">
+                    <label for="slider-cta-label" class="form-label">CTA Label</label>
+                    <input type="text" name="cta_label" id="slider-cta-label" class="form-control" value="{{ old('cta_label', $slider->cta_label) }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">CTA URL</label>
-                    <input type="text" name="cta_url" class="form-control" value="{{ old('cta_url', $slider->cta_url) }}">
+                    <label for="slider-cta-url" class="form-label">CTA URL</label>
+                    <input type="text" name="cta_url" id="slider-cta-url" class="form-control" value="{{ old('cta_url', $slider->cta_url) }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Secondary CTA Label</label>
-                    <input type="text" name="secondary_cta_label" class="form-control" value="{{ old('secondary_cta_label', $slider->secondary_cta_label) }}">
+                    <label for="slider-secondary-cta-label" class="form-label">Secondary CTA Label</label>
+                    <input type="text" name="secondary_cta_label" id="slider-secondary-cta-label" class="form-control" value="{{ old('secondary_cta_label', $slider->secondary_cta_label) }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Secondary CTA URL</label>
-                    <input type="text" name="secondary_cta_url" class="form-control" value="{{ old('secondary_cta_url', $slider->secondary_cta_url) }}">
+                    <label for="slider-secondary-cta-url" class="form-label">Secondary CTA URL</label>
+                    <input type="text" name="secondary_cta_url" id="slider-secondary-cta-url" class="form-control" value="{{ old('secondary_cta_url', $slider->secondary_cta_url) }}">
                 </div>
                 <div class="col-md-3">
                     <div class="form-check mt-4">

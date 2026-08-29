@@ -36,8 +36,8 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('admin.inquiries.update', $inquiry) }}">
                         @csrf @method('PUT')
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-select mb-3">
+                        <label for="inquiry-status" class="form-label">Status</label>
+                        <select name="status" id="inquiry-status" class="form-select mb-3">
                             @foreach(['new', 'contacted', 'closed'] as $status)
                                 <option value="{{ $status }}" {{ $inquiry->status === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
                             @endforeach

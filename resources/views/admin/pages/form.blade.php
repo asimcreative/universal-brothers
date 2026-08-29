@@ -10,26 +10,26 @@
             <div class="card-header bg-white fw-semibold">Content</div>
             <div class="card-body row g-3">
                 <div class="col-md-8">
-                    <label class="form-label">Title</label>
+                    <label for="page-title" class="form-label">Title</label>
                     <input type="text" name="title" id="page-title" class="form-control" value="{{ old('title', $page->title) }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Slug</label>
+                    <label for="page-slug" class="form-label">Slug</label>
                     <input type="text" name="slug" id="page-slug" class="form-control" value="{{ old('slug', $page->slug) }}" required>
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Body</label>
-                    <textarea name="body" class="form-control" rows="10">{{ old('body', $page->body) }}</textarea>
+                    <label for="page-body" class="form-label">Body</label>
+                    <textarea name="body" id="page-body" class="form-control" rows="10">{{ old('body', $page->body) }}</textarea>
                     <div class="form-text">HTML is supported (rendered as-is on the public page). Only trusted admin users can edit this.</div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Featured Image</label>
-                    <input type="file" name="featured_image" class="form-control" accept="image/*">
+                    <label for="page-featured-image" class="form-label">Featured Image</label>
+                    <input type="file" name="featured_image" id="page-featured-image" class="form-control" accept="image/*">
                     @if($page->featured_image)<img src="{{ Storage::url($page->featured_image) }}" class="mt-2" style="height:60px;" alt="">@endif
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Template</label>
-                    <select name="template" class="form-select">
+                    <label for="page-template" class="form-label">Template</label>
+                    <select name="template" id="page-template" class="form-select">
                         <option value="default" {{ old('template', $page->template ?? 'default') === 'default' ? 'selected' : '' }}>Default</option>
                         <option value="about" {{ old('template', $page->template) === 'about' ? 'selected' : '' }}>About</option>
                         <option value="policy" {{ old('template', $page->template) === 'policy' ? 'selected' : '' }}>Policy</option>
@@ -48,16 +48,16 @@
             <div class="card-header bg-white fw-semibold">SEO</div>
             <div class="card-body row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Meta Title</label>
-                    <input type="text" name="meta_title" class="form-control" value="{{ old('meta_title', $page->meta_title) }}">
+                    <label for="page-meta-title" class="form-label">Meta Title</label>
+                    <input type="text" name="meta_title" id="page-meta-title" class="form-control" value="{{ old('meta_title', $page->meta_title) }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Meta Description</label>
-                    <input type="text" name="meta_description" class="form-control" value="{{ old('meta_description', $page->meta_description) }}">
+                    <label for="page-meta-description" class="form-label">Meta Description</label>
+                    <input type="text" name="meta_description" id="page-meta-description" class="form-control" value="{{ old('meta_description', $page->meta_description) }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Canonical URL (optional)</label>
-                    <input type="text" name="canonical_url" class="form-control" value="{{ old('canonical_url', $page->canonical_url) }}">
+                    <label for="page-canonical-url" class="form-label">Canonical URL (optional)</label>
+                    <input type="text" name="canonical_url" id="page-canonical-url" class="form-control" value="{{ old('canonical_url', $page->canonical_url) }}">
                 </div>
             </div>
         </div>

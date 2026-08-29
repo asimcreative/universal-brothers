@@ -11,16 +11,16 @@
             <div class="card-header bg-white fw-semibold">Basic Information</div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">Category</label>
-                    <select name="package_category_id" class="form-select" required>
+                    <label for="pkg-category" class="form-label">Category</label>
+                    <select name="package_category_id" id="pkg-category" class="form-select" required>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ old('package_category_id', $package->package_category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Series</label>
-                    <select name="package_series_id" class="form-select">
+                    <label for="pkg-series" class="form-label">Series</label>
+                    <select name="package_series_id" id="pkg-series" class="form-select">
                         <option value="">— None —</option>
                         @foreach($series as $s)
                             <option value="{{ $s->id }}" {{ old('package_series_id', $package->package_series_id) == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
@@ -28,43 +28,43 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Package Code</label>
-                    <input type="text" name="code" class="form-control" value="{{ old('code', $package->code) }}" placeholder="e.g. UB001">
+                    <label for="pkg-code" class="form-label">Package Code</label>
+                    <input type="text" name="code" id="pkg-code" class="form-control" value="{{ old('code', $package->code) }}" placeholder="e.g. UB001">
                 </div>
 
                 <div class="col-md-8">
-                    <label class="form-label">Name</label>
+                    <label for="pkg-name" class="form-label">Name</label>
                     <input type="text" name="name" id="pkg-name" class="form-control" value="{{ old('name', $package->name) }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Slug</label>
+                    <label for="pkg-slug" class="form-label">Slug</label>
                     <input type="text" name="slug" id="pkg-slug" class="form-control" value="{{ old('slug', $package->slug) }}" required>
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label">Summary</label>
-                    <textarea name="summary" class="form-control" rows="2">{{ old('summary', $package->summary) }}</textarea>
+                    <label for="pkg-summary" class="form-label">Summary</label>
+                    <textarea name="summary" id="pkg-summary" class="form-control" rows="2">{{ old('summary', $package->summary) }}</textarea>
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control" rows="3">{{ old('description', $package->description) }}</textarea>
+                    <label for="pkg-description" class="form-label">Description</label>
+                    <textarea name="description" id="pkg-description" class="form-control" rows="3">{{ old('description', $package->description) }}</textarea>
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Duration (days)</label>
-                    <input type="number" name="duration_days" class="form-control" value="{{ old('duration_days', $package->duration_days) }}">
+                    <label for="pkg-duration-days" class="form-label">Duration (days)</label>
+                    <input type="number" name="duration_days" id="pkg-duration-days" class="form-control" value="{{ old('duration_days', $package->duration_days) }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Duration Label</label>
-                    <input type="text" name="duration_label" class="form-control" value="{{ old('duration_label', $package->duration_label) }}" placeholder="e.g. 13 Days Package">
+                    <label for="pkg-duration-label" class="form-label">Duration Label</label>
+                    <input type="text" name="duration_label" id="pkg-duration-label" class="form-control" value="{{ old('duration_label', $package->duration_label) }}" placeholder="e.g. 13 Days Package">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Season Year</label>
-                    <input type="number" name="season_year" class="form-control" value="{{ old('season_year', $package->season_year) }}">
+                    <label for="pkg-season-year" class="form-label">Season Year</label>
+                    <input type="number" name="season_year" id="pkg-season-year" class="form-control" value="{{ old('season_year', $package->season_year) }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Season Label</label>
-                    <input type="text" name="season_label" class="form-control" value="{{ old('season_label', $package->season_label) }}" placeholder="e.g. Hajj 2027 / 1448 AH">
+                    <label for="pkg-season-label" class="form-label">Season Label</label>
+                    <input type="text" name="season_label" id="pkg-season-label" class="form-control" value="{{ old('season_label', $package->season_label) }}" placeholder="e.g. Hajj 2027 / 1448 AH">
                 </div>
 
                 <div class="col-md-3">
@@ -93,34 +93,34 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label class="form-label">Currency</label>
-                    <select name="currency" class="form-select">
+                    <label for="pkg-currency" class="form-label">Currency</label>
+                    <select name="currency" id="pkg-currency" class="form-select">
                         <option value="USD" {{ old('currency', $package->currency) === 'USD' ? 'selected' : '' }}>USD</option>
                         <option value="PKR" {{ old('currency', $package->currency) === 'PKR' ? 'selected' : '' }}>PKR</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
+                    <label for="pkg-status" class="form-label">Status</label>
+                    <select name="status" id="pkg-status" class="form-select">
                         <option value="draft" {{ old('status', $package->status) === 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="published" {{ old('status', $package->status) === 'published' ? 'selected' : '' }}>Published</option>
                     </select>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Cover Image</label>
-                    <input type="file" name="cover_image" class="form-control" accept="image/*">
+                    <label for="pkg-cover-image" class="form-label">Cover Image</label>
+                    <input type="file" name="cover_image" id="pkg-cover-image" class="form-control" accept="image/*">
                     @if($package->cover_image)
                         <img src="{{ Storage::url($package->cover_image) }}" class="mt-2" style="height:60px;">
                     @endif
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Meta Title</label>
-                    <input type="text" name="meta_title" class="form-control" value="{{ old('meta_title', $package->meta_title) }}">
+                    <label for="pkg-meta-title" class="form-label">Meta Title</label>
+                    <input type="text" name="meta_title" id="pkg-meta-title" class="form-control" value="{{ old('meta_title', $package->meta_title) }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Meta Description</label>
-                    <input type="text" name="meta_description" class="form-control" value="{{ old('meta_description', $package->meta_description) }}">
+                    <label for="pkg-meta-description" class="form-label">Meta Description</label>
+                    <input type="text" name="meta_description" id="pkg-meta-description" class="form-control" value="{{ old('meta_description', $package->meta_description) }}">
                 </div>
             </div>
         </div>
@@ -176,24 +176,24 @@
                     @forelse($tierRows as $i => $tier)
                         <div class="row g-2 align-items-end mb-2 tier-row border-bottom pb-2">
                             <div class="col-md-3">
-                                <label class="form-label small">Tier Label</label>
-                                <input type="text" name="tiers[{{ $i }}][label]" class="form-control form-control-sm" value="{{ $tier['label'] ?? '' }}" placeholder="e.g. Package A — Hotel Name">
+                                <label for="tier-{{ $i }}-label" class="form-label small">Tier Label</label>
+                                <input type="text" name="tiers[{{ $i }}][label]" id="tier-{{ $i }}-label" class="form-control form-control-sm" value="{{ $tier['label'] ?? '' }}" placeholder="e.g. Package A — Hotel Name">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Sharing</label>
-                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][sharing]" class="form-control form-control-sm" value="{{ $tier['prices']['sharing'] ?? '' }}">
+                                <label for="tier-{{ $i }}-sharing" class="form-label small">Sharing</label>
+                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][sharing]" id="tier-{{ $i }}-sharing" class="form-control form-control-sm" value="{{ $tier['prices']['sharing'] ?? '' }}">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Quad</label>
-                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][quad]" class="form-control form-control-sm" value="{{ $tier['prices']['quad'] ?? '' }}">
+                                <label for="tier-{{ $i }}-quad" class="form-label small">Quad</label>
+                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][quad]" id="tier-{{ $i }}-quad" class="form-control form-control-sm" value="{{ $tier['prices']['quad'] ?? '' }}">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Triple</label>
-                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][triple]" class="form-control form-control-sm" value="{{ $tier['prices']['triple'] ?? '' }}">
+                                <label for="tier-{{ $i }}-triple" class="form-label small">Triple</label>
+                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][triple]" id="tier-{{ $i }}-triple" class="form-control form-control-sm" value="{{ $tier['prices']['triple'] ?? '' }}">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small">Double</label>
-                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][double]" class="form-control form-control-sm" value="{{ $tier['prices']['double'] ?? '' }}">
+                                <label for="tier-{{ $i }}-double" class="form-label small">Double</label>
+                                <input type="number" step="0.01" name="tiers[{{ $i }}][prices][double]" id="tier-{{ $i }}-double" class="form-control form-control-sm" value="{{ $tier['prices']['double'] ?? '' }}">
                             </div>
                             <div class="col-md-1">
                                 <button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button>
@@ -209,12 +209,12 @@
             <div class="card-header bg-white fw-semibold">Inclusions &amp; Exclusions</div>
             <div class="card-body row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Inclusions (one per line)</label>
-                    <textarea name="inclusions_text" class="form-control" rows="8">{{ old('inclusions_text', $package->inclusions?->pluck('description')->implode("\n")) }}</textarea>
+                    <label for="pkg-inclusions" class="form-label">Inclusions (one per line)</label>
+                    <textarea name="inclusions_text" id="pkg-inclusions" class="form-control" rows="8">{{ old('inclusions_text', $package->inclusions?->pluck('description')->implode("\n")) }}</textarea>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Exclusions (one per line)</label>
-                    <textarea name="exclusions_text" class="form-control" rows="8">{{ old('exclusions_text', $package->exclusions?->pluck('description')->implode("\n")) }}</textarea>
+                    <label for="pkg-exclusions" class="form-label">Exclusions (one per line)</label>
+                    <textarea name="exclusions_text" id="pkg-exclusions" class="form-control" rows="8">{{ old('exclusions_text', $package->exclusions?->pluck('description')->implode("\n")) }}</textarea>
                 </div>
             </div>
         </div>
@@ -239,24 +239,24 @@
     <template id="tier-row-template">
         <div class="row g-2 align-items-end mb-2 tier-row border-bottom pb-2">
             <div class="col-md-3">
-                <label class="form-label small">Tier Label</label>
-                <input type="text" name="tiers[__INDEX__][label]" class="form-control form-control-sm">
+                <label for="tier-__INDEX__-label" class="form-label small">Tier Label</label>
+                <input type="text" name="tiers[__INDEX__][label]" id="tier-__INDEX__-label" class="form-control form-control-sm">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Sharing</label>
-                <input type="number" step="0.01" name="tiers[__INDEX__][prices][sharing]" class="form-control form-control-sm">
+                <label for="tier-__INDEX__-sharing" class="form-label small">Sharing</label>
+                <input type="number" step="0.01" name="tiers[__INDEX__][prices][sharing]" id="tier-__INDEX__-sharing" class="form-control form-control-sm">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Quad</label>
-                <input type="number" step="0.01" name="tiers[__INDEX__][prices][quad]" class="form-control form-control-sm">
+                <label for="tier-__INDEX__-quad" class="form-label small">Quad</label>
+                <input type="number" step="0.01" name="tiers[__INDEX__][prices][quad]" id="tier-__INDEX__-quad" class="form-control form-control-sm">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Triple</label>
-                <input type="number" step="0.01" name="tiers[__INDEX__][prices][triple]" class="form-control form-control-sm">
+                <label for="tier-__INDEX__-triple" class="form-label small">Triple</label>
+                <input type="number" step="0.01" name="tiers[__INDEX__][prices][triple]" id="tier-__INDEX__-triple" class="form-control form-control-sm">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Double</label>
-                <input type="number" step="0.01" name="tiers[__INDEX__][prices][double]" class="form-control form-control-sm">
+                <label for="tier-__INDEX__-double" class="form-label small">Double</label>
+                <input type="number" step="0.01" name="tiers[__INDEX__][prices][double]" id="tier-__INDEX__-double" class="form-control form-control-sm">
             </div>
             <div class="col-md-1">
                 <button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button>

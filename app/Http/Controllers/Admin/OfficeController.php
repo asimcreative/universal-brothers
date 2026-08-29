@@ -62,6 +62,7 @@ class OfficeController extends Controller
         ]);
         $data['is_domestic'] = $request->boolean('is_domestic');
         $data['is_active'] = $request->boolean('is_active');
+        $data['sort_order'] = $data['sort_order'] ?? 0;
 
         return $data;
     }

@@ -11,12 +11,12 @@
                     <form method="POST" action="{{ route('admin.categories.update', $category) }}">
                         @csrf @method('PUT')
                         <div class="mb-3">
-                            <label class="form-label">Icon (Bootstrap Icon class)</label>
-                            <input type="text" name="icon" class="form-control" value="{{ old('icon', $category->icon) }}" placeholder="e.g. bi-moon-stars">
+                            <label for="category-icon" class="form-label">Icon (Bootstrap Icon class)</label>
+                            <input type="text" name="icon" id="category-icon" class="form-control" value="{{ old('icon', $category->icon) }}" placeholder="e.g. bi-moon-stars">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea name="description" class="form-control" rows="3">{{ old('description', $category->description) }}</textarea>
+                            <label for="category-description" class="form-label">Description</label>
+                            <textarea name="description" id="category-description" class="form-control" rows="3">{{ old('description', $category->description) }}</textarea>
                         </div>
                         <div class="form-check mb-3">
                             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }}>
@@ -47,7 +47,8 @@
                     <form method="POST" action="{{ route('admin.categories.series.store', $category) }}">
                         @csrf
                         <div class="input-group">
-                            <input type="text" name="name" class="form-control" placeholder="New series name" required>
+                            <label for="new-series-name" class="visually-hidden">New series name</label>
+                            <input type="text" name="name" id="new-series-name" class="form-control" placeholder="New series name" required>
                             <button class="btn btn-outline-primary">Add</button>
                         </div>
                     </form>

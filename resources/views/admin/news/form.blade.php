@@ -9,24 +9,24 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body row g-3">
                 <div class="col-md-8">
-                    <label class="form-label">Title</label>
-                    <input type="text" name="title" class="form-control" value="{{ old('title', $article->title) }}" required>
+                    <label for="news-title" class="form-label">Title</label>
+                    <input type="text" name="title" id="news-title" class="form-control" value="{{ old('title', $article->title) }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Published At</label>
-                    <input type="datetime-local" name="published_at" class="form-control" value="{{ old('published_at', optional($article->published_at)->format('Y-m-d\TH:i')) }}">
+                    <label for="news-published-at" class="form-label">Published At</label>
+                    <input type="datetime-local" name="published_at" id="news-published-at" class="form-control" value="{{ old('published_at', optional($article->published_at)->format('Y-m-d\TH:i')) }}">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Excerpt</label>
-                    <textarea name="excerpt" class="form-control" rows="2">{{ old('excerpt', $article->excerpt) }}</textarea>
+                    <label for="news-excerpt" class="form-label">Excerpt</label>
+                    <textarea name="excerpt" id="news-excerpt" class="form-control" rows="2">{{ old('excerpt', $article->excerpt) }}</textarea>
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Body</label>
-                    <textarea name="body" class="form-control" rows="8">{{ old('body', $article->body) }}</textarea>
+                    <label for="news-body" class="form-label">Body</label>
+                    <textarea name="body" id="news-body" class="form-control" rows="8">{{ old('body', $article->body) }}</textarea>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Cover Image</label>
-                    <input type="file" name="cover_image" class="form-control" accept="image/*">
+                    <label for="news-cover-image" class="form-label">Cover Image</label>
+                    <input type="file" name="cover_image" id="news-cover-image" class="form-control" accept="image/*">
                     @if($article->cover_image)<img src="{{ Storage::url($article->cover_image) }}" class="mt-2" style="height:60px;">@endif
                 </div>
                 <div class="col-md-3">
@@ -36,12 +36,12 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Meta Title</label>
-                    <input type="text" name="meta_title" class="form-control" value="{{ old('meta_title', $article->meta_title) }}">
+                    <label for="news-meta-title" class="form-label">Meta Title</label>
+                    <input type="text" name="meta_title" id="news-meta-title" class="form-control" value="{{ old('meta_title', $article->meta_title) }}">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Meta Description</label>
-                    <input type="text" name="meta_description" class="form-control" value="{{ old('meta_description', $article->meta_description) }}">
+                    <label for="news-meta-description" class="form-label">Meta Description</label>
+                    <input type="text" name="meta_description" id="news-meta-description" class="form-control" value="{{ old('meta_description', $article->meta_description) }}">
                 </div>
             </div>
         </div>

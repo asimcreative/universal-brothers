@@ -56,6 +56,7 @@ class FaqController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
         $data['is_active'] = $request->boolean('is_active');
+        $data['sort_order'] = $data['sort_order'] ?? 0;
 
         return $data;
     }
