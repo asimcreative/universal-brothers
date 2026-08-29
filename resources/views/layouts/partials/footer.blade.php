@@ -18,6 +18,7 @@
                 <h6 class="text-white mb-3">Quick Links</h6>
                 <ul class="list-unstyled small">
                     <li class="mb-2"><a href="{{ route('home') }}" class="text-secondary text-decoration-none">Home</a></li>
+                    <li class="mb-2"><a href="{{ url('/about-us') }}" class="text-secondary text-decoration-none">About Us</a></li>
                     @foreach($navCategories as $navCategory)
                         <li class="mb-2"><a href="{{ route('packages.category', $navCategory->slug) }}" class="text-secondary text-decoration-none">{{ $navCategory->name }}</a></li>
                     @endforeach

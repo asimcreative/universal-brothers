@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleControll
 use App\Http\Controllers\Admin\OfficeController as AdminOfficeController;
 use App\Http\Controllers\Admin\PackageCategoryController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
+use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\SliderController as AdminSliderController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +56,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('sliders', AdminSliderController::class)->except(['show']);
         Route::resource('news', AdminNewsArticleController::class)->except(['show']);
         Route::resource('offices', AdminOfficeController::class)->except(['show']);
+        Route::resource('pages', AdminPageController::class)->except(['show']);
 
         Route::get('inquiries', [AdminInquiryController::class, 'index'])->name('inquiries.index');
         Route::get('inquiries/{inquiry}', [AdminInquiryController::class, 'show'])->name('inquiries.show');
@@ -64,3 +67,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('settings', [SiteSettingController::class, 'update'])->name('settings.update');
     });
 });
+
+// Catch-all static CMS page route — must stay last so it never shadows a more
+// specific route above (contact, sitemap, category/package routes, admin/*).
+Route::get('/{slug}', [PageController::class, 'show'])
+    ->where('slug', '[a-z0-9-]+')
+    ->name('pages.show');

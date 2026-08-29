@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             OfficeSeeder::class,
             SiteSettingSeeder::class,
             FaqSeeder::class,
+            AboutPageSeeder::class,
             AdminUserSeeder::class,
         ]);
     }
