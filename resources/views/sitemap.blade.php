@@ -25,4 +25,12 @@
         <priority>{{ $package->is_featured ? '0.9' : '0.7' }}</priority>
     </url>
     @endforeach
+    @foreach($pages as $page)
+    <url>
+        <loc>{{ url($page->slug) }}</loc>
+        <lastmod>{{ $page->updated_at->toAtomString() }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    @endforeach
 </urlset>

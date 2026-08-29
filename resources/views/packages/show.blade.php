@@ -125,6 +125,34 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- Optional add-ons --}}
+                @if($addons->isNotEmpty())
+                    <h2 class="h5 mt-4 mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Optional Add-ons</h2>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr><th>Add-on</th><th>Price</th><th>Notes</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach($addons as $addon)
+                                    <tr>
+                                        <td>{{ $addon->name }}</td>
+                                        <td>
+                                            @if($addon->price !== null)
+                                                {{ $addon->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($addon->price) }}
+                                                @if($addon->unit) <span class="text-muted small">({{ $addon->unit }})</span> @endif
+                                            @else
+                                                On request
+                                            @endif
+                                        </td>
+                                        <td class="small text-muted">{{ $addon->notes }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
 
             <div class="col-lg-4">

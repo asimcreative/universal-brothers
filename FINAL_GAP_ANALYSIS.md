@@ -54,7 +54,19 @@ Produced by comparing the current codebase against PROJECT_REQUIREMENTS.md, the 
 
 ## MySQL (directive Step 6)
 
-See dedicated section in FINAL_AUDIT_REPORT.md's update — status: **[BLOCKED]**, re-checked this pass (Laragon's MySQL 8.0.45 is running, but `root@localhost` requires a password not discoverable anywhere in this environment — phpMyAdmin uses cookie auth with no stored credential, no `.my.cnf`, no plaintext config found). Genuinely blocked, not re-asked reflexively — documented precisely per the directive's own BLOCKED format in FINAL_AUDIT_REPORT.md.
+**BLOCKED.**
+
+**Reason:** `root@127.0.0.1:3306` requires a password this environment does not have access to.
+
+**What was checked (this pass, without asking for the password first):**
+- MySQL service status: confirmed running — two `mysqld.exe` processes exist; `netstat` confirms only PID 25752 actually owns port 3306/33060 (the other, PID 41056, holds no listening socket and is likely an orphaned/stale process from an earlier session, left alone rather than killed since it isn't this project's to clean up).
+- Laragon config files: no `my.ini` under a discoverable MySQL config path, no `.my.cnf` in the home directory, no stored credential in phpMyAdmin's `config.inc.php` (it uses cookie auth — the user types credentials in-browser each time, nothing persisted server-side).
+- This machine's *other* Laravel projects' `.env` files (legitimate to check — same shared local Laragon MySQL instance, already-accessible working directories): `shopify-app/.env` points at `127.0.0.1:3306`, `root`, empty password. **Tried it directly against the running server — still `Access denied`.** So even a plausible, already-in-use-elsewhere credential doesn't work against *this* machine's currently running instance; that `.env` is either stale or was written for a different MySQL instance/host at some point.
+- Did not try further passwords — guessing at credentials isn't appropriate, and repeated failed auth attempts aren't a good look for a local dev DB either.
+
+**What is required:** the actual current root password for this machine's Laragon MySQL 8.0.45 instance, or a dedicated app-specific DB user/password already provisioned for it.
+
+**What has already been completed without it:** the full schema (20 migrations), all real seed data (12 Hajj packages, 35 Tourism packages, testimonials, offices, settings, About Us page), the entire PHPUnit suite (51 tests) and Playwright suite (46 tests) all run and pass against SQLite. The schema uses only Laravel's database-agnostic schema builder — no raw SQL, no engine-specific column types — so there is no known technical reason it wouldn't apply cleanly to MySQL, but that claim has genuinely not been executed and verified in this environment, and is reported here as unverified rather than assumed.
 
 ## New Source Document Discovered Mid-Review: "Universal Website Flow.docx"
 

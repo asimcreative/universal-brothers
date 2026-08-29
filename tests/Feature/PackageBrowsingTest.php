@@ -80,6 +80,49 @@ class PackageBrowsingTest extends TestCase
         $response->assertSee('Airline ticket');
     }
 
+    public function test_package_detail_shows_category_wide_addons(): void
+    {
+        $category = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);
+        $package = Package::factory()->create(['package_category_id' => $category->id]);
+
+        \App\Models\PackageAddon::create([
+            'package_category_id' => $category->id,
+            'name' => 'Kaba view supplement',
+            'price' => 2200,
+            'currency' => 'USD',
+            'unit' => 'per person',
+            'is_active' => true,
+        ]);
+
+        $response = $this->get('/hajj/'.$package->slug);
+
+        $response->assertOk();
+        $response->assertSee('Optional Add-ons');
+        $response->assertSee('Kaba view supplement');
+        $response->assertSee('2,200');
+    }
+
+    public function test_package_detail_only_shows_addons_matching_its_own_aziziya_status(): void
+    {
+        $category = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);
+        $nonAziziyaPackage = Package::factory()->create(['package_category_id' => $category->id, 'has_aziziya' => false]);
+
+        \App\Models\PackageAddon::create([
+            'package_category_id' => $category->id, 'name' => 'Kaba view supplement (Non-Aziziya series)',
+            'price' => 2200, 'currency' => 'USD', 'is_active' => true,
+        ]);
+        \App\Models\PackageAddon::create([
+            'package_category_id' => $category->id, 'name' => 'Kaba view supplement (Aziziya series)',
+            'price' => 1050, 'currency' => 'USD', 'is_active' => true,
+        ]);
+
+        $response = $this->get('/hajj/'.$nonAziziyaPackage->slug);
+
+        $response->assertOk();
+        $response->assertSee('Kaba view supplement (Non-Aziziya series)');
+        $response->assertDontSee('Kaba view supplement (Aziziya series)');
+    }
+
     public function test_draft_package_detail_returns_404(): void
     {
         $category = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);

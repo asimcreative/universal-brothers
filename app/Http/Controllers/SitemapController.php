@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Models\PackageCategory;
+use App\Models\Page;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
 
@@ -18,7 +19,9 @@ class SitemapController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $xml = view('sitemap', compact('categories', 'packages'))->render();
+        $pages = Page::where('is_active', true)->orderBy('updated_at', 'desc')->get();
+
+        $xml = view('sitemap', compact('categories', 'packages', 'pages'))->render();
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }

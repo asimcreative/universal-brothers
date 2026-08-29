@@ -14,8 +14,16 @@ class HomeController extends Controller
     public function index(): View
     {
         $categories = PackageCategory::with(['packages' => function ($query) {
-            $query->published()->orderBy('is_featured', 'desc')->orderBy('sort_order')->limit(6);
+            $query->published()->with('series')->orderBy('is_featured', 'desc')->orderBy('sort_order')->limit(6);
         }])->orderBy('sort_order')->get();
+
+        // Every package here was just loaded *through* its own category, so
+        // the category is already in memory — setRelation avoids an N+1
+        // lazy-load of $package->category (used by package-card) per card,
+        // for zero extra queries rather than one more batched one.
+        $categories->each(function (PackageCategory $category) {
+            $category->packages->each(fn ($package) => $package->setRelation('category', $category));
+        });
 
         $sliders = Slider::where('page_context', 'home')->where('is_active', true)->orderBy('sort_order')->get();
 
