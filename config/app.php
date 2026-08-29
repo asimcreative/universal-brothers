@@ -123,4 +123,21 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Facade Aliases
+    |--------------------------------------------------------------------------
+    |
+    | Laravel's minimal skeleton no longer pre-populates this array, but
+    | Blade views compile to plain PHP in the global namespace, so a small
+    | set of facades used unqualified across the view layer (Str, Storage)
+    | need to be registered here rather than fully-qualified in every file.
+    |
+    */
+
+    'aliases' => [
+        'Str' => Illuminate\Support\Str::class,
+        'Storage' => Illuminate\Support\Facades\Storage::class,
+    ],
+
 ];
