@@ -54,7 +54,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('testimonials', AdminTestimonialController::class)->except(['show']);
         Route::resource('faqs', AdminFaqController::class)->except(['show']);
         Route::resource('sliders', AdminSliderController::class)->except(['show']);
-        Route::resource('news', AdminNewsArticleController::class)->except(['show']);
+        // Explicit parameter name: the controller type-hints `NewsArticle $article`
+        // (clearer than `$news`, which reads oddly next to the `NewsArticle` class),
+        // but Route::resource('news', ...) otherwise generates a {news} route
+        // parameter — implicit model binding requires the two to match by name,
+        // so without this it silently fails and every edit/update/destroy request
+        // was resolving a fresh, empty NewsArticle instead of the real one.
+        Route::resource('news', AdminNewsArticleController::class)
+            ->except(['show'])
+            ->parameters(['news' => 'article']);
         Route::resource('offices', AdminOfficeController::class)->except(['show']);
         Route::resource('pages', AdminPageController::class)->except(['show']);
 

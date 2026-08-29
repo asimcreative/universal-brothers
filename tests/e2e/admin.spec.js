@@ -62,6 +62,29 @@ test.describe('Admin CMS', () => {
         await expect(page.getByText(/Updated via Playwright/)).toBeVisible();
     });
 
+    test('admin can create, edit, and delete a News article (regression: route param mismatch previously broke edit/update/delete)', async ({ page }) => {
+        const title = 'Playwright E2E News ' + Date.now();
+
+        await page.goto('/admin/news/create');
+        await page.locator('input[name="title"]').fill(title);
+        await page.locator('textarea[name="excerpt"]').fill('Test excerpt.');
+        await page.locator('input[name="is_active"]').check();
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL(/\/admin\/news$/);
+        await expect(page.getByText(title)).toBeVisible();
+
+        await page.getByRole('row', { name: new RegExp(title) }).getByRole('link', { name: 'Edit' }).click();
+        await expect(page.locator('input[name="title"]')).toHaveValue(title);
+        await page.locator('input[name="title"]').fill(title + ' Updated');
+        await page.getByRole('button', { name: 'Save' }).click();
+        await expect(page).toHaveURL(/\/admin\/news$/);
+        await expect(page.getByText(title + ' Updated')).toBeVisible();
+
+        page.once('dialog', (dialog) => dialog.accept());
+        await page.getByRole('row', { name: new RegExp(title) }).getByRole('button', { name: 'Delete' }).click();
+        await expect(page.getByText(title + ' Updated')).not.toBeVisible();
+    });
+
     test('22. admin can manage a FAQ', async ({ page }) => {
         await page.goto('/admin/faqs/create');
         await page.locator('select[name="category"]').selectOption('hajj');
