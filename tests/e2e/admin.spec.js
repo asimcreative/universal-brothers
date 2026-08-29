@@ -13,6 +13,21 @@ test.describe('Admin CMS', () => {
         await expect(page.getByText('New Inquiries')).toBeVisible();
     });
 
+    test('admin panel is navigable on a mobile viewport (regression: sidebar had no mobile fallback)', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.goto('/admin');
+
+        // The desktop sidebar is intentionally hidden below md — there must
+        // be a working alternative, not a silent dead-end.
+        await expect(page.locator('nav.navbar.d-md-none')).toBeVisible();
+        await page.locator('nav.navbar.d-md-none .navbar-toggler').click();
+
+        const mobileNav = page.locator('#adminMobileNav');
+        await expect(mobileNav).toBeVisible();
+        await mobileNav.getByRole('link', { name: 'Packages' }).click();
+        await expect(page).toHaveURL(/\/admin\/packages$/);
+    });
+
     test('17-19. admin can create, edit, and publish/unpublish a package, verified on the frontend', async ({ page }) => {
         const uniqueCode = 'E2E' + Date.now();
         const uniqueName = 'Playwright E2E Test Package ' + Date.now();

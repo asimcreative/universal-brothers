@@ -7,21 +7,55 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body class="bg-light">
+    @php
+        $adminNavItems = [
+            ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'icon' => 'bi-speedometer2', 'label' => 'Dashboard'],
+            ['route' => 'admin.packages.index', 'pattern' => 'admin.packages.*', 'icon' => 'bi-box-seam', 'label' => 'Packages'],
+            ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'icon' => 'bi-tags', 'label' => 'Categories & Series'],
+            ['route' => 'admin.pages.index', 'pattern' => 'admin.pages.*', 'icon' => 'bi-file-earmark-text', 'label' => 'Pages'],
+            ['route' => 'admin.sliders.index', 'pattern' => 'admin.sliders.*', 'icon' => 'bi-images', 'label' => 'Sliders'],
+            ['route' => 'admin.news.index', 'pattern' => 'admin.news.*', 'icon' => 'bi-newspaper', 'label' => 'News'],
+            ['route' => 'admin.testimonials.index', 'pattern' => 'admin.testimonials.*', 'icon' => 'bi-chat-quote', 'label' => 'Testimonials'],
+            ['route' => 'admin.faqs.index', 'pattern' => 'admin.faqs.*', 'icon' => 'bi-question-circle', 'label' => 'FAQs'],
+            ['route' => 'admin.offices.index', 'pattern' => 'admin.offices.*', 'icon' => 'bi-geo-alt', 'label' => 'Offices'],
+            ['route' => 'admin.inquiries.index', 'pattern' => 'admin.inquiries.*', 'icon' => 'bi-envelope', 'label' => 'Inquiries'],
+            ['route' => 'admin.settings.index', 'pattern' => 'admin.settings.*', 'icon' => 'bi-gear', 'label' => 'Settings'],
+        ];
+    @endphp
+
+    <nav class="navbar navbar-dark bg-dark d-md-none px-3">
+        <a href="{{ route('admin.dashboard') }}" class="navbar-brand fw-bold">Universal Brothers</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminMobileNav" aria-controls="adminMobileNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+
+    <div class="offcanvas offcanvas-start bg-dark text-light d-md-none" tabindex="-1" id="adminMobileNav">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Menu</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="nav nav-pills flex-column gap-1">
+                @foreach($adminNavItems as $item)
+                    <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs($item['pattern']) ? 'active' : '' }}" href="{{ route($item['route']) }}"><i class="bi {{ $item['icon'] }} me-2"></i>{{ $item['label'] }}</a></li>
+                @endforeach
+            </ul>
+            <hr class="border-secondary">
+            <form method="POST" action="{{ route('admin.logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-outline-light btn-sm w-100"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+            </form>
+        </div>
+    </div>
+
     <div class="d-flex">
         <nav class="bg-dark text-light p-3 vh-100 sticky-top d-none d-md-block" style="width: 250px;">
             <a href="{{ route('admin.dashboard') }}" class="d-block text-white text-decoration-none fw-bold fs-5 mb-4">Universal Brothers</a>
             <ul class="nav nav-pills flex-column gap-1">
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}" href="{{ route('admin.packages.index') }}"><i class="bi bi-box-seam me-2"></i>Packages</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><i class="bi bi-tags me-2"></i>Categories &amp; Series</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.pages.*') ? 'active' : '' }}" href="{{ route('admin.pages.index') }}"><i class="bi bi-file-earmark-text me-2"></i>Pages</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.sliders.*') ? 'active' : '' }}" href="{{ route('admin.sliders.index') }}"><i class="bi bi-images me-2"></i>Sliders</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.news.*') ? 'active' : '' }}" href="{{ route('admin.news.index') }}"><i class="bi bi-newspaper me-2"></i>News</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.testimonials.*') ? 'active' : '' }}" href="{{ route('admin.testimonials.index') }}"><i class="bi bi-chat-quote me-2"></i>Testimonials</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.faqs.*') ? 'active' : '' }}" href="{{ route('admin.faqs.index') }}"><i class="bi bi-question-circle me-2"></i>FAQs</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.offices.*') ? 'active' : '' }}" href="{{ route('admin.offices.index') }}"><i class="bi bi-geo-alt me-2"></i>Offices</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.inquiries.*') ? 'active' : '' }}" href="{{ route('admin.inquiries.index') }}"><i class="bi bi-envelope me-2"></i>Inquiries</a></li>
-                <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.index') }}"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                @foreach($adminNavItems as $item)
+                    <li class="nav-item"><a class="nav-link text-light {{ request()->routeIs($item['pattern']) ? 'active' : '' }}" href="{{ route($item['route']) }}"><i class="bi {{ $item['icon'] }} me-2"></i>{{ $item['label'] }}</a></li>
+                @endforeach
             </ul>
             <hr class="border-secondary">
             <form method="POST" action="{{ route('admin.logout') }}">
