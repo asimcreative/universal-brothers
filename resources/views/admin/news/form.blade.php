@@ -27,7 +27,7 @@
                 <div class="col-md-6">
                     <label for="news-cover-image" class="form-label">Cover Image</label>
                     <input type="file" name="cover_image" id="news-cover-image" class="form-control" accept="image/*">
-                    @if($article->cover_image)<img src="{{ Storage::url($article->cover_image) }}" class="mt-2" style="height:60px;">@endif
+                    @if($article->cover_image)<img src="{{ Storage::url($article->cover_image) }}" class="mt-2" style="height:60px;" alt="Current cover image">@endif
                 </div>
                 <div class="col-md-3">
                     <div class="form-check mt-4">

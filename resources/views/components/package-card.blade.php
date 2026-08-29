@@ -3,7 +3,7 @@
 <div class="card package-card reveal-on-scroll">
     <div class="position-relative">
         @if($package->cover_image)
-            <img src="{{ Storage::url($package->cover_image) }}" class="card-img-top package-card-img" alt="{{ $package->name }}">
+            <img src="{{ Storage::url($package->cover_image) }}" class="card-img-top package-card-img" alt="{{ $package->name }}" loading="lazy">
         @else
             <div class="package-card-img d-flex align-items-center justify-content-center text-muted">
                 <i class="bi bi-image fs-1"></i>

@@ -177,7 +177,7 @@
                         <div class="col-md-4">
                             <div class="card h-100 border-0 shadow-sm">
                                 @if($article->cover_image)
-                                    <img src="{{ Storage::url($article->cover_image) }}" class="card-img-top package-card-img" alt="{{ $article->title }}">
+                                    <img src="{{ Storage::url($article->cover_image) }}" class="card-img-top package-card-img" alt="{{ $article->title }}" loading="lazy">
                                 @endif
                                 <div class="card-body">
                                     <p class="small text-muted mb-1">{{ optional($article->published_at)->format('d M Y') }}</p>

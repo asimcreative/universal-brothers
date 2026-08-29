@@ -110,7 +110,7 @@
                     <label for="pkg-cover-image" class="form-label">Cover Image</label>
                     <input type="file" name="cover_image" id="pkg-cover-image" class="form-control" accept="image/*">
                     @if($package->cover_image)
-                        <img src="{{ Storage::url($package->cover_image) }}" class="mt-2" style="height:60px;">
+                        <img src="{{ Storage::url($package->cover_image) }}" class="mt-2" style="height:60px;" alt="Current cover image">
                     @endif
                 </div>
 

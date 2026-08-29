@@ -19,7 +19,7 @@
                 <div class="col-md-6">
                     <label for="slider-image" class="form-label">Image {{ $slider->exists ? '(leave blank to keep current)' : '' }}</label>
                     <input type="file" name="image" id="slider-image" class="form-control" accept="image/*" {{ $slider->exists ? '' : 'required' }}>
-                    @if($slider->image)<img src="{{ Storage::url($slider->image) }}" class="mt-2" style="height:60px;">@endif
+                    @if($slider->image)<img src="{{ Storage::url($slider->image) }}" class="mt-2" style="height:60px;" alt="Current slider image">@endif
                 </div>
                 <div class="col-md-3">
                     <label for="slider-page-context" class="form-label">Page</label>

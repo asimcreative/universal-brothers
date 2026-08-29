@@ -93,6 +93,20 @@ While staging this pass's changes, a *second* new file appeared alongside the fi
 - **A genuine real-data lead**: a "DATABASE" section quoting SAR-denominated pricing (Package A: Triple 82,000 SAR / Double 98,000 SAR; Package B: Quad 59,500 / Triple 66,000 / Double 76,000 SAR) and a day-by-day field structure (English date / Islamic date / City / Accommodation). This almost certainly reflects the **SAR-denominated Hajj 2027 PDF** referenced in EXISTING_WEBSITE_AUDIT.md (`HAJJ-2027-Packages-SAR-3_compressed-1.pdf`, seen linked on the live Hajj site but never itself supplied to or opened in this project) — this project has only ever had the **USD/overseas** brochure. These SAR figures are **not** added to any package's pricing here: there's no way to confirm which package code (UB0xx) they'd map to, and guessing that mapping would be inventing a fact, not recovering one. If the actual SAR PDF becomes available, it likely completes the pricing picture for domestic (non-overseas) Hajj pilgrims, which the current seeded data — sourced entirely from the "overseas" brochure — does not cover at all.
 - **A genuinely useful, low-risk structural confirmation**: this document's own package-filter suggestion (filter Hajj packages by day-count, "Arrival (Jeddah/Madina)", and "Azizia (Yes/No)") lines up with fields already in the real schema (`packages.is_shifting`, `packages.has_aziziya`) — worth building as an actual homepage/listing filter UI later, since the data to power it already exists; not built in this pass (scope-limited to the user's explicit 17-step list, which doesn't ask for a new filter feature).
 
+## Real Asset / Photography Handling (directive Step 7)
+
+Not blocked on missing client photography — the architecture is production-ready independent of whether real photos exist yet:
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| CMS supports image upload | ✅ | Every content type with imagery (packages, sliders, news, pages) has a working file-upload field, verified by PHPUnit/Playwright creating real records with real uploaded files |
+| Image validation | ✅ | Every upload field is `['image', 'max:4096']` — no arbitrary file type accepted |
+| Alt text | ✅ (2 real gaps fixed this pass) | Found and fixed: `package-card` and the homepage news card had `alt` text but no `loading="lazy"`; three admin thumbnail previews (package/slider/news edit forms) had no `alt` at all — all fixed and re-verified (60/60 PHPUnit still passing) |
+| Lazy loading | ✅ (fixed this pass, see above) | `loading="lazy"` now present on every below-the-fold content image (package cards, news cards, static-page featured images); hero/slider images intentionally excluded from lazy-loading since they're above-the-fold on first paint |
+| Responsive images (`srcset`/multiple sizes) | ❌ | Not implemented — every uploaded image is served at its original upload size. Real gap: a large photo uploaded by an admin ships the same bytes to a phone as to a desktop. Not fixed in this pass (would need an image-processing pipeline — e.g. `spatie/laravel-image-optimizer` or Intervention Image — which is a real dependency addition, not a quick template fix, so flagged rather than rushed in) |
+| Placeholders/fallbacks when no image exists | ✅ | `package-card` shows a Bootstrap-icon placeholder tile when `cover_image` is null — verified this renders correctly for the 34 Tourism packages that have no image yet |
+| WebP conversion | ❌ | Not implemented — same reasoning as responsive images above; proposal calls for it, genuinely deferred, not silently dropped |
+
 ## Client Assets Required Before Production
 
 - Real photography: hotel exteriors/rooms, Mina tent interiors, Aziziya building — all exist as embedded images inside the brochure PDF and were not extracted as standalone files in this pass (a legitimate follow-up, not a blocker for launch since placeholder-safe rendering is already in place).
