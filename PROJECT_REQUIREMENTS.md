@@ -45,7 +45,7 @@ Hero banner/dynamic slider → Featured Umrah Packages → Featured Hajj Package
 
 This is the one product line with real, complete source data (HAJJ 2027 Packages overseas.pdf). Requirements here are data facts to preserve exactly, not aspirations:
 
-- **9 real packages for Hajj 2027 / 1448 AH**, organized into 3 series:
+- **12 real packages for Hajj 2027 / 1448 AH**, organized into 3 series:
   - *Platinum, Non-Aziziya, in front of Haram* (Makkah & Medinah series): UB001 (13 days), UB003 (10 days), UB004 (14 days), UB006 (10 days), UB008 (14 days), UB010 (10 days), UB011 (14 days), UB013 (10 days).
   - *Platinum, With Aziziya* (Makkah & Medinah series, shifting): UB015 (Flex 14), UB016 (Flex 10).
   - *Platinum Value, With Aziziya* (Medinah series, non-shifting): UB023 (Value 14), UB024 (Value 10).
@@ -66,9 +66,10 @@ No package-level source data exists for Umrah in either source document (the pro
 
 ## H. Tourism Requirements
 
-Same situation as Umrah: proposal references a "Featured Tourism Packages" homepage section and a Tourism destination structure, but no tourism package/pricing/destination data exists in either source PDF.
+No tourism package/pricing/destination data exists in either source PDF, but the live-site audit (EXISTING_WEBSITE_AUDIT.md) recovered **real package names, Domestic/International categorization, and some real PKR prices** from `tourism.universalbrothers.com`'s listing pages (e.g. "The Splendid Skardu Tour Direct from Dubai," ₨197,500). Every individual tour detail page on that live site currently returns HTTP 500 (confirmed, reproducible, site-wide) — so itineraries/inclusions/hotel names for these packages are genuinely unavailable, not merely unfetched.
 - Tourism must be a first-class package category, same CMS structure as Hajj/Umrah.
-- No destinations, prices, or itineraries are to be invented. **[client-supplied content pending]** — carry forward whatever is recoverable from the live tourism.universalbrothers.com audit.
+- Seed real recovered package names/categories/prices from the live audit; leave itinerary/inclusions/hotel fields empty and CMS-editable rather than inventing them. **[client-supplied content pending]** for everything below the listing level.
+- The recovered testimonials (see §S) are Hajj/Umrah-flavored despite living on the tourism site's homepage on the current build — the rebuild should tag testimonials by the service they actually describe, not by which page they were pasted onto.
 
 ## I. Package Requirements (cross-cutting: Hajj/Umrah/Tourism)
 
@@ -116,7 +117,10 @@ Online booking/payment system, customer portal, agent portal, online visa applic
 
 ## S. Assumptions
 
-- The client (Universal Brothers) will supply real Umrah and Tourism package content during or after development; the CMS must make adding it trivial.
+- The rebuild unifies the current two-sister-sites-plus-splash-gate structure (`universalbrothers.com` root is currently just a static "Hajj vs Tourism" chooser page) into one site on one domain — confirmed by the proposal's own Homepage Requirements already listing Hajj + Umrah + Tourism together on a single homepage, not introduced as a new decision here.
+- The client (Universal Brothers) will supply real Umrah package content and full Tourism itinerary/inclusion detail during or after development; the CMS must make adding it trivial. Tourism package *names/categories/some prices* are already real, recovered from the live site (see §H) and EXISTING_WEBSITE_AUDIT.md.
+- Real testimonials recovered from the live tourism site (Haseeb Jawed, Mustafa Aslam, Rehan Ahmed, Ali Naviwala — full quotes in EXISTING_WEBSITE_AUDIT.md) will be reused as seed content since they are genuine, already-published customer reviews; standard practice is for the client to reconfirm consent to reuse before final launch, noted as a pending content-governance item rather than a build blocker.
+- Real company facts recovered from the live Hajj site (20+ years operating, 50,000+ pilgrims served, licenses/affiliations with Ministry of Religious Affairs/IATA/TAAP/HOAP/DTS/SECP/KCCI) are treated as real seed content for the About/Why-Choose-Us sections, consistent with the brochure's own award/accreditation claims.
 - "MySQL 8.x" and "Laravel 12 / PHP 8.3+" in the proposal are binding technical constraints, not suggestions.
 - The proposal's 8-week timeline is a client-facing estimate; this delivery is being executed by an AI agent under continuous autonomous execution rather than a human team, so the actual working cadence will differ, but the deliverable scope is the same.
 - Where the proposal says "if required" (e.g., mega menu, documentation), the feature is implemented only if the actual content/navigation depth ends up needing it.

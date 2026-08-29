@@ -31,7 +31,7 @@ Key facts extracted from the packages brochure (ground truth for all Hajj packag
 - Address: A-9, 1st Floor, Hassan Homes FL-3/8, Opp. Nehr-e-Khyyam, KDA Scheme Block-5, Clifton, Karachi.
 - Contacts: Landline 021-111-102-786 / 021-111-106-786, WhatsApp +92 322 2102786, phone 0322 3350151, web www.universalbrothers.com, email info@maximsgroup.org, social `@Universalbrotherstravel`.
 - Leadership: Furqan Abdul Qadir (Chief Executive), Junaid Abdul Qadir (Director).
-- Document covers **Hajj 2027 / 1448 AH** only — 9 distinct packages (codes UB001–UB024) across 3 series (Non-Aziziya Platinum, Aziziya Platinum, Aziziya Value), each with real hotel names, per-room-type USD pricing, day-by-day itineraries, and a shared terms/payment-plan/booking-form appendix.
+- Document covers **Hajj 2027 / 1448 AH** only — 12 distinct packages (codes UB001, UB003, UB004, UB006, UB008, UB010, UB011, UB013, UB015, UB016, UB023, UB024) across 3 series (Non-Aziziya Platinum — 8 packages, Aziziya Platinum Flex — 2 packages, Aziziya Platinum Value — 2 packages), each with real hotel names, per-room-type USD pricing, day-by-day itineraries, and a shared terms/payment-plan/booking-form appendix.
 - The document contains **no Umrah or Tourism package data** — those product lines must ship as empty, CMS-manageable categories per the directive's "never invent" rule, pending client-supplied content.
 
 ## 3. Development Environment (verified working)
