@@ -12,6 +12,25 @@
     <link rel="icon" href="data:,">
 
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+
+    @php($__schemaOffice = \App\Models\Office::where('is_active', true)->orderBy('sort_order')->first())
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "TravelAgency",
+        "name": "Universal Brothers (Pvt) Ltd",
+        "alternateName": "Crown Packages",
+        "url": "{{ url('/') }}",
+        @if($__schemaOffice?->phone_primary)"telephone": "{{ $__schemaOffice->phone_primary }}",@endif
+        @if($__schemaOffice?->email)"email": "{{ $__schemaOffice->email }}",@endif
+        "address": {
+            "@@type": "PostalAddress",
+            "addressLocality": "Karachi",
+            "addressCountry": "PK"
+        }
+    }
+    </script>
+
     @stack('head')
 </head>
 <body>

@@ -15,13 +15,15 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
-Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
-Route::post('/inquiries', [InquiryController::class, 'store'])->name('inquiries.store');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
+Route::post('/inquiries', [InquiryController::class, 'store'])->middleware('throttle:5,1')->name('inquiries.store');
 
 Route::get('/{category}', [PackageController::class, 'category'])
     ->whereIn('category', ['hajj', 'umrah', 'tourism'])
@@ -33,7 +35,7 @@ Route::get('/{category}/{package:slug}', [PackageController::class, 'show'])
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login')->middleware('guest');
-    Route::post('/login', [AdminAuthController::class, 'login'])->middleware('guest');
+    Route::post('/login', [AdminAuthController::class, 'login'])->middleware(['guest', 'throttle:5,1']);
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout')->middleware('auth');
 
     Route::middleware(['auth', 'admin'])->group(function () {
