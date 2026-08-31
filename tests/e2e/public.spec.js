@@ -7,7 +7,7 @@ test.describe('Public website', () => {
         await expect(page).toHaveTitle(/Universal Brothers/);
     });
 
-    test('2. header navigation links to Hajj/Umrah/Tourism/Contact', async ({ page, isMobile }) => {
+    test('2. header navigation links to Hajj & Umrah mega-menu/Tourism/Contact', async ({ page, isMobile }) => {
         // On mobile, the desktop nav is intentionally collapsed behind the
         // hamburger — its links live in the offcanvas instead, already
         // covered by test 13. Nothing to check here for that viewport.
@@ -15,11 +15,20 @@ test.describe('Public website', () => {
 
         await page.goto('/');
         const nav = page.locator('nav.navbar');
-        await expect(nav.getByRole('link', { name: 'Hajj', exact: true })).toBeVisible();
-        await expect(nav.getByRole('link', { name: 'Umrah', exact: true })).toBeVisible();
-        await expect(nav.getByRole('link', { name: 'Tourism', exact: true })).toBeVisible();
+        // The Hajj & Umrah / Tourism triggers are dropdown-openers, not real
+        // navigation, so they're marked role="button" (WAI-ARIA authoring
+        // practice for a menu trigger) rather than the implicit link role.
+        await expect(nav.getByRole('button', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
+        await expect(nav.getByRole('button', { name: 'Tourism', exact: true })).toBeVisible();
         await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toBeVisible();
         await expect(nav.getByRole('link', { name: 'About Us', exact: true })).toBeVisible();
+
+        // The Hajj & Umrah mega-menu itself carries the real Hajj/Umrah
+        // package links — Bootstrap's dropdown reveals it on click.
+        await nav.getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
+        const megaMenu = page.locator('.mega-menu');
+        await expect(megaMenu.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeVisible();
+        await expect(megaMenu.getByRole('link', { name: 'Umrah Packages', exact: true })).toBeVisible();
     });
 
     test('3. hero renders (fallback hero when no slider is configured)', async ({ page }) => {
@@ -44,11 +53,49 @@ test.describe('Public website', () => {
 
     test('6. Hajj package detail shows real itinerary and pricing', async ({ page }) => {
         await page.goto('/hajj');
-        await page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click();
-        await expect(page).toHaveURL(/\/hajj\/ub001-/);
+        // Release-gate cross-browser QA: this exact click reproduced an
+        // intermittent WebKit-only failure across 3 separate full-suite runs
+        // — the trace showed the click itself completing and Playwright's
+        // own post-click "wait for scheduled navigation" reporting done, yet
+        // the URL never changed. That's the classic Playwright navigation
+        // race: a `.click()` that starts a fast local-dev-server navigation
+        // can complete before a *subsequently* awaited navigation-wait
+        // attaches its listener. Arming `waitForURL` in the same `Promise.all`
+        // as the click (Playwright's own recommended pattern for this race)
+        // closes the window entirely, regardless of how fast the navigation
+        // completes.
+        await Promise.all([
+            page.waitForURL(/\/hajj\/ub001-/),
+            page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click(),
+        ]);
         await expect(page.getByText('Dar Al Tawhid Intercontinental').first()).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Day-by-Day Itinerary' })).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Room Type Pricing' })).toBeVisible();
+    });
+
+    test('6b. Hajj package detail currency switcher changes displayed price without a page reload', async ({ page }) => {
+        await page.goto('/hajj');
+        await Promise.all([
+            page.waitForURL(/\/hajj\/ub001-/),
+            page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click(),
+        ]);
+
+        // UB001 Package B Quad is a real seeded USD-only price (no PKR/SAR
+        // value exists in the brochure — see HAJJ_BROCHURE_EXTRACTION.md) —
+        // proves the currency switcher itself works without depending on
+        // data this session is not authorized to invent.
+        const priceCell = page.locator('.currency-price[data-usd="16300.00"]').first();
+        await expect(priceCell).toHaveText('US$16,300');
+
+        await page.locator('#currency-switcher [data-currency="SAR"]').click();
+        await expect(priceCell).toHaveText('N/A');
+
+        await page.locator('#currency-switcher [data-currency="USD"]').click();
+        await expect(priceCell).toHaveText('US$16,300');
+
+        // Switching currency must not touch anything else on the page.
+        await expect(page.getByRole('heading', { name: 'Day-by-Day Itinerary' })).toBeVisible();
+        await expect(page.getByText('Dar Al Tawhid Intercontinental').first()).toBeVisible();
     });
 
     test('7. Umrah page loads and shows the honest empty state (no invented packages)', async ({ page }) => {
@@ -67,8 +114,12 @@ test.describe('Public website', () => {
 
     test('9. package card CTA navigates to the detail page', async ({ page }) => {
         await page.goto('/tourism');
-        await page.getByRole('link', { name: 'View Details' }).first().click();
-        await expect(page.url()).toMatch(/\/tourism\//);
+        // Same click/navigation race as test 6 — arm the wait before clicking.
+        await Promise.all([
+            page.waitForURL(/\/tourism\//),
+            page.getByRole('link', { name: 'View Details' }).first().click(),
+        ]);
+        await expect(page).toHaveURL(/\/tourism\//);
     });
 
     test('10. inquiry form on a package detail page submits successfully', async ({ page, isMobile }) => {
@@ -79,7 +130,11 @@ test.describe('Public website', () => {
         test.skip(isMobile, 'Submission logic covered on desktop — avoids shared rate-limit contention.');
 
         await page.goto('/hajj');
-        await page.getByRole('link', { name: 'View Details' }).first().click();
+        // Same click/navigation race as test 6 — arm the wait before clicking.
+        await Promise.all([
+            page.waitForURL(/\/hajj\/.+/),
+            page.getByRole('link', { name: 'View Details' }).first().click(),
+        ]);
 
         await page.getByLabel('Full Name').fill('Playwright Tester');
         await page.getByLabel('Email').fill('playwright@example.com');
@@ -135,7 +190,9 @@ test.describe('Public website', () => {
         await page.goto('/');
         const footer = page.locator('footer');
         await expect(footer.getByText(/Karachi/i)).toBeVisible();
-        await expect(footer.getByRole('link', { name: 'Hajj', exact: true })).toHaveAttribute('href', /\/hajj$/);
+        // Real Hajj column link, driven by the actual active "hajj" category
+        // (see FooterTest for the CMS-driven-services regression this covers).
+        await expect(footer.getByRole('link', { name: 'Hajj Packages', exact: true })).toHaveAttribute('href', /\/hajj$/);
     });
 
     test('13. mobile navigation opens via offcanvas toggle', async ({ page }) => {
@@ -144,7 +201,11 @@ test.describe('Public website', () => {
         await page.locator('.navbar-toggler').click();
         const offcanvas = page.locator('#mobileNav');
         await expect(offcanvas).toBeVisible();
-        await expect(offcanvas.getByRole('link', { name: 'Hajj', exact: true })).toBeVisible();
+        // "Hajj Services" is the collapsible group trigger (role="button" —
+        // it toggles a collapse, it isn't real in-page navigation); expanding
+        // it reveals the real "Hajj Packages" link underneath.
+        await offcanvas.getByRole('button', { name: 'Hajj Services', exact: true }).click();
+        await expect(offcanvas.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeVisible();
     });
 
     test('14. no obvious horizontal overflow at mobile width', async ({ page }) => {
@@ -161,6 +222,6 @@ test.describe('Public website', () => {
         const response = await page.goto('/about-us');
         expect(response.status()).toBe(200);
         await expect(page.getByRole('heading', { name: 'About Us', exact: true })).toBeVisible();
-        await expect(page.getByText(/50,000/)).toBeVisible();
+        await expect(page.getByText(/10,000/)).toBeVisible();
     });
 });

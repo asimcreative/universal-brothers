@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\NewsArticle;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\Page;
@@ -21,7 +22,9 @@ class SitemapController extends Controller
 
         $pages = Page::where('is_active', true)->orderBy('updated_at', 'desc')->get();
 
-        $xml = view('sitemap', compact('categories', 'packages', 'pages'))->render();
+        $news = NewsArticle::where('is_active', true)->orderBy('updated_at', 'desc')->get();
+
+        $xml = view('sitemap', compact('categories', 'packages', 'pages', 'news'))->render();
 
         return response($xml, 200)->header('Content-Type', 'application/xml');
     }

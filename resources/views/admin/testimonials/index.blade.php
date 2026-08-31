@@ -10,13 +10,14 @@
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table mb-0 align-middle">
-                <thead><tr><th>Name</th><th>Quote</th><th>Service</th><th>Active</th><th></th></tr></thead>
+                <thead><tr><th>Name</th><th>Quote</th><th>Service</th><th>Video</th><th>Active</th><th></th></tr></thead>
                 <tbody>
                     @forelse($testimonials as $testimonial)
                         <tr>
                             <td>{{ $testimonial->name }}</td>
                             <td>{{ Str::limit($testimonial->quote, 60) }}</td>
                             <td class="text-capitalize">{{ $testimonial->service_tag }}</td>
+                            <td>{!! $testimonial->video_url ? '<span class="badge bg-info text-dark">Yes</span>' : '<span class="text-muted">—</span>' !!}</td>
                             <td>{!! $testimonial->is_active ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
                             <td class="text-end">
                                 <a href="{{ route('admin.testimonials.edit', $testimonial) }}" class="btn btn-sm btn-outline-primary">Edit</a>
@@ -27,7 +28,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-muted py-4">No testimonials yet.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">No testimonials yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

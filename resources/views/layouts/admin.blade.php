@@ -11,16 +11,23 @@
         $adminNavItems = [
             ['route' => 'admin.dashboard', 'pattern' => 'admin.dashboard', 'icon' => 'bi-speedometer2', 'label' => 'Dashboard'],
             ['route' => 'admin.packages.index', 'pattern' => 'admin.packages.*', 'icon' => 'bi-box-seam', 'label' => 'Packages'],
+            ['route' => 'admin.hajj-packages.index', 'pattern' => 'admin.hajj-packages.*', 'icon' => 'bi-moon-stars', 'label' => 'Hajj Packages'],
             ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'icon' => 'bi-tags', 'label' => 'Categories & Series'],
             ['route' => 'admin.pages.index', 'pattern' => 'admin.pages.*', 'icon' => 'bi-file-earmark-text', 'label' => 'Pages'],
             ['route' => 'admin.sliders.index', 'pattern' => 'admin.sliders.*', 'icon' => 'bi-images', 'label' => 'Sliders'],
+            ['route' => 'admin.media.index', 'pattern' => 'admin.media.*', 'icon' => 'bi-collection-play', 'label' => 'Media Gallery'],
             ['route' => 'admin.news.index', 'pattern' => 'admin.news.*', 'icon' => 'bi-newspaper', 'label' => 'News'],
             ['route' => 'admin.testimonials.index', 'pattern' => 'admin.testimonials.*', 'icon' => 'bi-chat-quote', 'label' => 'Testimonials'],
             ['route' => 'admin.faqs.index', 'pattern' => 'admin.faqs.*', 'icon' => 'bi-question-circle', 'label' => 'FAQs'],
+            ['route' => 'admin.awards.index', 'pattern' => 'admin.awards.*', 'icon' => 'bi-trophy', 'label' => 'Awards'],
+            ['route' => 'admin.affiliations.index', 'pattern' => 'admin.affiliations.*', 'icon' => 'bi-diagram-3', 'label' => 'Affiliations'],
             ['route' => 'admin.offices.index', 'pattern' => 'admin.offices.*', 'icon' => 'bi-geo-alt', 'label' => 'Offices'],
             ['route' => 'admin.inquiries.index', 'pattern' => 'admin.inquiries.*', 'icon' => 'bi-envelope', 'label' => 'Inquiries'],
             ['route' => 'admin.settings.index', 'pattern' => 'admin.settings.*', 'icon' => 'bi-gear', 'label' => 'Settings'],
         ];
+        if (auth()->user()?->isSuperAdmin()) {
+            $adminNavItems[] = ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'icon' => 'bi-people', 'label' => 'Users & Roles'];
+        }
     @endphp
 
     <nav class="navbar navbar-dark bg-dark d-md-none px-3">

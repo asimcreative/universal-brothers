@@ -1,11 +1,12 @@
 @extends('layouts.app')
 
 @section('title', ($package->meta_title ?: $package->name . ' | Universal Brothers'))
-@section('meta_description', $package->meta_description ?: Str::limit($package->summary, 160))
+@section('meta_description', $package->meta_description ?: Str::limit($package->publicSummary() ?? '', 160))
 
 @section('content')
-    <div class="bg-primary text-white py-5">
-        <div class="container">
+    <div class="hero-slide" style="min-height: 42vh;">
+        <div class="hero-slide-bg" @if($package->cover_image) style="background-image: url('{{ Storage::url($package->cover_image) }}')" @else style="background-image: linear-gradient(135deg, #101B45, #0A1230)" @endif></div>
+        <div class="container hero-content py-4">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
                     <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
@@ -21,7 +22,10 @@
                 @if(!is_null($package->has_aziziya))<span class="badge bg-light text-dark">{{ $package->has_aziziya ? 'With Aziziya' : 'Non-Aziziya' }}</span>@endif
             </div>
             <h1>{{ $package->name }}</h1>
-            @if($package->summary)<p class="lead mb-0">{{ $package->summary }}</p>@endif
+            @if($package->publicSummary())<p class="lead mb-0" style="max-width: 720px;">{{ $package->publicSummary() }}</p>@endif
+            @if($package->starting_price)
+                <p class="fs-5 fw-semibold mt-2 mb-0 text-white">From {{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}</p>
+            @endif
         </div>
     </div>
 
@@ -35,39 +39,31 @@
                 {{-- Pricing --}}
                 @if($package->priceTiers->isNotEmpty())
                     <h2 class="h4 mt-4 mb-3">Room Type Pricing</h2>
-                    <div class="table-responsive mb-2">
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Room Type</th>
-                                    @foreach($package->priceTiers as $tier)
-                                        <th>{{ $tier->label ?: 'Price' }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(['sharing' => 'Sharing', 'quad' => 'Quad', 'triple' => 'Triple', 'double' => 'Double'] as $type => $label)
-                                    @php
-                                        $rowHasData = $package->priceTiers->contains(fn ($t) => $t->roomPrices->firstWhere('room_type', $type) !== null);
-                                    @endphp
-                                    @if($rowHasData)
-                                        <tr>
-                                            <td class="fw-semibold">{{ $label }} Per Person</td>
-                                            @foreach($package->priceTiers as $tier)
-                                                @php $price = $tier->roomPrices->firstWhere('room_type', $type); @endphp
-                                                <td>
-                                                    @if($price && $price->price !== null)
-                                                        {{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($price->price) }}
-                                                    @else
-                                                        N/A
-                                                    @endif
-                                                </td>
-                                            @endforeach
-                                        </tr>
-                                    @endif
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="row g-3 mb-2">
+                        @foreach($package->priceTiers as $tier)
+                            <div class="col-md-6">
+                                <div class="pricing-card h-100">
+                                    <div class="pricing-card-variant">{{ $tier->label ?: 'Price' }}</div>
+                                    <ul class="list-unstyled mb-0">
+                                        @foreach(['sharing' => 'Sharing', 'quad' => 'Quad', 'triple' => 'Triple', 'double' => 'Double'] as $type => $label)
+                                            @php $price = $tier->roomPrices->firstWhere('room_type', $type); @endphp
+                                            @if($price)
+                                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom border-light-subtle">
+                                                    <span class="small text-muted">{{ $label }} Per Person</span>
+                                                    <span class="fw-semibold">
+                                                        @if($price->price !== null)
+                                                            {{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($price->price) }}
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    </span>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                     <p class="small text-muted fst-italic">Book early — prices and packages are subject to change.</p>
                 @endif
@@ -75,26 +71,28 @@
                 {{-- Itinerary --}}
                 @if($package->itineraryDays->isNotEmpty())
                     <h2 class="h4 mt-4 mb-3">Day-by-Day Itinerary</h2>
-                    <div class="accordion mb-4" id="itineraryAccordion">
+                    <div class="itinerary-timeline mb-4" id="itineraryAccordion">
                         @foreach($package->itineraryDays as $day)
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button {{ $loop->first ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#day{{ $day->id }}">
-                                        Day {{ $day->day_number }}
-                                        @if($day->date_gregorian) — {{ $day->date_gregorian->format('d M Y') }} @endif
-                                        @if($day->date_hijri_label) ({{ $day->date_hijri_label }}) @endif
-                                        @if($day->city) — {{ $day->city }} @endif
-                                    </button>
-                                </h2>
-                                <div id="day{{ $day->id }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" data-bs-parent="#itineraryAccordion">
-                                    <div class="accordion-body">
-                                        <p class="mb-1"><strong>{{ $package->priceTiers->count() > 1 ? 'Package A: ' : '' }}</strong>{{ $day->accommodation_a }}</p>
-                                        @if($day->accommodation_b)
-                                            <p class="mb-1"><strong>Package B:</strong> {{ $day->accommodation_b }}</p>
-                                        @endif
-                                        @if($day->notes)
-                                            <p class="small text-muted mb-0">{{ $day->notes }}</p>
-                                        @endif
+                            <div class="itinerary-day" data-day="{{ $day->day_number }}">
+                                <div class="accordion-item">
+                                    <h3 class="accordion-header">
+                                        <button class="accordion-button {{ $loop->first ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#day{{ $day->id }}">
+                                            Day {{ $day->day_number }}
+                                            @if($day->date_gregorian) — {{ $day->date_gregorian->format('d M Y') }} @endif
+                                            @if($day->date_hijri_label) ({{ $day->date_hijri_label }}) @endif
+                                            @if($day->city) — {{ $day->city }} @endif
+                                        </button>
+                                    </h3>
+                                    <div id="day{{ $day->id }}" class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}" data-bs-parent="#itineraryAccordion">
+                                        <div class="accordion-body">
+                                            <p class="mb-1"><strong>{{ $package->priceTiers->count() > 1 ? 'Package A: ' : '' }}</strong>{{ $day->accommodation_a }}</p>
+                                            @if($day->accommodation_b)
+                                                <p class="mb-1"><strong>Package B:</strong> {{ $day->accommodation_b }}</p>
+                                            @endif
+                                            @if($day->notes)
+                                                <p class="small text-muted mb-0">{{ $day->notes }}</p>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -107,9 +105,9 @@
                     @if($package->inclusions->isNotEmpty())
                         <div class="col-md-6">
                             <h2 class="h5 mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Inclusions</h2>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled inclusion-list">
                                 @foreach($package->inclusions as $inclusion)
-                                    <li class="mb-2"><i class="bi bi-check2 text-success me-2"></i>{{ $inclusion->description }}</li>
+                                    <li><i class="bi bi-check2-circle text-success"></i><span>{{ $inclusion->description }}</span></li>
                                 @endforeach
                             </ul>
                         </div>
@@ -117,57 +115,22 @@
                     @if($package->exclusions->isNotEmpty())
                         <div class="col-md-6">
                             <h2 class="h5 mb-3"><i class="bi bi-x-circle-fill text-danger me-2"></i>Exclusions</h2>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled exclusion-list">
                                 @foreach($package->exclusions as $exclusion)
-                                    <li class="mb-2"><i class="bi bi-dash text-danger me-2"></i>{{ $exclusion->description }}</li>
+                                    <li><i class="bi bi-x-circle text-danger"></i><span>{{ $exclusion->description }}</span></li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
                 </div>
 
-                {{-- Optional add-ons --}}
-                @if($addons->isNotEmpty())
-                    <h2 class="h5 mt-4 mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Optional Add-ons</h2>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr><th>Add-on</th><th>Price</th><th>Notes</th></tr>
-                            </thead>
-                            <tbody>
-                                @foreach($addons as $addon)
-                                    <tr>
-                                        <td>{{ $addon->name }}</td>
-                                        <td>
-                                            @if($addon->price !== null)
-                                                {{ $addon->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($addon->price) }}
-                                                @if($addon->unit) <span class="text-muted small">({{ $addon->unit }})</span> @endif
-                                            @else
-                                                On request
-                                            @endif
-                                        </td>
-                                        <td class="small text-muted">{{ $addon->notes }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
             </div>
 
             <div class="col-lg-4">
                 <div class="sticky-top" style="top: 100px;">
-                    <x-inquiry-form :package="$package" :category="$package->category" title="Inquire About This Package" />
+                    <x-inquiry-form :package="$package" :category="$package->category" title="Enquire About This Package" />
 
-                    @if($related->isNotEmpty())
-                        <h3 class="h6 mt-4 mb-3">Related Packages</h3>
-                        @foreach($related as $r)
-                            <a href="{{ route('packages.show', [$r->category->slug, $r->slug]) }}" class="d-block text-decoration-none mb-2 p-2 border rounded">
-                                <span class="fw-semibold text-dark">{{ $r->name }}</span>
-                                <span class="d-block small text-muted">{{ $r->duration_label }}</span>
-                            </a>
-                        @endforeach
-                    @endif
+                    <x-related-packages :related="$related" />
                 </div>
             </div>
         </div>

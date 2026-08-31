@@ -18,7 +18,10 @@ class DatabaseSeeder extends Seeder
             OfficeSeeder::class,
             SiteSettingSeeder::class,
             FaqSeeder::class,
+            AwardSeeder::class,
+            AffiliationSeeder::class,
             AboutPageSeeder::class,
+            LegalPageSeeder::class,
             AdminUserSeeder::class,
         ]);
     }

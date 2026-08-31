@@ -100,8 +100,62 @@ class NewsCategorySettingsTest extends TestCase
         $this->assertDatabaseHas('site_settings', ['key' => 'years_in_operation', 'value' => '25+']);
     }
 
+    /**
+     * Regression for FINAL_CODE_REVIEW.md H-1: the controller previously did a
+     * raw `SiteSetting::where(...)->update(...)` query-builder mass update,
+     * which bypasses Eloquent model events, so the `saved` hook that forgets
+     * the `Cache::rememberForever` entry never fired — an admin's edit hit the
+     * DB but `SiteSetting::get()` kept serving the stale cached value forever.
+     * This test reads through the cache (as HomeController does), not just
+     * the DB row, so it would have caught the original bug.
+     */
+    public function test_updating_a_site_setting_actually_invalidates_its_cached_value(): void
+    {
+        SiteSetting::set('pilgrims_served', '50,000+');
+        $this->assertSame('50,000+', SiteSetting::get('pilgrims_served'));
+
+        $this->actingAs($this->admin)->put('/admin/settings', [
+            'settings' => ['pilgrims_served' => '60,000+'],
+        ])->assertRedirect();
+
+        $this->assertSame('60,000+', SiteSetting::get('pilgrims_served'));
+    }
+
+    /**
+     * Regression for FINAL_CODE_REVIEW.md M-5: secret-type settings must not
+     * be overwritten with a blank value just because the form intentionally
+     * never echoes the live secret back into the page source.
+     */
+    public function test_submitting_a_blank_secret_setting_keeps_the_existing_value(): void
+    {
+        SiteSetting::set('recaptcha_secret_key', 'existing-secret-value');
+
+        $this->actingAs($this->admin)->put('/admin/settings', [
+            'settings' => ['recaptcha_secret_key' => ''],
+        ])->assertRedirect();
+
+        $this->assertSame('existing-secret-value', SiteSetting::get('recaptcha_secret_key'));
+    }
+
     public function test_guest_cannot_manage_settings(): void
     {
         $this->get('/admin/settings')->assertRedirect('/admin/login');
+    }
+
+    /**
+     * Regression for a MEDIUM finding from the release-gate security audit:
+     * `SiteSettingController::update()` looped over `$request->input('settings', [])`
+     * with no validation at all, and its fallback branch would silently
+     * `SiteSetting::create()` a brand-new row for any key a tampered request
+     * submitted — an unvalidated write path with no key allow-list. Only
+     * keys that already exist as real SiteSetting rows may now be touched.
+     */
+    public function test_submitting_an_unknown_setting_key_does_not_create_a_new_row(): void
+    {
+        $this->actingAs($this->admin)->put('/admin/settings', [
+            'settings' => ['a_key_that_does_not_exist' => 'injected value'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseMissing('site_settings', ['key' => 'a_key_that_does_not_exist']);
     }
 }

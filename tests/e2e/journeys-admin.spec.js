@@ -39,6 +39,14 @@ test.describe('Full business journeys — admin', () => {
         await page.goto('/admin/pages');
         await page.getByRole('row', { name: /About Us/ }).getByRole('link', { name: 'Edit' }).click();
 
+        // About Us is a real, persistent singleton page (not delete-able like
+        // a test package), so its original real-seeded body must be captured
+        // and restored afterward — a previous version of this test
+        // overwrote it with a throwaway marker and never restored it,
+        // corrupting the real content for every other test/manual check
+        // that depends on it until the next `db:seed`.
+        const originalBody = await page.locator('textarea[name="body"]').inputValue();
+
         const marker = 'Journey E marker ' + Date.now();
         await page.locator('textarea[name="body"]').fill('<p>' + marker + '</p>');
         await page.locator('input[name="is_active"]').check();
@@ -48,5 +56,11 @@ test.describe('Full business journeys — admin', () => {
         const response = await page.goto('/about-us');
         expect(response.status()).toBe(200);
         await expect(page.getByText(marker)).toBeVisible();
+
+        // Cleanup: restore the real content.
+        await page.goto('/admin/pages');
+        await page.getByRole('row', { name: /About Us/ }).getByRole('link', { name: 'Edit' }).click();
+        await page.locator('textarea[name="body"]').fill(originalBody);
+        await page.getByRole('button', { name: 'Update Page' }).click();
     });
 });

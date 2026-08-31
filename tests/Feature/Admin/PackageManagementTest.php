@@ -59,6 +59,45 @@ class PackageManagementTest extends TestCase
         $this->assertEquals(13850, $package->fresh()->starting_price);
     }
 
+    /**
+     * Regression for a release-gate CRITICAL/HIGH-adjacent finding
+     * (FINAL_CODE_REVIEW_FRONTEND_REDESIGN-follow-up review): `tiers.*.prices`
+     * validation only describes the 4 real room-type keys without rejecting
+     * an unlisted one, and the controller read raw `$request->input('tiers')`
+     * rather than `$request->safe()` — so a submission containing an
+     * unrecognized key under `prices` (unreachable through the shipped
+     * admin form, but not blocked server-side either) would have reached
+     * `roomPrices()->create()` and thrown an unhandled QueryException against
+     * `package_room_prices.room_type`'s DB-level enum, mid-sync, after the
+     * package's old itinerary/pricing had already been deleted. The
+     * controller now filters to the known room-type keys before creating
+     * any row, and the whole sync runs inside a transaction as a second
+     * layer of protection.
+     */
+    public function test_an_unknown_room_type_key_is_silently_ignored_not_a_crash(): void
+    {
+        $category = PackageCategory::factory()->create(['slug' => 'hajj']);
+
+        $response = $this->actingAs($this->admin)->post('/admin/packages', [
+            'package_category_id' => $category->id,
+            'code' => 'UB998',
+            'name' => 'Test Unknown Room Type Package',
+            'slug' => 'test-unknown-room-type-package',
+            'currency' => 'USD',
+            'status' => 'published',
+            'tiers' => [
+                ['label' => 'Package A', 'prices' => ['quad' => '13850', 'king' => '99999']],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.packages.index'));
+
+        $package = Package::where('code', 'UB998')->firstOrFail();
+        $this->assertSame(1, $package->priceTiers()->first()->roomPrices()->count());
+        $this->assertDatabaseHas('package_room_prices', ['room_type' => 'quad', 'price' => 13850]);
+        $this->assertDatabaseMissing('package_room_prices', ['room_type' => 'king']);
+    }
+
     public function test_admin_can_update_a_package_and_nested_data_is_replaced_not_duplicated(): void
     {
         $category = PackageCategory::factory()->create(['slug' => 'hajj']);
@@ -134,5 +173,32 @@ class PackageManagementTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('slug');
+    }
+
+    /**
+     * Regression for FINAL_CODE_REVIEW.md H-4: Package uses SoftDeletes, but
+     * the slug/code uniqueness rules checked the raw table without excluding
+     * trashed rows — an admin who deleted a package and tried to recreate it
+     * with the same slug/code got an unrecoverable "already taken" error
+     * pointing at a record they can no longer see anywhere in the UI.
+     */
+    public function test_a_soft_deleted_packages_slug_and_code_can_be_reused(): void
+    {
+        $category = PackageCategory::factory()->create();
+        $old = Package::factory()->create(['package_category_id' => $category->id, 'slug' => 'reused-slug', 'code' => 'UB-REUSE']);
+        $old->delete();
+        $this->assertSoftDeleted($old);
+
+        $response = $this->actingAs($this->admin)->post('/admin/packages', [
+            'package_category_id' => $category->id,
+            'code' => 'UB-REUSE',
+            'name' => 'Recreated Package',
+            'slug' => 'reused-slug',
+            'currency' => 'USD',
+            'status' => 'draft',
+        ]);
+
+        $response->assertRedirect(route('admin.packages.index'));
+        $this->assertDatabaseHas('packages', ['slug' => 'reused-slug', 'code' => 'UB-REUSE', 'deleted_at' => null]);
     }
 }

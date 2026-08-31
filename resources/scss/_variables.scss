@@ -6,6 +6,7 @@ $ub-navy: #101b45;
 $ub-navy-dark: #0a1230;
 $ub-gold: #c9a227;
 $ub-gold-light: #e8c766;
+$ub-gold-dark: #7a5f14; // ~6:1 contrast on white — for gold text/links on light backgrounds ($ub-gold itself is only ~2.4:1, safe on dark backgrounds only)
 $ub-cream: #f7f3e8;
 
 $primary: $ub-navy;
@@ -23,3 +24,40 @@ $border-radius-sm: 0.375rem;
 
 $enable-shadows: true;
 $link-decoration: none;
+
+// ---------------------------------------------------------------------
+// Premium design-system tokens (frontend visual redesign, 2026-08-30)
+// ---------------------------------------------------------------------
+// A small, deliberately limited shadow/spacing/motion scale so every new
+// section draws from the same vocabulary instead of one-off inline values
+// — the difference between a site that looks "intentionally designed" and
+// one that looks "generated from repeated Bootstrap rows".
+
+// Shadows: soft/resting, elevated/hover, deep/hero-overlay. Kept subtle —
+// this is a premium travel brand, not a flat design-system showcase.
+$ub-shadow-sm: 0 2px 12px rgba(16, 27, 69, 0.06);
+$ub-shadow-md: 0 10px 30px rgba(16, 27, 69, 0.10);
+$ub-shadow-lg: 0 20px 50px rgba(16, 27, 69, 0.16);
+
+// Section vertical rhythm — deliberately larger than Bootstrap's own
+// spacer scale tops out (spacer * 3 = 4.5rem) so full-bleed sections read
+// as generously spaced rather than cramped.
+$ub-section-py: 6rem;
+$ub-section-py-sm: 3.5rem;
+
+// Eyebrow label (small uppercase kicker above a heading) — used across
+// every section header for consistent visual rhythm.
+$ub-eyebrow-letter-spacing: 0.12em;
+
+// Motion — a single easing/duration vocabulary for the whole animation
+// system (`_animations.scss`), so no two sections invent their own timing.
+$ub-ease: cubic-bezier(0.22, 1, 0.36, 1);
+$ub-duration-fast: 0.25s;
+$ub-duration-base: 0.6s;
+$ub-duration-slow: 0.9s;
+
+// Gradients — the recurring navy overlay used on hero/CTA imagery, defined
+// once so hero, package hero, and final-CTA sections stay visually related.
+@function ub-navy-overlay($from: 0.82, $to: 0.55) {
+    @return linear-gradient(180deg, rgba($ub-navy-dark, $from) 0%, rgba($ub-navy-dark, $to) 100%);
+}

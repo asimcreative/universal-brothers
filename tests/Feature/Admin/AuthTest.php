@@ -64,6 +64,33 @@ class AuthTest extends TestCase
         $this->assertGuest();
     }
 
+    /**
+     * Regression for a release-gate code-review finding: `AuthController::login()`
+     * previously called `Auth::attempt()` + `session()->regenerate()` +
+     * `redirect()->intended()` for a deactivated account, succeeding at the
+     * login form itself — only `EnsureUserIsAdmin` caught it one request
+     * later, logging the user straight back out. That still works (see the
+     * test above), but a session/remember-cookie was briefly issued for an
+     * account that should never receive one. The login form itself must
+     * now reject a deactivated account before ever regenerating the session.
+     */
+    public function test_login_rejects_a_deactivated_account_before_establishing_a_session(): void
+    {
+        $user = User::factory()->create([
+            'role' => 'super_admin',
+            'is_active' => false,
+            'password' => bcrypt('password'),
+        ]);
+
+        $response = $this->post('/admin/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
     public function test_admin_can_log_out(): void
     {
         $user = User::factory()->create(['role' => 'super_admin', 'is_active' => true]);

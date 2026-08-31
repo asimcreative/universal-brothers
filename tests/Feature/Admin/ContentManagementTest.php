@@ -76,6 +76,42 @@ class ContentManagementTest extends TestCase
         $this->assertDatabaseHas('testimonials', ['name' => 'Test Reviewer', 'sort_order' => 0]);
     }
 
+    /**
+     * Regression for FINAL_CODE_REVIEW_FRONTEND_REDESIGN.md H-1: the video
+     * testimonial fields (`video_url`/`video_thumbnail`/`package_label`)
+     * were added to `Testimonial::$fillable` and fully consumed by the
+     * public pages, but the admin form/validation were never updated to
+     * match — every video field was silently dropped before `create()`,
+     * behind a false "Testimonial created." success message.
+     */
+    public function test_admin_can_create_a_video_testimonial_and_it_renders_publicly(): void
+    {
+        Storage::fake('public');
+
+        $response = $this->actingAs($this->admin)->post('/admin/testimonials', [
+            'name' => 'Video Pilgrim',
+            'quote' => 'Watch my story.',
+            'service_tag' => 'hajj',
+            'package_label' => 'UB001 — Platinum Hajj',
+            'video_url' => 'https://www.youtube.com/embed/real-video',
+            'video_thumbnail' => UploadedFile::fake()->image('thumb.jpg'),
+            'sort_order' => 0,
+            'is_active' => '1',
+        ]);
+
+        $response->assertRedirect(route('admin.testimonials.index'));
+        $testimonial = Testimonial::where('name', 'Video Pilgrim')->firstOrFail();
+        $this->assertSame('https://www.youtube.com/embed/real-video', $testimonial->video_url);
+        $this->assertSame('UB001 — Platinum Hajj', $testimonial->package_label);
+        $this->assertNotNull($testimonial->video_thumbnail);
+        Storage::disk('public')->assertExists($testimonial->video_thumbnail);
+
+        $publicResponse = $this->get('/testimonials');
+        $publicResponse->assertOk();
+        $publicResponse->assertSee('Video Pilgrim');
+        $publicResponse->assertSee($testimonial->video_url, false);
+    }
+
     public function test_admin_can_create_a_slider_leaving_sort_order_blank(): void
     {
         Storage::fake('public');

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Office;
 use App\Models\PackageCategory;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -24,9 +25,31 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer('layouts.partials.*', function ($view) {
-            $view->with('navCategories', PackageCategory::where('is_active', true)->orderBy('sort_order')->get());
-            $view->with('primaryOffice', Office::where('is_active', true)->orderBy('sort_order')->first());
+        // Found during the frontend visual redesign's screenshot review:
+        // Laravel's paginator defaults to its Tailwind view (`sm:hidden` /
+        // `hidden sm:flex` classes), but this project only ever loads
+        // Bootstrap — with no Tailwind CSS present, those responsive
+        // visibility classes do nothing, so the "mobile" and "desktop"
+        // pagination variants (and their oversized, unstyled SVG arrows)
+        // rendered simultaneously on every paginated listing. Switching to
+        // Laravel's bundled Bootstrap 5 pagination view matches the CSS
+        // framework this project actually uses.
+        Paginator::defaultView('pagination::bootstrap-5');
+        Paginator::defaultSimpleView('pagination::simple-bootstrap-5');
+
+        // Bound as singletons (not queried directly in the closure) so the
+        // header, footer, and layouts.app JSON-LD block — all matched by this
+        // one composer — share a single query each per request instead of
+        // querying again on every view it's attached to (see
+        // FINAL_CODE_REVIEW.md M-6).
+        $this->app->singleton('nav-categories', fn () => PackageCategory::where('is_active', true)->orderBy('sort_order')->get());
+        $this->app->singleton('primary-office', fn () => Office::where('is_active', true)->orderBy('sort_order')->first());
+
+        // 'contact' added for the frontend visual redesign's quick-action
+        // Call/WhatsApp/Email cards — reuses the same singleton, no extra query.
+        View::composer(['layouts.partials.*', 'layouts.app', 'contact'], function ($view) {
+            $view->with('navCategories', app('nav-categories'));
+            $view->with('primaryOffice', app('primary-office'));
         });
 
         // Named limiters so the contact form, inquiry form, and admin login

@@ -28,6 +28,20 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
+        // Checked here too (not just in EnsureUserIsAdmin), so a deactivated
+        // account never gets a session/remember-cookie issued in the first
+        // place — previously it would briefly log in, then get bounced back
+        // out one request later by the admin middleware, a confusing UX and
+        // an unnecessary session grant for an account that should never
+        // receive one (release-gate QA finding).
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Your account is not active. Contact a super admin.',
+            ])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('admin.dashboard'));

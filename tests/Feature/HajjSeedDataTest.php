@@ -41,8 +41,12 @@ class HajjSeedDataTest extends TestCase
         $response->assertOk();
         $response->assertSee('Dar Al Tawhid Intercontinental');
         $response->assertSee('Fairmont Clock Tower');
-        $response->assertSee('26,850');
-        $response->assertSee('18,100');
+        // Prices render client-side from data attributes (currency
+        // switcher), not server-formatted text — assert the raw values the
+        // brochure prints for UB001's Package A Double ($26,850) and
+        // Package B Triple ($18,100).
+        $response->assertSee('data-usd="26850.00"', false);
+        $response->assertSee('data-usd="18100.00"', false);
         $response->assertSee('Zone 1 near to Jamarat A Category', false);
     }
 

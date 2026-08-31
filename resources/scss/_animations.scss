@@ -1,0 +1,84 @@
+// Premium animation system (frontend visual redesign, 2026-08-30).
+//
+// A small, named vocabulary of entrance/hover animations, all built on top
+// of the project's existing `.reveal-on-scroll` + `prefers-reduced-motion`
+// pattern (see `_components.scss`) rather than inventing a second, parallel
+// motion system. Every keyframe/transition here is gated the same way:
+// instant, final-state rendering when the user has reduced motion set.
+
+@keyframes ub-fade-up {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ub-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes ub-scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+// Hero entrance — the whole hero content block fades/lifts in as one
+// short, fast pass (not scroll-triggered, since the hero is always in
+// view immediately). A per-child staggered version was tried first but
+// measured out to ~1.5-2s before the LAST element became visible (delay +
+// duration compounding across 5 children, plus real paint/layout latency
+// on a content-heavy homepage) — long enough that a real visitor could
+// briefly see a blank hero, which is exactly what "animation must never
+// delay usability" rules out. A single fast animation on the container
+// itself has no such compounding and resolves well under half a second.
+.hero-anim {
+    opacity: 0;
+    animation: ub-fade-up 0.5s $ub-ease forwards;
+}
+
+// Scroll-reveal with a stagger modifier — same mechanism as the existing
+// `.reveal-on-scroll` (IntersectionObserver adds `.is-visible` in app.js),
+// just with an optional per-element delay for grids of cards/pillars so
+// they cascade in rather than all popping at once.
+.reveal-on-scroll {
+    &.reveal-delay-1 { transition-delay: 0.08s; }
+    &.reveal-delay-2 { transition-delay: 0.16s; }
+    &.reveal-delay-3 { transition-delay: 0.24s; }
+    &.reveal-delay-4 { transition-delay: 0.32s; }
+    &.reveal-delay-5 { transition-delay: 0.4s; }
+    &.reveal-delay-6 { transition-delay: 0.48s; }
+}
+
+// A gentler variant of `.reveal-on-scroll` for large imagery — scale+fade
+// instead of translate, so a full-bleed photo doesn't "slide" into place.
+.reveal-scale {
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity $ub-duration-base $ub-ease, transform $ub-duration-base $ub-ease;
+
+    &.is-visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+// Subtle parallax for hero/section background imagery — a slow, small
+// vertical drift driven by scroll position (see app.js `initParallax`).
+// Capped to a few pixels so it reads as "premium depth", not a gimmick,
+// and disabled entirely under reduced motion (handled in JS, not just CSS,
+// since this is scroll-driven rather than a CSS transition/animation).
+.parallax-layer {
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-anim {
+        opacity: 1;
+        animation: none;
+    }
+
+    .reveal-scale {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}

@@ -7,6 +7,21 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Universal Brothers (Pvt) Ltd — Project Documentation
+
+This repository is the Universal Brothers (Hajj/Umrah/Tourism operator) website build. All project-specific documentation — as opposed to the standard Laravel framework docs below — lives under [`docs/`](docs/), organized as:
+
+- [`docs/source-documents/`](docs/source-documents/) — the original client-supplied brochure/proposal/website-flow documents (PDF/DOCX) and their extracted Markdown, treated as ground truth for all business content.
+- [`docs/architecture/`](docs/architecture/) — [`ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md), [`DATABASE_DESIGN.md`](docs/architecture/DATABASE_DESIGN.md), [`UI_DESIGN_SYSTEM.md`](docs/architecture/UI_DESIGN_SYSTEM.md).
+- [`docs/requirements/`](docs/requirements/) — [`PROJECT_REQUIREMENTS.md`](docs/requirements/PROJECT_REQUIREMENTS.md), [`REQUIREMENTS_TRACEABILITY.md`](docs/requirements/REQUIREMENTS_TRACEABILITY.md), [`FRONTEND_IMPLEMENTATION_PLAN.md`](docs/requirements/FRONTEND_IMPLEMENTATION_PLAN.md).
+- [`docs/audits/`](docs/audits/) — every review/audit pass: [`FINAL_AUDIT_REPORT.md`](docs/audits/FINAL_AUDIT_REPORT.md) (start here for overall project status and the release-gate decision), [`FINAL_GAP_ANALYSIS.md`](docs/audits/FINAL_GAP_ANALYSIS.md), [`FRONTEND_QA.md`](docs/audits/FRONTEND_QA.md), [`SECURITY_AUDIT.md`](docs/audits/SECURITY_AUDIT.md), [`PERFORMANCE_AUDIT.md`](docs/audits/PERFORMANCE_AUDIT.md), [`FRONTEND_ACCESSIBILITY_AUDIT.md`](docs/audits/FRONTEND_ACCESSIBILITY_AUDIT.md), [`RESPONSIVE_QA.md`](docs/audits/RESPONSIVE_QA.md), [`SEO_CHECKLIST.md`](docs/audits/SEO_CHECKLIST.md), the three `FINAL_CODE_REVIEW*.md` independent code-review passes, and the historical [`EXISTING_WEBSITE_AUDIT.md`](docs/audits/EXISTING_WEBSITE_AUDIT.md)/[`PROJECT_DISCOVERY.md`](docs/audits/PROJECT_DISCOVERY.md).
+- [`docs/testing/`](docs/testing/) — [`REGRESSION_TEST_RESULTS.md`](docs/testing/REGRESSION_TEST_RESULTS.md), the full chronological PHPUnit/Playwright/E2E regression log.
+- [`docs/data/`](docs/data/) — [`HAJJ_PACKAGE_DATA_AUDIT.md`](docs/data/HAJJ_PACKAGE_DATA_AUDIT.md), the per-package Hajj brochure-vs-database verification record.
+
+**Current status, business decisions, and remaining blockers**: see `FINAL_AUDIT_REPORT.md`'s Release Gate section (§21 onward) for the authoritative, up-to-date summary.
+
+---
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

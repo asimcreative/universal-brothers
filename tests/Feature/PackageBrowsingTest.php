@@ -40,6 +40,56 @@ class PackageBrowsingTest extends TestCase
         $response->assertDontSee('Hidden Draft Package');
     }
 
+    /**
+     * Regression (frontend visual redesign, 2026-08-30): all 35 real seeded
+     * Tourism packages have `summary` literally set to an internal
+     * data-recovery note ("Recovered from the live tourism...listing
+     * pages... this content could not be recovered and is not invented
+     * here") — honest, deliberate, but written for an internal audience,
+     * not a visitor. It was rendering verbatim on the listing card, the
+     * detail page hero, and the SEO meta description. `Package::publicSummary()`
+     * substitutes an honest "still being finalized" line for that one
+     * known string while leaving every other real summary untouched.
+     */
+    public function test_the_internal_recovery_note_never_reaches_a_visitor(): void
+    {
+        $category = PackageCategory::factory()->create(['name' => 'Tourism', 'slug' => 'tourism']);
+        $package = Package::factory()->create([
+            'package_category_id' => $category->id,
+            'name' => 'Skardu Tour',
+            'summary' => 'Recovered from the live tourism.universalbrothers.com listing pages. Full itinerary, inclusions, and hotel details pending — every individual product detail page on the live site currently returns a server error, so this content could not be recovered and is not invented here.',
+        ]);
+
+        $listing = $this->get('/tourism');
+        $listing->assertOk();
+        $listing->assertDontSee('is not invented here');
+
+        $detail = $this->get('/tourism/'.$package->slug);
+        $detail->assertOk();
+        $detail->assertDontSee('is not invented here');
+        $detail->assertDontSee('server error');
+
+        $this->assertSame(
+            'Recovered from the live tourism.universalbrothers.com listing pages. Full itinerary, inclusions, and hotel details pending — every individual product detail page on the live site currently returns a server error, so this content could not be recovered and is not invented here.',
+            $package->fresh()->summary,
+            'the raw column must stay untouched — only the public-facing render is substituted'
+        );
+    }
+
+    public function test_a_real_summary_is_shown_unchanged(): void
+    {
+        $category = PackageCategory::factory()->create(['name' => 'Umrah', 'slug' => 'umrah']);
+        $package = Package::factory()->create([
+            'package_category_id' => $category->id,
+            'summary' => 'A comfortable 10-night Umrah package with direct Madinah arrival.',
+        ]);
+
+        $response = $this->get('/umrah/'.$package->slug);
+
+        $response->assertOk();
+        $response->assertSee('A comfortable 10-night Umrah package with direct Madinah arrival.');
+    }
+
     public function test_unknown_category_returns_404(): void
     {
         $response = $this->get('/not-a-real-category');
@@ -47,6 +97,13 @@ class PackageBrowsingTest extends TestCase
         $response->assertNotFound();
     }
 
+    /**
+     * Rewritten for the redesigned Hajj package data model (see
+     * HajjPackagePublicTest.php for the full new-schema coverage) — Hajj
+     * packages route to a dedicated view (PackageController::showHajj())
+     * that reads roomOptions/variants, not the generic priceTiers/
+     * roomPrices tables this test originally exercised.
+     */
     public function test_package_detail_page_shows_itinerary_and_pricing(): void
     {
         $category = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);
@@ -63,8 +120,10 @@ class PackageBrowsingTest extends TestCase
             'accommodation_a' => 'Dar Al Taqwa ★★★★★',
         ]);
 
-        $tier = $package->priceTiers()->create(['label' => 'Package A — Test Hotel']);
-        $tier->roomPrices()->create(['room_type' => 'double', 'price' => 26850, 'currency' => 'USD']);
+        $package->roomOptions()->create([
+            'sharing_type' => 'double', 'display_label' => 'Double Sharing', 'occupancy' => 2,
+            'price_basis' => 'per_person', 'price_usd' => 26850, 'is_available' => true,
+        ]);
 
         $package->inclusions()->create(['type' => 'inclusion', 'description' => 'Meet & assist at the airport']);
         $package->exclusions()->create(['type' => 'exclusion', 'description' => 'Airline ticket']);
@@ -75,52 +134,40 @@ class PackageBrowsingTest extends TestCase
         $response->assertSee('Executive Platinum Test Package');
         $response->assertSee('UB001');
         $response->assertSee('Dar Al Taqwa');
-        $response->assertSee('26,850');
+        $response->assertSee('data-usd="26850.00"', false);
         $response->assertSee('Meet &amp; assist at the airport', false);
         $response->assertSee('Airline ticket');
     }
 
-    public function test_package_detail_shows_category_wide_addons(): void
-    {
-        $category = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);
-        $package = Package::factory()->create(['package_category_id' => $category->id]);
-
-        \App\Models\PackageAddon::create([
-            'package_category_id' => $category->id,
-            'name' => 'Kaba view supplement',
-            'price' => 2200,
-            'currency' => 'USD',
-            'unit' => 'per person',
-            'is_active' => true,
-        ]);
-
-        $response = $this->get('/hajj/'.$package->slug);
-
-        $response->assertOk();
-        $response->assertSee('Optional Add-ons');
-        $response->assertSee('Kaba view supplement');
-        $response->assertSee('2,200');
-    }
-
-    public function test_package_detail_only_shows_addons_matching_its_own_aziziya_status(): void
+    /**
+     * Rewritten for the redesigned Hajj package data model: upgrades (e.g.
+     * Kaba view supplement) are now real per-package rows in
+     * `package_upgrades` with the package's own correct value, rather than
+     * category-wide PackageAddon rows matched by string-searching the
+     * addon's name for "(Non-Aziziya series)"/"(Aziziya series)" — real FK
+     * scoping makes the old name-matching test moot (see
+     * FINAL_CODE_REVIEW.md-style reasoning: the correct value is
+     * structurally guaranteed per package, not filtered post hoc).
+     */
+    public function test_package_detail_shows_its_own_upgrade_with_the_correct_value(): void
     {
         $category = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);
         $nonAziziyaPackage = Package::factory()->create(['package_category_id' => $category->id, 'has_aziziya' => false]);
+        $aziziyaPackage = Package::factory()->create(['package_category_id' => $category->id, 'has_aziziya' => true, 'slug' => 'aziziya-test-package']);
 
-        \App\Models\PackageAddon::create([
-            'package_category_id' => $category->id, 'name' => 'Kaba view supplement (Non-Aziziya series)',
-            'price' => 2200, 'currency' => 'USD', 'is_active' => true,
-        ]);
-        \App\Models\PackageAddon::create([
-            'package_category_id' => $category->id, 'name' => 'Kaba view supplement (Aziziya series)',
-            'price' => 1050, 'currency' => 'USD', 'is_active' => true,
-        ]);
+        $nonAziziyaPackage->upgrades()->create(['name' => 'Kaba view supplement', 'price' => 2200, 'currency' => 'USD', 'price_basis' => 'per person']);
+        $aziziyaPackage->upgrades()->create(['name' => 'Kaba view supplement', 'price' => 1050, 'currency' => 'USD', 'price_basis' => 'per person']);
 
-        $response = $this->get('/hajj/'.$nonAziziyaPackage->slug);
+        $nonAziziyaResponse = $this->get('/hajj/'.$nonAziziyaPackage->slug);
+        $nonAziziyaResponse->assertOk();
+        $nonAziziyaResponse->assertSee('Optional Upgrades');
+        $nonAziziyaResponse->assertSee('Kaba view supplement');
+        $nonAziziyaResponse->assertSee('data-usd="2200.00"', false);
 
-        $response->assertOk();
-        $response->assertSee('Kaba view supplement (Non-Aziziya series)');
-        $response->assertDontSee('Kaba view supplement (Aziziya series)');
+        $aziziyaResponse = $this->get('/hajj/'.$aziziyaPackage->slug);
+        $aziziyaResponse->assertOk();
+        $aziziyaResponse->assertSee('data-usd="1050.00"', false);
+        $aziziyaResponse->assertDontSee('data-usd="2200.00"', false);
     }
 
     public function test_draft_package_detail_returns_404(): void

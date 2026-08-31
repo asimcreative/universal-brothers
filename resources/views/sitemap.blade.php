@@ -10,6 +10,41 @@
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>
+    <url>
+        <loc>{{ route('hajj-services') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>{{ route('umrah-services') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>{{ route('awards') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>{{ route('affiliations') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>{{ route('media') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>{{ route('testimonials') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>{{ route('faqs') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
     @foreach($categories as $category)
     <url>
         <loc>{{ route('packages.category', $category->slug) }}</loc>
@@ -31,6 +66,14 @@
         <lastmod>{{ $page->updated_at->toAtomString() }}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
+    </url>
+    @endforeach
+    @foreach($news as $article)
+    <url>
+        <loc>{{ route('news.show', $article->slug) }}</loc>
+        <lastmod>{{ $article->updated_at->toAtomString() }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
     </url>
     @endforeach
 </urlset>

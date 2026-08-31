@@ -15,24 +15,23 @@ class AboutPageSeeder extends Seeder
 {
     public function run(): void
     {
+        // Awards and affiliations are deliberately NOT repeated here as flat
+        // lists any more — the About Us page (template 'about') now renders
+        // them as dedicated, structured sections sourced from the real
+        // Award/Affiliation models (AwardSeeder/AffiliationSeeder), so this
+        // body focuses on the company's own "Beginning" narrative, real
+        // leadership facts, and the "why choose us" points that don't have
+        // their own model/section elsewhere. Affiliation names used to be
+        // enumerated in the paragraph below too — removed (see
+        // FINAL_CODE_REVIEW_FRONTEND_REDESIGN.md M-7) since they now render
+        // once, in the dedicated Affiliations section further down the page.
         $body = <<<'HTML'
 <p>Universal Brothers (Pvt) Ltd is a company of Maxim's Group, operating as an Umrah &amp; Hajj Organizer and Travel &amp; Tours Operator under the brand "Crown Packages" — <strong>The Leader &amp; Trend Setter</strong>.</p>
 
-<p>With more than <strong>20 years</strong> in operation, Universal Brothers has served over <strong>50,000 pilgrims</strong>, earning recognition as an IATA-registered travel agency licensed and affiliated with the Ministry of Religious Affairs (Pakistan), TAAP, PHGOC, ELAF, FPCCI, HOAP, DTS, SECP and KCCI.</p>
+<p>With more than <strong>20 years</strong> in operation, Universal Brothers has served over <strong>10,000 Hajis</strong>, earning recognition as an IATA-registered travel agency.</p>
 
 <h2>Leadership</h2>
 <p>The company is led by <strong>Furqan Abdul Qadir</strong> (Chief Executive) and <strong>Junaid Abdul Qadir</strong> (Director) — sons of Maxim's Group founder Abdul Qadir.</p>
-
-<h2>Recognition</h2>
-<ul>
-<li>FPCCI Achievement Award (Gold Medal)</li>
-<li>Who's Who Pakistan Award</li>
-<li>Quality Standard Award</li>
-<li>Best Hajj Operator in Pakistan — World Hajj &amp; Umrah Convention (WHUC), London Olympia</li>
-<li>Consumers Choice Award</li>
-<li>Brand Icon of Pakistan Award (2010–2011)</li>
-<li>Brands of the Year Award — 25 years of excellence</li>
-</ul>
 
 <h2>Why Choose Universal Brothers</h2>
 <ul>
@@ -54,7 +53,7 @@ HTML;
                 'is_active' => true,
                 'published_at' => now(),
                 'meta_title' => 'About Us | Universal Brothers',
-                'meta_description' => 'Universal Brothers (Pvt) Ltd — 20+ years of trusted Hajj, Umrah and Tourism service, 50,000+ pilgrims served, IATA-registered.',
+                'meta_description' => 'Universal Brothers (Pvt) Ltd — 20+ years of trusted Hajj, Umrah and Tourism service, 10,000+ Hajis served, IATA-registered.',
             ]
         );
     }

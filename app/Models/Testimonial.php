@@ -10,8 +10,8 @@ class Testimonial extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'quote', 'service_tag', 'rating', 'photo', 'source',
-        'sort_order', 'is_active',
+        'name', 'quote', 'service_tag', 'package_label', 'rating', 'photo',
+        'video_url', 'video_thumbnail', 'source', 'sort_order', 'is_active',
     ];
 
     protected function casts(): array

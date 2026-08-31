@@ -9,6 +9,7 @@ use App\Models\PackageCategory;
 use App\Models\PackageSeries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -104,7 +105,24 @@ class PackageController extends Controller
         }
     }
 
+    /**
+     * Wraps the delete-then-recreate nested sync in a transaction so a
+     * mid-loop failure (e.g. a DB-level constraint violation) can't leave
+     * a package's itinerary/pricing/inclusions partially deleted with no
+     * replacement — the same real data-loss risk this codebase already
+     * found and fixed once for the Hajj admin controller (see
+     * FINAL_CODE_REVIEW_HAJJ_REDESIGN.md C-1). This generic controller had
+     * the identical unguarded pattern, just never independently reviewed
+     * until now.
+     */
     private function syncNestedData(Package $package, Request $request): void
+    {
+        DB::transaction(function () use ($package, $request) {
+            $this->syncNestedDataWithinTransaction($package, $request);
+        });
+    }
+
+    private function syncNestedDataWithinTransaction(Package $package, Request $request): void
     {
         $package->itineraryDays()->delete();
         foreach ($request->input('itinerary', []) as $row) {
@@ -122,8 +140,15 @@ class PackageController extends Controller
         }
 
         $package->priceTiers()->delete();
+        // package_room_prices.room_type is a DB-level enum('sharing','quad',
+        // 'triple','double') — filtering to that exact key-set here (not
+        // just via the request validation rules, which only describe the 4
+        // known keys without rejecting an unlisted one) guarantees no other
+        // value can ever reach the create() call and throw an unhandled
+        // QueryException mid-sync, regardless of what a request contains.
+        $knownRoomTypes = ['sharing', 'quad', 'triple', 'double'];
         foreach ($request->input('tiers', []) as $tierIndex => $tier) {
-            $prices = $tier['prices'] ?? [];
+            $prices = array_intersect_key($tier['prices'] ?? [], array_flip($knownRoomTypes));
             if (collect($prices)->filter(fn ($p) => $p !== null && $p !== '')->isEmpty()) {
                 continue;
             }

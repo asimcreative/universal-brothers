@@ -19,9 +19,9 @@ class PackageRequest extends FormRequest
         return [
             'package_category_id' => ['required', 'exists:package_categories,id'],
             'package_series_id' => ['nullable', 'exists:package_series,id'],
-            'code' => ['nullable', 'string', 'max:50', Rule::unique('packages', 'code')->ignore($packageId)],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('packages', 'code')->ignore($packageId)->where(fn ($query) => $query->whereNull('deleted_at'))],
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('packages', 'slug')->ignore($packageId)],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('packages', 'slug')->ignore($packageId)->where(fn ($query) => $query->whereNull('deleted_at'))],
             'summary' => ['nullable', 'string', 'max:1000'],
             'description' => ['nullable', 'string'],
             'duration_days' => ['nullable', 'integer', 'min:1', 'max:60'],

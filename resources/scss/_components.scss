@@ -1,6 +1,61 @@
 // Site-specific component styles layered on top of Bootstrap 5.
 // Filled in per UI_DESIGN_SYSTEM.md as each component is built.
 
+// This theme redefines Bootstrap's `$secondary` SASS variable to the brand
+// gold (`$ub-gold`) for buttons/badges — correct there, since Bootstrap
+// auto-picks a readable dark foreground for `.btn-secondary`/`.badge`. But
+// Bootstrap's own `.text-secondary` utility just paints literal text in
+// `$secondary`, and gold body text on a white/light card or section
+// measures ~2.4:1 contrast — well under the WCAG AA minimum (4.5:1 normal
+// text, 3:1 large text). This project's own body copy uses `.text-secondary`
+// throughout for ordinary paragraph text (package cards, testimonials, every
+// new redesign page), so the safe fix is a readable-gray override for the
+// TEXT utility specifically, leaving `$secondary`/buttons/badges untouched.
+.text-secondary {
+    color: rgba(33, 37, 41, 0.75) !important;
+}
+
+// Dark backgrounds (the footer, and any `.bg-primary`/`.text-white` section —
+// e.g. the homepage's Hajj Feature/Final-CTA blocks) already measure a safe
+// ~7.6-11:1 gold-on-navy contrast — restore the brand gold there
+// specifically, since the generic override above is for light backgrounds.
+// Without this, any `.text-secondary` usage nested inside one of those
+// sections (including raw admin-authored CMS body HTML rendered under a
+// `bg-primary` banner — see `page.blade.php`) would silently repaint as
+// dark-gray-on-navy, worse than the original light-background bug.
+.site-footer .text-secondary,
+.bg-primary .text-secondary,
+.bg-dark .text-secondary,
+.text-white .text-secondary {
+    color: $ub-gold-light !important;
+}
+
+// Bootstrap's offcanvas (mobile nav) stays a fixed-position element even
+// while closed off-screen via `transform` — some browsers still count that
+// transformed box toward the root's scrollable overflow, producing a false
+// "horizontal overflow" at narrow widths.
+//
+// `overflow-x: hidden` (the original fix) was replaced with `clip` here
+// (frontend visual redesign, 2026-08-30): CSS requires that if either axis
+// is non-`visible`, the *other* axis's computed value is force-promoted
+// from `visible` to `auto`, even if `overflow-y: visible` is declared
+// explicitly right alongside it (confirmed via getComputedStyle — the
+// explicit `visible` was silently overridden back to `auto`). Any
+// non-`visible` overflow on an ancestor breaks `position: sticky` for every
+// descendant, which is exactly why the Hajj package detail page's sticky
+// enquiry sidebar (`.sticky-top`) measured as not sticking at all in real
+// scroll testing — its viewport-relative position tracked the scroll
+// offset 1:1, i.e. it behaved as a plain static element. `overflow: clip`
+// is the one non-`visible` value that does NOT trigger that cross-axis
+// promotion (verified directly: `overflow-x: clip` alone left `overflow-y`
+// computed as genuinely `visible`, and a sticky descendant stayed pinned
+// through a full scroll test) — it still clips the offcanvas's transformed
+// box from the root's scrollable overflow just as `hidden` did, without
+// the side effect.
+html, body {
+    overflow-x: clip;
+}
+
 .btn-whatsapp {
     background-color: #25d366;
     border-color: #25d366;
@@ -14,29 +69,266 @@
 }
 
 .site-header {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: $ub-shadow-sm;
+}
+
+.site-navbar {
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+
+    .nav-link {
+        font-weight: 500;
+    }
+
+    .navbar-brand {
+        font-family: $headings-font-family;
+        letter-spacing: 0.01em;
+    }
+}
+
+// A visible, always-on-brand "Register Now" CTA in the header itself
+// (previously only reachable inside the mega-menu) — the directive calls
+// for a "prominent WhatsApp / Register Now CTA" in the header.
+.btn-register-now {
+    background: $ub-gold;
+    border-color: $ub-gold;
+    color: $ub-navy-dark;
+    font-weight: 700;
+
+    &:hover, &:focus {
+        background: $ub-gold-light;
+        border-color: $ub-gold-light;
+        color: $ub-navy-dark;
+    }
+}
+
+.mega-menu-parent {
+    position: static;
+
+    @media (min-width: 992px) {
+        position: relative;
+    }
+}
+
+.mega-menu {
+    border: none;
+    border-top: 3px solid $ub-gold;
+    min-width: 480px;
+
+    @media (min-width: 992px) {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+.mega-menu-title {
+    display: block;
+    font-family: $headings-font-family;
+    font-weight: 700;
+    color: $ub-navy;
+    text-decoration: none;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba($ub-navy, 0.1);
+
+    &:hover {
+        color: $ub-gold-dark;
+    }
+}
+
+.mega-menu-links {
+    li {
+        margin-bottom: 0.4rem;
+    }
+
+    a {
+        color: #495057;
+        text-decoration: none;
+        font-size: 0.9rem;
+
+        &:hover {
+            color: $ub-gold-dark;
+        }
+    }
 }
 
 .hero-slide {
     position: relative;
-    min-height: 60vh;
-    background-size: cover;
-    background-position: center;
+    min-height: 78vh;
     display: flex;
     align-items: center;
     color: #fff;
+    overflow: hidden;
 
-    &::before {
-        content: '';
+    // The actual background image/parallax layer is a separate absolutely
+    // positioned element (`.hero-slide-bg`) rather than this element's own
+    // `background-image`, so the parallax transform (see app.js
+    // `initParallax`) can drift the image without dragging the overlaid
+    // text/CTAs along with it. Oversized (`inset: -4%`) so the drift never
+    // reveals an edge.
+    .hero-slide-bg {
         position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba($ub-navy-dark, 0.75) 0%, rgba($ub-navy-dark, 0.55) 100%);
+        inset: -4%;
+        background-size: cover;
+        background-position: center;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: ub-navy-overlay(0.8, 0.5);
+        }
     }
 
     .hero-content {
         position: relative;
         z-index: 1;
     }
+
+    .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: $ub-eyebrow-letter-spacing;
+        color: $ub-gold-light;
+        margin-bottom: 1rem;
+
+        &::before, &::after {
+            content: '';
+            width: 32px;
+            height: 2px;
+            background: $ub-gold;
+        }
+    }
+
+    h1 {
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
+    }
+}
+
+.news-ticker {
+    background-color: $ub-cream;
+    border-bottom: 1px solid rgba($ub-navy, 0.08);
+    padding: 0.5rem 0;
+    overflow: hidden;
+
+    .news-ticker-label {
+        flex-shrink: 0;
+        font-weight: 700;
+        color: $ub-navy;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding-right: 1rem;
+        border-right: 2px solid $ub-gold;
+        margin-right: 1rem;
+    }
+
+    .news-ticker-track {
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        a {
+            display: inline-block;
+            color: $ub-navy;
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding-right: 2.5rem;
+
+            &:hover {
+                color: $ub-gold-dark;
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+.award-badge {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background-color: $ub-cream;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: $ub-gold;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.video-testimonial-card {
+    background-color: #fff;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover, &:focus {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+}
+
+.video-testimonial-thumb {
+    height: 200px;
+    background-color: $ub-navy;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-play-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: rgba($ub-gold, 0.9);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.affiliation-logo {
+    max-height: 60px;
+    filter: grayscale(1);
+    opacity: 0.8;
+    transition: filter 0.2s ease, opacity 0.2s ease;
+
+    &:hover {
+        filter: grayscale(0);
+        opacity: 1;
+    }
+}
+
+.affiliation-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba($ub-navy, 0.15);
+    border-radius: $border-radius;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: $ub-navy;
 }
 
 .trust-ticker {
@@ -54,30 +346,408 @@
 
 .package-card {
     border: none;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-radius: $border-radius-lg;
+    box-shadow: $ub-shadow-sm;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     height: 100%;
+    overflow: hidden;
+    position: relative;
+
+    // A thin gold accent line that reveals across the top edge on hover —
+    // a small, deliberate premium touch instead of the whole card lifting
+    // being the only feedback.
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 3px;
+        background: $ub-gold;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform $ub-duration-base $ub-ease;
+        z-index: 2;
+    }
 
     &:hover {
         transform: translateY(-4px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        box-shadow: $ub-shadow-md;
+
+        &::before { transform: scaleX(1); }
+    }
+
+    .package-card-img-wrap {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
     }
 
     .package-card-img {
-        height: 200px;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         background-color: $ub-cream;
+        transition: transform $ub-duration-slow $ub-ease;
+    }
+
+    @media (hover: hover) {
+        &:hover .package-card-img { transform: scale(1.06); }
+    }
+
+    .card-body { padding: 1.5rem; }
+
+    // Small icon+label chips for arrival/shifting/Aziziya — only the
+    // fields actually present on the package are rendered (see
+    // package-card.blade.php), never invented.
+    .package-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        color: rgba(33, 37, 41, 0.7);
+        margin-bottom: 0.5rem;
+
+        span { display: inline-flex; align-items: center; gap: 0.3rem; }
+        i { color: $ub-gold-dark; }
+    }
+
+    .package-card-price {
+        font-family: $headings-font-family;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: $ub-navy;
+
+        small {
+            display: block;
+            font-family: $font-family-sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: rgba(33, 37, 41, 0.55);
+        }
+    }
+
+    // Release-gate cross-browser QA (2026-08-30): the summary paragraph has
+    // no rendered-height cap, only a PHP-level character limit
+    // (`Str::limit(..., 110)`), so its actual wrapped line count varies with
+    // card width and font metrics. In a `d-flex flex-column` card body with
+    // the price/CTA row pinned to the bottom via `mt-auto`, a taller-than-
+    // expected render of this paragraph can overlap that row closely enough
+    // to intercept pointer events meant for "View Details" — reproduced via
+    // a Playwright trace showing exactly this element "intercepts pointer
+    // events" on repeated real clicks. Clamping to a fixed 2 lines makes the
+    // paragraph's box height deterministic regardless of content/font/width,
+    // so it can never encroach on the row below it.
+    .card-body p.text-secondary {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    // The package-card's own body is always a plain white card, even when
+    // the whole card sits inside a dark `.text-white`/`.bg-primary` section
+    // (e.g. the homepage's Hajj Feature block). The project-wide contrast
+    // fix at the top of this file repaints `.text-secondary` gold whenever
+    // ANY dark-background ancestor exists — correct for text that actually
+    // sits directly on that dark background, but wrong here: found via a
+    // real screenshot review showing the summary paragraph rendering in a
+    // low-contrast gold on the card's own white background. Same
+    // specificity as that rule (two classes) — wins on source order since
+    // this rule is later in the file.
+    .text-secondary {
+        color: rgba(33, 37, 41, 0.75) !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .package-card:hover .package-card-img {
+        transform: none;
+    }
+}
+
+// --- Filter panel (Hajj/Umrah/Tourism listing) -----------------------------
+// Replaces the plain white form card with a compact, visually distinct
+// panel. On mobile the actual fields live in an offcanvas drawer (see
+// category.blade.php) — `.filter-trigger-btn` is the button that opens it.
+.filter-panel {
+    background: #fff;
+    border-radius: $border-radius-lg;
+    border: 1px solid rgba($ub-navy, 0.08);
+    box-shadow: $ub-shadow-sm;
+    padding: 1.5rem;
+
+    .form-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: rgba(33, 37, 41, 0.65);
+        margin-bottom: 0.35rem;
+    }
+
+    .form-select, .form-control {
+        border-color: rgba($ub-navy, 0.15);
+    }
+}
+
+.filter-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+// Series/category pill filters — upgraded from plain btn-outline-primary
+// toggle buttons into a pill row matching the rest of the design system.
+.series-pill {
+    border-radius: 50rem;
+    padding: 0.45rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+// --- Package hero quick-overview strip --------------------------------------
+// A row of icon+label+value mini-cards summarizing the package at a glance
+// (duration, arrival, Aziziya, shifting, transport, meals, ...). Only the
+// fields actually available on the package render one of these — see
+// show-hajj.blade.php, which builds the list from real model data.
+.quick-overview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: rgba($ub-navy, 0.08);
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+
+    @media (min-width: 576px) {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (min-width: 992px) {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
+
+.quick-overview-item {
+    background: #fff;
+    padding: 1.1rem 1rem;
+    text-align: center;
+
+    i {
+        font-size: 1.35rem;
+        color: $ub-gold-dark;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .quick-overview-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: rgba(33, 37, 41, 0.55);
+        margin-bottom: 0.15rem;
+    }
+
+    .quick-overview-value {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: $ub-navy;
+    }
+}
+
+// --- Room-type / pricing cards ----------------------------------------------
+// Replaces the plain bordered `<table>` with a card-per-room-type grid —
+// far more scannable, and naturally responsive (cards reflow to one column
+// on mobile instead of a table needing horizontal scroll). The underlying
+// data — every real room type, every real price, N/A where genuinely
+// unavailable — is unchanged; only the presentation is a card instead of
+// a table row. See show-hajj.blade.php for the loop this styles.
+.pricing-card {
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius-lg;
+    padding: 1.25rem;
+    transition: border-color $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+    // Deliberately no `height: 100%` here — this class is used both inside
+    // equal-height grid rows (pair with Bootstrap's own `.h-100` there) and
+    // standalone (e.g. the Aziziya summary card, a direct child of the
+    // `.col-lg-8` content column). A blanket `height: 100%` on a standalone
+    // instance measured out to 5000+px in real testing — a percentage
+    // height resolving against an ancestor whose own height depends on its
+    // content (a classic runaway-percentage-height layout bug).
+
+    &:hover {
+        border-color: rgba($ub-gold, 0.5);
+        box-shadow: $ub-shadow-sm;
+    }
+
+    .pricing-card-variant {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: $ub-gold-dark;
+        margin-bottom: 0.35rem;
+    }
+
+    .pricing-card-room {
+        font-weight: 600;
+        color: $ub-navy;
+        margin-bottom: 0.15rem;
+    }
+
+    .pricing-card-occupancy {
+        font-size: 0.8rem;
+        color: rgba(33, 37, 41, 0.6);
+        margin-bottom: 0.75rem;
+    }
+
+    .pricing-card-price {
+        font-family: $headings-font-family;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: $ub-navy;
+    }
+
+    .pricing-card-basis {
+        font-size: 0.75rem;
+        color: rgba(33, 37, 41, 0.55);
+    }
+
+    &.pricing-card-na {
+        opacity: 0.6;
+
+        .pricing-card-price {
+            font-size: 1rem;
+            color: rgba(33, 37, 41, 0.55);
+        }
+    }
+}
+
+// --- Itinerary timeline ------------------------------------------------------
+// Restyles the existing Bootstrap accordion (behavior/JS untouched) into a
+// day-by-day journey timeline: a numbered marker connected by a vertical
+// line, with the day's content in the accordion body as before.
+.itinerary-timeline {
+    position: relative;
+    padding-left: 3.25rem;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 17px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: rgba($ub-gold, 0.35);
+    }
+}
+
+.itinerary-day {
+    position: relative;
+    margin-bottom: 1rem;
+
+    &::before {
+        content: attr(data-day);
+        position: absolute;
+        left: -3.25rem;
+        top: 0.15rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: $ub-navy;
+        color: $ub-gold-light;
+        font-family: $headings-font-family;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+    }
+
+    .accordion-button {
+        font-weight: 600;
+        border-radius: $border-radius !important;
+    }
+
+    .accordion-item {
+        border-radius: $border-radius;
+        overflow: hidden;
+        border-color: rgba($ub-navy, 0.1);
+    }
+}
+
+// --- Inclusions / exclusions ------------------------------------------------
+.inclusion-list, .exclusion-list {
+    li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed rgba($ub-navy, 0.08);
+
+        &:last-child { border-bottom: none; }
+    }
+}
+
+// --- Package notes -----------------------------------------------------------
+.package-note {
+    background: $ub-cream;
+    border-left: 3px solid $ub-gold;
+    border-radius: 0 $border-radius $border-radius 0;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.6rem;
+
+    &.package-note-important {
+        border-left-color: #b02a37;
+        background: rgba(#b02a37, 0.06);
     }
 }
 
 .stat-tile {
     text-align: center;
 
+    // Larger, with a short gold divider under the number, so "10,000+"
+    // reads as a genuine headline statistic rather than a small Bootstrap
+    // figure (frontend visual redesign, 2026-08-30).
     .stat-number {
         font-family: $headings-font-family;
-        font-size: 2.5rem;
+        font-size: clamp(2.75rem, 2.4rem + 1.4vw, 4rem);
         font-weight: 700;
-        color: $ub-gold;
+        line-height: 1;
+        display: inline-block;
+        position: relative;
+        padding-bottom: 0.6rem;
+        margin-bottom: 0.4rem;
+        // Navy-on-white/light gives a safe ~14:1 contrast ratio for the
+        // stat sections that sit on a light background (Experience,
+        // Awards, About Us) — gold-on-white was only ever ~2.4:1, well
+        // under the WCAG AA 3:1 minimum for large text.
+        color: $ub-navy;
+
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 3px;
+            background: $ub-gold;
+            border-radius: 2px;
+        }
+    }
+
+    // On a navy section (e.g. the Hajj Feature block), gold-on-navy is the
+    // correct, high-contrast (~10:1) choice instead.
+    .bg-primary &, .text-white & {
+        .stat-number {
+            color: $ub-gold-light;
+        }
     }
 }
 
@@ -92,13 +762,497 @@
     }
 }
 
-.icon-pillar {
-    text-align: center;
-    padding: 1.5rem;
+@media (prefers-reduced-motion: reduce) {
+    .reveal-on-scroll {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
 
-    .icon-pillar-icon {
-        font-size: 2.5rem;
-        color: $ub-gold;
-        margin-bottom: 1rem;
+    // Release-gate cross-browser QA (2026-08-30): the package-card hover lift
+    // is a WCAG 2.3.3 "Animation from Interactions" gap for real users with
+    // reduced motion set, and its constantly-moving bounding box (a 4px
+    // translate over 200ms) was also independently found to be the actual
+    // cause of an intermittent Playwright click failure on `.package-card`
+    // links under sustained cross-browser load — the link kept moving out
+    // from under the click before the browser's own actionability check
+    // settled. Fixing the accessibility gap fixes both at once.
+    .package-card:hover {
+        transform: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    // Same bug class as `.package-card` above: `.video-testimonial-card` is
+    // also directly clickable (opens the video modal) and shares the
+    // identical translateY hover lift, so it carries the same accessibility
+    // gap and the same latent click-instability risk.
+    .video-testimonial-card:hover,
+    .video-testimonial-card:focus {
+        transform: none;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
 }
+
+.hajj-process-timeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 0;
+    position: relative;
+    counter-reset: stage;
+
+    @media (min-width: 992px) {
+        flex-wrap: nowrap;
+        gap: 0;
+    }
+}
+
+.hajj-process-stage {
+    flex: 1 1 33%;
+    min-width: 140px;
+    text-align: center;
+    position: relative;
+    padding: 0 0.5rem;
+
+    &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 55%;
+        width: 90%;
+        height: 2px;
+        background-color: rgba($ub-gold, 0.35);
+        display: none;
+
+        @media (min-width: 992px) {
+            display: block;
+        }
+    }
+}
+
+.hajj-process-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 0.75rem;
+    border-radius: 50%;
+    background-color: $ub-navy;
+    color: $ub-gold-light;
+    font-family: $headings-font-family;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+.hajj-process-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $ub-navy;
+}
+
+
+// Release-gate touch-target QA: `.btn-sm` (package card CTAs, the currency
+// switcher) measured ~31px tall on a real mobile viewport — under the
+// ~44px minimum touch-target guideline (WCAG 2.5.5 AAA / Apple HIG /
+// Material Design). Scoped to mobile only, so the compact desktop density
+// this theme deliberately uses elsewhere is untouched.
+@media (max-width: 767px) {
+    .package-card .btn,
+    #currency-switcher .btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+// =====================================================================
+// PREMIUM FRONTEND VISUAL REDESIGN (2026-08-30)
+// =====================================================================
+// Global design system — typography, section rhythm, buttons, cards,
+// placeholders, badges — applied consistently so every page draws from
+// one vocabulary rather than looking individually assembled. See
+// docs/audits/FRONTEND_VISUAL_REDESIGN.md for the full rationale.
+
+// --- Typography hierarchy ------------------------------------------------
+// Bootstrap's own h1-h6 already compile against $headings-font-family
+// (Playfair Display) — the fonts just weren't loaded until this pass (see
+// app.js). Bumped here for a more confident, premium scale than Bootstrap's
+// defaults, and given every heading a touch of negative letter-spacing
+// (serif display faces read better tightened slightly at large sizes).
+h1, .h1 { font-size: clamp(2.25rem, 1.9rem + 1.6vw, 3.5rem); letter-spacing: -0.01em; line-height: 1.15; }
+h2, .h2 { font-size: clamp(1.75rem, 1.55rem + 0.9vw, 2.5rem); letter-spacing: -0.01em; line-height: 1.2; }
+h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3; }
+
+.lead {
+    font-size: clamp(1.05rem, 1rem + 0.3vw, 1.25rem);
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+// --- Section rhythm -------------------------------------------------------
+// A consistent generous vertical rhythm (see $ub-section-py), replacing
+// ad-hoc `py-5` on every section. `.section` is additive — existing
+// `bg-*`/`text-*` utilities still apply on top of it.
+.section {
+    padding-top: $ub-section-py-sm;
+    padding-bottom: $ub-section-py-sm;
+
+    @media (min-width: 992px) {
+        padding-top: $ub-section-py;
+        padding-bottom: $ub-section-py;
+    }
+}
+
+.section-tight {
+    padding-top: $ub-section-py-sm * 0.6;
+    padding-bottom: $ub-section-py-sm * 0.6;
+
+    @media (min-width: 992px) {
+        padding-top: $ub-section-py * 0.55;
+        padding-bottom: $ub-section-py * 0.55;
+    }
+}
+
+// Eyebrow kicker label — small, uppercase, gold, letter-spaced — used above
+// nearly every section heading for a consistent "premium editorial" rhythm.
+.section-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    color: $ub-gold-dark;
+    margin-bottom: 0.75rem;
+
+    &::before {
+        content: '';
+        display: inline-block;
+        width: 28px;
+        height: 2px;
+        background: $ub-gold;
+    }
+
+    .bg-primary &, .bg-dark &, .text-white & {
+        color: $ub-gold-light;
+    }
+}
+
+.section-heading-block {
+    max-width: 720px;
+
+    &.mx-auto { text-align: center; }
+}
+
+// --- Buttons --------------------------------------------------------------
+// A slightly more confident CTA treatment: generous padding, a soft lift +
+// shadow on hover/focus (desktop only — see the reduced-motion guard
+// further down), and a touch of letter-spacing on the larger sizes.
+.btn {
+    font-weight: 600;
+    transition: transform $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease, background-color $ub-duration-fast $ub-ease, border-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
+}
+
+.btn-lg {
+    padding: 0.85rem 1.75rem;
+    letter-spacing: 0.02em;
+}
+
+@media (hover: hover) {
+    .btn-primary:hover, .btn-secondary:hover, .btn-whatsapp:hover, .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: $ub-shadow-md;
+    }
+}
+
+.btn-outline-light {
+    border-width: 2px;
+}
+
+// --- Elegant image placeholder --------------------------------------------
+// Used everywhere a package/award/gallery/testimonial image is not yet
+// uploaded. Never a browser broken-image icon or a flat gray box — a
+// designed gradient card with a relevant icon and (optionally) a caption,
+// so the layout looks intentional and the client can tell at a glance
+// which slots still need real photography.
+.visual-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(135deg, $ub-navy 0%, $ub-navy-dark 100%);
+    color: rgba(255, 255, 255, 0.85);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba($ub-gold, 0.18) 1px, transparent 1px);
+        background-size: 18px 18px;
+        opacity: 0.5;
+    }
+
+    i {
+        font-size: 2.25rem;
+        color: $ub-gold-light;
+        position: relative;
+    }
+
+    span {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.6);
+        position: relative;
+    }
+}
+
+// --- Feature pillar (Why Universal Brothers) ------------------------------
+// Upgraded from a tiny centered icon+text block into a proper bordered
+// card with a circular icon badge, so six blocks read as a designed grid
+// rather than six small stacked icons.
+// Admin-authored long-form content (About Us story, news articles) sits in a
+// `.col-lg-9` column for the page layout, but 75% of a wide desktop
+// container is too long a line length for comfortable reading (optimal is
+// roughly 60-75 characters) — paragraphs read as a wall of text stretching
+// nearly edge-to-edge. Capping the prose itself, not the column, keeps any
+// full-width elements an editor adds (e.g. a wide image) unconstrained.
+.page-body {
+    p, ul, ol {
+        max-width: 46rem;
+    }
+}
+
+// A designed "nothing published yet" state (news, gallery, awards,
+// testimonials, affiliations, FAQs, package listings) — replaces a bare
+// Bootstrap `.alert-info` box, which read as an unstyled placeholder rather
+// than an intentional part of the page (visual redesign, 2026-08-30).
+.empty-state {
+    background-color: $ub-cream;
+    border-radius: $border-radius-lg;
+    padding: 3.5rem 1.5rem;
+
+    .empty-state-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.25rem;
+        border-radius: 50%;
+        background-color: rgba($ub-navy, 0.08);
+        color: $ub-gold-dark;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+    }
+
+    p {
+        color: rgba(33, 37, 41, 0.7);
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.icon-pillar {
+    height: 100%;
+    text-align: left;
+    padding: 1.75rem;
+    background: #fff;
+    border-radius: $border-radius-lg;
+    border: 1px solid rgba($ub-navy, 0.08);
+    box-shadow: $ub-shadow-sm;
+    transition: transform $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    .icon-pillar-icon {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba($ub-gold, 0.12);
+        color: $ub-gold-dark;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    h3 { margin-bottom: 0.35rem; }
+}
+
+@media (hover: hover) {
+    .icon-pillar:hover {
+        transform: translateY(-4px);
+        box-shadow: $ub-shadow-md;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .icon-pillar:hover {
+        transform: none;
+        box-shadow: $ub-shadow-sm;
+    }
+}
+
+// --- Split section (image / content) --------------------------------------
+// "Because No Two Sacred Journeys Are the Same" and similar half/half
+// sections — a large image or visual-placeholder on one side, generously
+// spaced content on the other.
+.split-section-visual {
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    box-shadow: $ub-shadow-md;
+    aspect-ratio: 4 / 3;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+// --- Footer -----------------------------------------------------------------
+// A substantial premium footer: a gold top accent, tighter link spacing,
+// and a slightly larger brand line — the existing 6-column navigation
+// structure (Hajj/Umrah/Tourism/Company/Support/Contact) is unchanged.
+.site-footer {
+    border-top: 3px solid $ub-gold;
+
+    h4 { font-size: 1.4rem; }
+
+    h6 {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: $ub-gold-light !important;
+    }
+
+    a.text-secondary {
+        transition: color $ub-duration-fast $ub-ease;
+
+        &:hover { color: #fff !important; }
+    }
+}
+
+// --- Final CTA band ----------------------------------------------------------
+.final-cta {
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba($ub-gold, 0.12) 1px, transparent 1px);
+        background-size: 22px 22px;
+        opacity: 0.6;
+    }
+
+    .container { position: relative; }
+}
+
+// --- Media gallery (lightbox) ------------------------------------------------
+.gallery-item {
+    position: relative;
+    border-radius: $border-radius;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    cursor: pointer;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform $ub-duration-base $ub-ease;
+    }
+
+    &::after {
+        content: '\f52a';
+        font-family: 'bootstrap-icons';
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
+        background: rgba($ub-navy-dark, 0);
+        opacity: 0;
+        transition: background $ub-duration-fast $ub-ease, opacity $ub-duration-fast $ub-ease;
+    }
+
+    @media (hover: hover) {
+        &:hover img { transform: scale(1.08); }
+        &:hover::after { background: rgba($ub-navy-dark, 0.35); opacity: 1; }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gallery-item:hover img { transform: none; }
+}
+
+// --- FAQ accordion ------------------------------------------------------------
+.faq-accordion {
+    .accordion-item {
+        border: 1px solid rgba($ub-navy, 0.08);
+        border-radius: $border-radius-lg !important;
+        overflow: hidden;
+        margin-bottom: 0.85rem;
+        box-shadow: $ub-shadow-sm;
+    }
+
+    .accordion-button {
+        font-weight: 600;
+        font-family: $headings-font-family;
+
+        &:not(.collapsed) {
+            background: rgba($ub-gold, 0.08);
+            color: $ub-navy;
+        }
+
+        &:focus { box-shadow: none; }
+    }
+}
+
+// --- Contact page -------------------------------------------------------------
+.contact-method-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    padding: 1.1rem 1.25rem;
+    height: 100%;
+    text-decoration: none;
+    transition: border-color $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover {
+        border-color: rgba($ub-gold, 0.5);
+        box-shadow: $ub-shadow-sm;
+    }
+
+    .contact-method-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: rgba($ub-gold, 0.12);
+        color: $ub-gold-dark;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+}
+

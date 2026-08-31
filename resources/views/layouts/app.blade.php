@@ -13,7 +13,6 @@
 
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 
-    @php($__schemaOffice = \App\Models\Office::where('is_active', true)->orderBy('sort_order')->first())
     <script type="application/ld+json">
     {
         "@@context": "https://schema.org",
@@ -21,8 +20,8 @@
         "name": "Universal Brothers (Pvt) Ltd",
         "alternateName": "Crown Packages",
         "url": "{{ url('/') }}",
-        @if($__schemaOffice?->phone_primary)"telephone": "{{ $__schemaOffice->phone_primary }}",@endif
-        @if($__schemaOffice?->email)"email": "{{ $__schemaOffice->email }}",@endif
+        @if($primaryOffice?->phone_primary)"telephone": "{{ $primaryOffice->phone_primary }}",@endif
+        @if($primaryOffice?->email)"email": "{{ $primaryOffice->email }}",@endif
         "address": {
             "@@type": "PostalAddress",
             "addressLocality": "Karachi",
@@ -42,6 +41,8 @@
     </main>
 
     @include('layouts.partials.footer')
+
+    <x-lightbox-modal />
 
     @stack('scripts')
 </body>

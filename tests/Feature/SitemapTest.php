@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\NewsArticle;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\Page;
@@ -27,5 +28,22 @@ class SitemapTest extends TestCase
         $response->assertSee(route('packages.show', ['hajj', 'test-package']), false);
         $response->assertSee(url('about-us'), false);
         $response->assertDontSee(url('draft-page'), false);
+    }
+
+    /**
+     * Regression for FINAL_CODE_REVIEW.md H-2's follow-on gap: once news
+     * articles got a real public page, the sitemap needed to list them too —
+     * same class of omission the Pages module had before an earlier pass.
+     */
+    public function test_sitemap_includes_published_news_articles_and_excludes_drafts(): void
+    {
+        NewsArticle::create(['title' => 'Published Article', 'slug' => 'published-article', 'body' => 'Body.', 'is_active' => true]);
+        NewsArticle::create(['title' => 'Draft Article', 'slug' => 'draft-article', 'body' => 'Body.', 'is_active' => false]);
+
+        $response = $this->get('/sitemap.xml');
+
+        $response->assertOk();
+        $response->assertSee(route('news.show', 'published-article'), false);
+        $response->assertDontSee(route('news.show', 'draft-article'), false);
     }
 }
