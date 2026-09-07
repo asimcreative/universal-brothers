@@ -3,7 +3,7 @@
 @section('title', 'Testimonials')
 
 @section('actions')
-    <a href="{{ route('admin.testimonials.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Testimonial</a>
+    <a href="{{ route('admin.testimonials.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Testimonial</a>
 @endsection
 
 @section('content')
@@ -17,18 +17,23 @@
                             <td>{{ $testimonial->name }}</td>
                             <td>{{ Str::limit($testimonial->quote, 60) }}</td>
                             <td class="text-capitalize">{{ $testimonial->service_tag }}</td>
-                            <td>{!! $testimonial->video_url ? '<span class="badge bg-info text-dark">Yes</span>' : '<span class="text-muted">—</span>' !!}</td>
-                            <td>{!! $testimonial->is_active ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
+                            <td>{!! $testimonial->video_url ? '<span class="status-pill status-pill-info">Video</span>' : '<span class="text-muted">—</span>' !!}</td>
+                            <td><span class="status-pill {{ $testimonial->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $testimonial->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.testimonials.edit', $testimonial) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.testimonials.destroy', $testimonial) }}" class="d-inline" onsubmit="return confirm('Delete?')">
+                                <form method="POST" action="{{ route('admin.testimonials.destroy', $testimonial) }}" class="d-inline" onsubmit="return confirm('Delete this testimonial? This cannot be undone.')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-4">No testimonials yet.</td></tr>
+                        <tr><td colspan="6">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-chat-quote" aria-hidden="true"></i>
+                                No testimonials yet.
+                            </div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

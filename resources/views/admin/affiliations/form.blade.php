@@ -43,7 +43,9 @@
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mt-3">Save</button>
-        <a href="{{ route('admin.affiliations.index') }}" class="btn btn-outline-secondary mt-3">Cancel</a>
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{{ route('admin.affiliations.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
     </form>
 @endsection

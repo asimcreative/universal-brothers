@@ -10,11 +10,11 @@
             <div class="card-header bg-white fw-semibold">Content</div>
             <div class="card-body row g-3">
                 <div class="col-md-8">
-                    <label for="page-title" class="form-label">Title</label>
+                    <label for="page-title" class="form-label">Title <span class="required-mark">*</span></label>
                     <input type="text" name="title" id="page-title" class="form-control" value="{{ old('title', $page->title) }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label for="page-slug" class="form-label">Slug</label>
+                    <label for="page-slug" class="form-label">Slug <span class="required-mark">*</span></label>
                     <input type="text" name="slug" id="page-slug" class="form-control" value="{{ old('slug', $page->slug) }}" required>
                 </div>
                 <div class="col-12">
@@ -62,8 +62,10 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">{{ $page->exists ? 'Update Page' : 'Create Page' }}</button>
-        <a href="{{ route('admin.pages.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">{{ $page->exists ? 'Update Page' : 'Create Page' }}</button>
+            <a href="{{ route('admin.pages.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
     </form>
 
     @push('scripts')

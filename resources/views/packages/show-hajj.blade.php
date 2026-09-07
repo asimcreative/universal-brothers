@@ -26,32 +26,38 @@
 @endphp
 
 @section('content')
-    <div class="hero-slide" style="min-height: 48vh;">
-        <div class="hero-slide-bg" @if($package->cover_image) style="background-image: url('{{ Storage::url($package->cover_image) }}')" @else style="background-image: linear-gradient(135deg, #101B45, #0A1230)" @endif></div>
-        <div class="container hero-content py-4">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('packages.category', $package->category->slug) }}" class="text-light">{{ $package->category->name }}</a></li>
-                    <li class="breadcrumb-item active text-white-50" aria-current="page">{{ $package->name }}</li>
-                </ol>
-            </nav>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                @if($package->code)<span class="badge bg-secondary">{{ $package->code }}</span>@endif
-                @if($package->package_type)<span class="badge bg-light text-dark">{{ $package->package_type }}</span>@endif
-                @if($package->season_label)<span class="badge bg-light text-dark">{{ $package->season_label }}</span>@endif
-                @if($package->duration_label)<span class="badge bg-light text-dark">{{ $package->duration_label }}</span>@endif
-                @if(!is_null($package->medinah_first))<span class="badge bg-light text-dark">{{ $package->medinah_first ? 'Medinah First' : 'Makkah First' }}</span>@endif
-                @if(!is_null($package->is_shifting))<span class="badge bg-light text-dark">{{ $package->is_shifting ? 'Shifting' : 'Non-Shifting' }}</span>@endif
-                @if($aziziyaLabel)<span class="badge bg-light text-dark">{{ $aziziyaLabel }}</span>@endif
-            </div>
-            <h1>{{ $package->name }}</h1>
-            @if($package->publicSummary())<p class="lead mb-0" style="max-width: 720px;">{{ $package->publicSummary() }}</p>@endif
-            @if($package->starting_price)
-                <p class="fs-5 fw-semibold mt-2 mb-0 text-white">From {{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}</p>
-            @endif
+    {{-- The package hero carries the real cover photograph when one exists and
+         the generated geometric stage when it does not — the previous fallback
+         was the same flat navy gradient used on every other page. The badge
+         row, summary and "From" price are unchanged in content; only their
+         presentation is. --}}
+    <x-page-hero
+        class="package-hero"
+        :eyebrow="$package->series?->name"
+        :title="$package->name"
+        :lead="$package->publicSummary()"
+        :breadcrumbs="['Home' => route('home'), $package->category->name => route('packages.category', $package->category->slug), $package->name => null]">
+        @if($package->cover_image)
+            <img src="{{ Storage::url($package->cover_image) }}" alt="{{ $package->name }}" class="package-hero-photo" decoding="async">
+        @endif
+
+        <div class="package-hero-badges">
+            @if($package->code)<span class="pkg-badge pkg-badge-featured">{{ $package->code }}</span>@endif
+            @if($package->package_type)<span class="pkg-badge pkg-badge-outline">{{ $package->package_type }}</span>@endif
+            @if($package->season_label)<span class="pkg-badge pkg-badge-outline">{{ $package->season_label }}</span>@endif
+            @if($package->duration_label)<span class="pkg-badge pkg-badge-outline">{{ $package->duration_label }}</span>@endif
+            @if(!is_null($package->medinah_first))<span class="pkg-badge pkg-badge-outline">{{ $package->medinah_first ? 'Medinah First' : 'Makkah First' }}</span>@endif
+            @if(!is_null($package->is_shifting))<span class="pkg-badge pkg-badge-outline">{{ $package->is_shifting ? 'Shifting' : 'Non-Shifting' }}</span>@endif
+            @if($aziziyaLabel)<span class="pkg-badge pkg-badge-outline">{{ $aziziyaLabel }}</span>@endif
         </div>
-    </div>
+
+        @if($package->starting_price)
+            <p class="package-hero-price">
+                <span>From</span>{{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}
+                <small>per person</small>
+            </p>
+        @endif
+    </x-page-hero>
 
     <div class="container py-5">
         @if($overviewItems->isNotEmpty())
@@ -137,7 +143,10 @@
                                                 <li class="mb-2">
                                                     @if($acc->variant)<span class="badge bg-light text-dark me-1">Package {{ $acc->variant->code }}</span>@endif
                                                     <span class="fw-semibold">{{ $acc->hotel_name }}</span>
-                                                    @if($acc->star_rating) <span class="text-warning">{{ str_repeat('★', $acc->star_rating) }}</span> @endif
+                                                    {{-- `.star-rating`, not Bootstrap's `.text-warning` (#ffc107 at 1.63:1 on
+     white). The rating carries real information about the hotel, so it has
+     to be legible rather than merely decorative. --}}
+@if($acc->star_rating) <span class="star-rating" aria-label="{{ $acc->star_rating }} star hotel">{{ str_repeat('★', $acc->star_rating) }}</span> @endif
                                                     @if($acc->nights) <span class="text-muted small d-block">{{ $acc->nights }} nights</span> @endif
                                                     @if($acc->meal_plan) <span class="text-muted small d-block">{{ $acc->meal_plan }}</span> @endif
                                                 </li>
@@ -244,7 +253,10 @@
                         @foreach($package->transportation as $t)
                             <li class="mb-2">
                                 <i class="bi {{ $t->is_included ? 'bi-check2 text-success' : 'bi-plus-circle text-primary' }} me-2"></i>
-                                {{ $t->transport_type }}
+                                {{-- `transportLabel()`, not the raw column: the stored
+                                     values are snake_case enum keys and were rendering
+                                     to visitors as "airport_transfer" / "vip_gmc". --}}
+                                <strong>{{ $t->transportLabel() }}</strong>
                                 @if($t->from_location || $t->to_location) ({{ $t->from_location }} @if($t->from_location && $t->to_location) → @endif {{ $t->to_location }}) @endif
                                 @if(!$t->is_included && $t->price)
                                     — <span class="currency-price" data-pkr="{{ $t->currency === 'PKR' ? $t->price : '' }}" data-sar="{{ $t->currency === 'SAR' ? $t->price : '' }}" data-usd="{{ $t->currency === 'USD' ? $t->price : '' }}"></span>

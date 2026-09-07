@@ -22,9 +22,13 @@ test.describe('Admin CMS', () => {
         await page.goto('/admin');
 
         // The desktop sidebar is intentionally hidden below md — there must
-        // be a working alternative, not a silent dead-end.
-        await expect(page.locator('nav.navbar.d-md-none')).toBeVisible();
-        await page.locator('nav.navbar.d-md-none .navbar-toggler').click();
+        // be a working alternative, not a silent dead-end. The admin UI
+        // redesign moved the mobile toggle into the shared topbar (no
+        // longer a separate `nav.navbar.d-md-none` bar), so it's matched by
+        // its accessible name instead of the old CSS-class selector.
+        const mobileToggle = page.getByRole('button', { name: 'Open menu' });
+        await expect(mobileToggle).toBeVisible();
+        await mobileToggle.click();
 
         const mobileNav = page.locator('#adminMobileNav');
         await expect(mobileNav).toBeVisible();
@@ -54,8 +58,15 @@ test.describe('Admin CMS', () => {
         // (in `finally`) always runs, even if an assertion above throws.
         try {
             // 17. Create as draft
+            // Regression, admin panel redesign (2026-08-31): this used to
+            // select "Hajj" here — through the *generic* package form, the
+            // exact CRITICAL data-loss path closed by PackageController's
+            // new Hajj-category guard (see ADMIN_UI_DESIGN.md). "Hajj" is no
+            // longer an option in this dropdown at all, so this now uses
+            // "Umrah" — a real category this generic controller legitimately
+            // owns — with the public-URL checks below updated to match.
             await page.goto('/admin/packages/create');
-            await page.locator('select[name="package_category_id"]').selectOption({ label: 'Hajj' });
+            await page.locator('select[name="package_category_id"]').selectOption({ label: 'Umrah' });
             await page.locator('input[name="code"]').fill(uniqueCode);
             await page.locator('input[name="name"]').fill(uniqueName);
             await page.locator('select[name="status"]').selectOption('draft');
@@ -65,7 +76,7 @@ test.describe('Admin CMS', () => {
 
             // 20 (part 1). Draft package must NOT appear on the public frontend yet
             const slug = uniqueName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-            const draftResponse = await page.goto('/hajj/' + slug);
+            const draftResponse = await page.goto('/umrah/' + slug);
             expect(draftResponse.status()).toBe(404);
 
             // 18/19. Edit and publish
@@ -77,7 +88,7 @@ test.describe('Admin CMS', () => {
             await expect(page).toHaveURL(/\/admin\/packages$/);
 
             // 20 (part 2). Published package now appears on the public frontend
-            const liveResponse = await page.goto('/hajj/' + slug);
+            const liveResponse = await page.goto('/umrah/' + slug);
             expect(liveResponse.status()).toBe(200);
             await expect(page.getByRole('heading', { name: uniqueName })).toBeVisible();
             // Frontend visual redesign: duration now legitimately appears twice
@@ -167,24 +178,33 @@ test.describe('Admin CMS', () => {
 
     test('23. admin can view and update an inquiry status', async ({ page }) => {
         // Create a real inquiry via the public contact form first — uniquely
-        // named so the test targets its own row even amid other inquiries
-        // that have accumulated from previous runs (inquiries are real
-        // business records with no delete action in the admin UI, so the
-        // test can't clean up after itself the way FAQ/News/Media do).
+        // named so the test targets its own row even amid other inquiries.
+        // Regression: this test previously had no way to remove the row it
+        // created (the admin inquiry-detail page had no delete action at
+        // all) — after this whole engagement's many Playwright runs, that
+        // left 185 of 260 real `inquiries` rows as permanent test residue,
+        // found via an admin dashboard screenshot showing "234 New
+        // Inquiries" real staff would see. A delete action now exists
+        // (admin/inquiries/show.blade.php), so this cleans up in `finally`.
         const name = 'E2E Inquiry Source ' + Date.now();
 
-        await page.goto('/contact');
-        await page.getByLabel('Full Name').fill(name);
-        await page.getByLabel('Email').fill('e2e-inquiry@example.com');
-        await page.getByLabel('Phone').fill('+923001112222');
-        await page.getByLabel('Message').fill('Testing admin inquiry management.');
-        await page.getByRole('button', { name: 'Send Message' }).click();
+        try {
+            await page.goto('/contact');
+            await page.getByLabel('Full Name').fill(name);
+            await page.getByLabel('Email').fill('e2e-inquiry@example.com');
+            await page.getByLabel('Phone').fill('+923001112222');
+            await page.getByLabel('Message').fill('Testing admin inquiry management.');
+            await page.getByRole('button', { name: 'Send Message' }).click();
 
-        await page.goto('/admin/inquiries');
-        await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'View' }).click();
-        await page.locator('select[name="status"]').selectOption('contacted');
-        await page.getByRole('button', { name: 'Update Status' }).click();
-        await expect(page.locator('select[name="status"]')).toHaveValue('contacted');
+            await page.goto('/admin/inquiries');
+            await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'View' }).click();
+            await page.locator('select[name="status"]').selectOption('contacted');
+            await page.getByRole('button', { name: 'Update Status' }).click();
+            await expect(page.locator('select[name="status"]')).toHaveValue('contacted');
+        } finally {
+            page.once('dialog', (dialog) => dialog.accept());
+            await page.getByRole('button', { name: 'Delete Inquiry' }).click();
+        }
     });
 
     test('24. admin can manage the About Us page', async ({ page }) => {
@@ -204,14 +224,19 @@ test.describe('Admin CMS', () => {
         // real seeded meta_title/meta_description with throwaway test text
         // and never restored them. Capture the originals and restore them
         // afterward instead of permanently corrupting real seed data.
-        await page.goto('/admin/packages');
+        //
+        // Regression, admin panel redesign (2026-08-31): this used to reach
+        // UB001 via the *generic* `/admin/packages` listing, which no longer
+        // lists Hajj packages at all (see ADMIN_UI_DESIGN.md's critical
+        // fix) — it now goes through the real Hajj admin route instead.
+        await page.goto('/admin/hajj-packages');
         await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
         const originalMetaTitle = await page.locator('input[name="meta_title"]').inputValue();
         const originalMetaDescription = await page.locator('input[name="meta_description"]').inputValue();
 
         await page.locator('input[name="meta_title"]').fill('Playwright SEO Title Test | Universal Brothers');
         await page.locator('input[name="meta_description"]').fill('Playwright SEO description test.');
-        await page.getByRole('button', { name: 'Update Package' }).click();
+        await page.getByRole('button', { name: 'Update Hajj Package' }).click();
 
         await page.goto('/hajj');
         await page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click();
@@ -219,11 +244,11 @@ test.describe('Admin CMS', () => {
         await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', 'Playwright SEO description test.');
 
         // Cleanup: restore the real seeded values.
-        await page.goto('/admin/packages');
+        await page.goto('/admin/hajj-packages');
         await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
         await page.locator('input[name="meta_title"]').fill(originalMetaTitle);
         await page.locator('input[name="meta_description"]').fill(originalMetaDescription);
-        await page.getByRole('button', { name: 'Update Package' }).click();
+        await page.getByRole('button', { name: 'Update Hajj Package' }).click();
     });
 
     test('26. admin can create, edit, and delete a Media Gallery item (image upload)', async ({ page }) => {
@@ -306,5 +331,48 @@ test.describe('Admin CMS', () => {
         page.once('dialog', (dialog) => dialog.accept());
         await page.getByRole('row', { name: new RegExp(email) }).getByRole('button', { name: 'Delete' }).click();
         await expect(page.getByText(email)).not.toBeVisible();
+    });
+
+    test('admin can create, edit, and delete an Award (Awards module)', async ({ page }) => {
+        const name = 'Playwright E2E Test Award ' + Date.now();
+
+        try {
+            await page.goto('/admin/awards/create');
+            await page.locator('#award-name').fill(name);
+            await page.locator('#award-organization').fill('E2E Testing Organization');
+            await page.getByRole('button', { name: 'Save' }).click();
+            await expect(page).toHaveURL(/\/admin\/awards$/);
+            await expect(page.getByText(name)).toBeVisible();
+
+            await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'Edit' }).click();
+            await page.locator('#award-year').fill('2026');
+            await page.getByRole('button', { name: 'Save' }).click();
+            await expect(page.getByRole('row', { name: new RegExp(name) })).toContainText('2026');
+        } finally {
+            page.once('dialog', (dialog) => dialog.accept());
+            await page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }).click();
+            await expect(page.getByText(name)).not.toBeVisible();
+        }
+    });
+
+    test('admin can create, edit, and delete an Affiliation (Affiliations module)', async ({ page }) => {
+        const name = 'Playwright E2E Test Affiliation ' + Date.now();
+
+        try {
+            await page.goto('/admin/affiliations/create');
+            await page.locator('#affiliation-organization-name').fill(name);
+            await page.getByRole('button', { name: 'Save' }).click();
+            await expect(page).toHaveURL(/\/admin\/affiliations$/);
+            await expect(page.getByText(name)).toBeVisible();
+
+            await page.getByRole('row', { name: new RegExp(name) }).getByRole('link', { name: 'Edit' }).click();
+            await page.locator('#affiliation-year').fill('2026');
+            await page.getByRole('button', { name: 'Save' }).click();
+            await expect(page.getByRole('row', { name: new RegExp(name) })).toContainText('2026');
+        } finally {
+            page.once('dialog', (dialog) => dialog.accept());
+            await page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }).click();
+            await expect(page.getByText(name)).not.toBeVisible();
+        }
     });
 });

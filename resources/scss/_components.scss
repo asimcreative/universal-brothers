@@ -68,22 +68,244 @@ html, body {
     }
 }
 
+// No light-coloured shadow here: a `0 1px 0 rgba(255,255,255,.06)` inner edge
+// rendered as a visible pale seam between the navy navbar and the navy hero.
 .site-header {
-    box-shadow: $ub-shadow-sm;
+    box-shadow: 0 6px 24px rgba(6, 11, 30, 0.28);
 }
 
-.site-navbar {
-    padding-top: 0.85rem;
-    padding-bottom: 0.85rem;
+// --- Utility bar ------------------------------------------------------------
+// Carries contact details, the licence credential and the WhatsApp link so
+// the primary nav below it only has to hold navigation plus one CTA.
+.topbar {
+    background: $ub-navy-dark;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.8rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 
+    a {
+        color: rgba(255, 255, 255, 0.78);
+        text-decoration: none;
+        transition: color $ub-duration-fast $ub-ease;
+
+        &:hover, &:focus { color: $ub-gold-light; }
+    }
+
+    i { margin-right: 0.4rem; color: $ub-gold; }
+}
+
+.topbar-credential {
+    color: rgba(255, 255, 255, 0.62);
+    letter-spacing: 0.02em;
+}
+
+.topbar-sep { opacity: 0.4; margin: 0 0.15rem; }
+
+.topbar-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid rgba(37, 211, 102, 0.45);
+    color: #4ade80 !important;
+
+    i { color: #25d366; }
+
+    &:hover, &:focus {
+        background: rgba(37, 211, 102, 0.14);
+        color: #86efac !important;
+    }
+}
+
+// --- Primary navigation -----------------------------------------------------
+.site-navbar {
+    background: $ub-navy;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+
+    // Nowrap is the actual fix for the mid-word wrapping ("About / Us",
+    // "Awards & / Recognition") seen on the live site — the labels were
+    // being allowed to break inside a bar that was simply too narrow.
     .nav-link {
         font-weight: 500;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        padding: 0.5rem 0.62rem;
+        color: rgba(255, 255, 255, 0.82);
+        position: relative;
+        transition: color $ub-duration-fast $ub-ease;
+
+        // Gold underline that grows from the centre on hover/active — quiet
+        // feedback that does not shift layout.
+        &::after {
+            content: '';
+            position: absolute;
+            left: 0.62rem;
+            right: 0.62rem;
+            bottom: 0.22rem;
+            height: 2px;
+            background: $ub-gold;
+            transform: scaleX(0);
+            transition: transform $ub-duration-fast $ub-ease;
+        }
+
+        &:hover, &:focus, &.active, &[aria-expanded="true"] {
+            color: #fff;
+            &::after { transform: scaleX(1); }
+        }
     }
 
-    .navbar-brand {
-        font-family: $headings-font-family;
-        letter-spacing: 0.01em;
+    .dropdown-toggle::after {
+        margin-left: 0.3rem;
+        vertical-align: 0.13em;
+        opacity: 0.7;
     }
+
+    .navbar-toggler {
+        border-color: rgba(255, 255, 255, 0.25);
+        padding: 0.4rem 0.6rem;
+
+        &:focus { box-shadow: 0 0 0 0.2rem rgba($ub-gold, 0.35); }
+    }
+}
+
+// --- Brand lockup -----------------------------------------------------------
+.site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    // The brand is a real link to the homepage, so it needs a real tap
+    // target — it measured 38px tall on every mobile breakpoint.
+    min-height: 44px;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-right: 1.25rem;
+}
+
+.site-brand-mark {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    color: $ub-gold;
+
+    svg { position: absolute; inset: 0; }
+}
+
+.site-brand-initials {
+    font-family: $headings-font-family;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: $ub-gold-light;
+    line-height: 1;
+}
+
+.site-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.site-brand-name {
+    font-family: $headings-font-family;
+    font-size: 1.16rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.site-brand-tag {
+    // 0.58rem measured 9.28px, which the responsive sweep flagged as
+    // genuinely hard to read. Slightly larger with marginally tighter
+    // tracking keeps the same lockup width.
+    // Held at >=12px so no visitor-facing label falls below the readable
+    // floor; tracking is tightened to 0.12em so the larger size does not
+    // widen the brand lockup and re-crowd the 1280px nav.
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba($ub-gold-light, 0.8);
+    margin-top: 0.25rem;
+    white-space: nowrap;
+}
+
+// --- Mobile drawer ----------------------------------------------------------
+.site-mobile-nav {
+    background: $ub-navy;
+    color: #fff;
+    width: min(88vw, 360px);
+
+    .offcanvas-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.15rem 1.35rem;
+    }
+
+    .btn-close {
+        filter: invert(1) grayscale(1) brightness(2);
+        opacity: 0.8;
+    }
+
+    .offcanvas-body { padding: 0.75rem 1.35rem 2rem; }
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        font-weight: 500;
+        // 48px minimum touch target.
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+
+        &:hover, &:focus { color: $ub-gold-light; }
+    }
+
+    .nav-link-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        i { font-size: 0.8rem; transition: transform $ub-duration-fast $ub-ease; }
+        &[aria-expanded="true"] i { transform: rotate(180deg); }
+    }
+}
+
+.mobile-subnav {
+    a {
+        display: block;
+        padding: 0.62rem 0 0.62rem 1rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.66);
+        text-decoration: none;
+        border-left: 2px solid rgba($ub-gold, 0.3);
+        margin-left: 0.25rem;
+
+        &:hover, &:focus { color: $ub-gold-light; border-left-color: $ub-gold; }
+    }
+}
+
+.mobile-nav-cta {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+
+    .btn { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; }
+}
+
+.mobile-nav-phone {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding-top: 0.25rem;
+
+    i { color: $ub-gold; }
+    &:hover, &:focus { color: $ub-gold-light; }
 }
 
 // A visible, always-on-brand "Register Now" CTA in the header itself
@@ -105,7 +327,7 @@ html, body {
 .mega-menu-parent {
     position: static;
 
-    @media (min-width: 992px) {
+    @media (min-width: 1200px) {
         position: relative;
     }
 }
@@ -113,11 +335,33 @@ html, body {
 .mega-menu {
     border: none;
     border-top: 3px solid $ub-gold;
-    min-width: 480px;
+    border-radius: 0 0 $border-radius-lg $border-radius-lg;
+    box-shadow: $ub-shadow-lg;
+    padding: 0;
+    overflow: hidden;
+    min-width: 760px;
 
-    @media (min-width: 992px) {
+    @media (min-width: 1200px) {
         left: 50%;
         transform: translateX(-50%);
+    }
+}
+
+// Two link columns plus an editorial feature panel. The panel replaces what
+// was a plain white two-column list — the mega menu is the first thing a
+// desktop visitor opens, so it now carries the brand promise and a clear
+// primary action rather than only anchors.
+.mega-menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.05fr;
+    gap: 0;
+}
+
+.mega-menu-col {
+    padding: 1.65rem 1.5rem;
+
+    & + .mega-menu-col {
+        border-left: 1px solid rgba($ub-navy, 0.07);
     }
 }
 
@@ -125,10 +369,11 @@ html, body {
     display: block;
     font-family: $headings-font-family;
     font-weight: 700;
+    font-size: 1.02rem;
     color: $ub-navy;
     text-decoration: none;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.6rem;
     border-bottom: 1px solid rgba($ub-navy, 0.1);
 
     &:hover {
@@ -138,18 +383,55 @@ html, body {
 
 .mega-menu-links {
     li {
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.15rem;
     }
 
     a {
+        display: block;
         color: #495057;
         text-decoration: none;
-        font-size: 0.9rem;
+        font-size: 0.875rem;
+        padding: 0.32rem 0.55rem;
+        margin-left: -0.55rem;
+        border-radius: $border-radius-sm;
+        transition: background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
 
-        &:hover {
-            color: $ub-gold-dark;
+        &:hover, &:focus {
+            color: $ub-navy;
+            background: rgba($ub-gold, 0.12);
         }
     }
+}
+
+.mega-menu-feature {
+    display: flex;
+    align-items: flex-end;
+    min-height: 100%;
+    color: #fff;
+}
+
+.mega-menu-feature-body {
+    position: relative;
+    z-index: 2;
+    padding: 1.65rem 1.5rem;
+}
+
+.mega-menu-feature-eyebrow {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    text-transform: uppercase;
+    color: $ub-gold-light;
+    margin-bottom: 0.6rem;
+}
+
+.mega-menu-feature-title {
+    font-family: $headings-font-family;
+    font-size: 1.12rem;
+    line-height: 1.35;
+    color: #fff;
+    margin-bottom: 1.1rem;
 }
 
 .hero-slide {
@@ -185,28 +467,170 @@ html, body {
         z-index: 1;
     }
 
-    .hero-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.6rem;
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: $ub-eyebrow-letter-spacing;
-        color: $ub-gold-light;
-        margin-bottom: 1rem;
-
-        &::before, &::after {
-            content: '';
-            width: 32px;
-            height: 2px;
-            background: $ub-gold;
-        }
-    }
-
     h1 {
         text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35);
     }
+}
+
+// Top-level, not nested inside `.hero-slide`. It was scoped there, so every
+// interior page's eyebrow — now rendered by `<x-page-hero>` rather than a
+// `.hero-slide` block — silently lost its gold colour, uppercase treatment and
+// flanking rule and rendered as plain white body text.
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    color: $ub-gold-light;
+    margin-bottom: 1rem;
+
+    &::before, &::after {
+        content: '';
+        width: 32px;
+        height: 2px;
+        background: $ub-gold;
+        flex: 0 0 auto;
+    }
+}
+
+// --- Editorial hero (no-slider path) ----------------------------------------
+// This is the hero every visitor currently gets, since no Slider rows exist.
+.hero-editorial {
+    // Deliberately not a full 100vh: the trust strip immediately below must
+    // peek above the fold so the page reads as having content to scroll to.
+    min-height: min(82vh, 760px);
+    padding: 4rem 0 4.25rem;
+
+    // The eyebrow's flanking rules read as decoration when the block is
+    // centred, but as a stray leading dash when it is left-aligned.
+    .hero-eyebrow::before { display: none; }
+
+    @media (max-width: 991.98px) {
+        min-height: auto;
+        padding: 3.5rem 0 3.25rem;
+        text-align: center;
+
+        .hero-eyebrow::before { display: block; }
+    }
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 5.2vw, 4.15rem);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    margin-bottom: 1.25rem;
+}
+
+// The second line in gold — a single accent that gives the headline a focal
+// point instead of two equal-weight sentences.
+.hero-title-accent {
+    color: $ub-gold-light;
+    font-style: italic;
+}
+
+.hero-lead {
+    font-size: clamp(1.05rem, 1.45vw, 1.3rem);
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.94);
+    margin-bottom: 0.9rem;
+}
+
+.hero-copy {
+    // ~62 characters per line — long enough to carry the paragraph, short
+    // enough to stay comfortably readable against a dark background.
+    max-width: 34rem;
+    color: rgba(255, 255, 255, 0.76);
+    font-size: 0.98rem;
+    line-height: 1.72;
+    margin-bottom: 2rem;
+
+    @media (max-width: 991.98px) { margin-inline: auto; }
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    @media (max-width: 991.98px) { justify-content: center; }
+}
+
+// --- Hero credentials panel -------------------------------------------------
+// Fills what used to be an empty half of the hero with real, admin-editable
+// facts (years, pilgrims, awards, IATA status, licence number, Mina camp
+// zone) rather than decoration.
+.hero-credentials {
+    position: relative;
+    background: rgba(8, 14, 36, 0.52);
+    border: 1px solid rgba($ub-gold, 0.28);
+    border-radius: $border-radius-lg;
+    padding: 1.75rem 1.85rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}
+
+.hero-credentials-eyebrow {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    text-transform: uppercase;
+    color: rgba($ub-gold-light, 0.9);
+    margin-bottom: 1.15rem;
+}
+
+.hero-credentials-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.35rem;
+
+    li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.85rem;
+        padding: 0.7rem 0;
+
+        & + li { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+    }
+}
+
+// Fixed 8.25rem column so "20+", "10,000+" and "20+" all start their labels
+// on the same optical line — at 6.5rem the widest figure overflowed and
+// shunted only that row's label to the right.
+.hero-credential-figure {
+    font-family: $headings-font-family;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    color: $ub-gold-light;
+    flex: 0 0 8.25rem;
+    white-space: nowrap;
+}
+
+.hero-credential-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.hero-credentials-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid rgba($ub-gold, 0.22);
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    i { color: $ub-gold; font-size: 0.85rem; }
 }
 
 .news-ticker {
@@ -331,16 +755,37 @@ html, body {
     color: $ub-navy;
 }
 
+// `white-space: nowrap` + `overflow: hidden` meant the strip silently clipped
+// its last item at every width below desktop — visitors on tablet and phone
+// read "IATA Registered Ope…" and "10,000+ Pilgrims S…" cut off mid-word at
+// the viewport edge. It now wraps to as many centred rows as it needs, so no
+// credential is ever half-shown.
 .trust-ticker {
     background-color: $ub-navy-dark;
     color: $ub-gold-light;
-    overflow: hidden;
-    white-space: nowrap;
-    padding: 0.6rem 0;
+    padding: 0.85rem 0;
+    border-top: 1px solid rgba($ub-gold, 0.16);
+    border-bottom: 1px solid rgba($ub-gold, 0.16);
+
+    .container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem 2.25rem;
+    }
 
     span {
-        display: inline-block;
-        padding-right: 3rem;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.86rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 575.98px) {
+        .container { gap: 0.6rem 1.25rem; }
+        span { font-size: 0.8rem; }
     }
 }
 
@@ -376,9 +821,12 @@ html, body {
         &::before { transform: scaleX(1); }
     }
 
+    // 16:10 rather than the previous 4:3 — a wider, more cinematic media
+    // area, and the ratio the generated visual's composition is balanced
+    // for (`.ub-visual--card` in `_visuals.scss`).
     .package-card-img-wrap {
         position: relative;
-        aspect-ratio: 4 / 3;
+        aspect-ratio: 16 / 10;
         overflow: hidden;
     }
 
@@ -386,7 +834,6 @@ html, body {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        background-color: $ub-cream;
         transition: transform $ub-duration-slow $ub-ease;
     }
 
@@ -394,38 +841,128 @@ html, body {
         &:hover .package-card-img { transform: scale(1.06); }
     }
 
-    .card-body { padding: 1.5rem; }
+    // Badges sit in one flex row rather than being absolutely positioned
+    // into opposite corners, so a long package code and the "Featured" pill
+    // can never collide on a narrow card.
+    .package-card-badges {
+        position: absolute;
+        top: 0.85rem;
+        left: 0.85rem;
+        right: 0.85rem;
+        z-index: 3;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+        pointer-events: none;
+    }
+
+    .pkg-badge-featured {
+        margin-left: auto;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    // Series name as a small caps eyebrow above the title. Clamped to one
+    // line — the real series names run to 45 characters ("Platinum —
+    // Non-Aziziya (Makkah & Medinah Series)") and wrapped to three lines
+    // inside the old metadata stack.
+    .package-card-series {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: $ub-eyebrow-letter-spacing;
+        text-transform: uppercase;
+        color: $ub-gold-dark;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    // Clamped to two lines so every card in a row has the same title block
+    // height — the previous unclamped h5 produced visibly ragged card
+    // heights across the Hajj grid.
+    .package-card-title {
+        font-size: 1.16rem;
+        line-height: 1.32;
+        margin-bottom: 0.65rem;
+        color: $ub-navy;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: calc(1.16rem * 1.32 * 2);
+    }
 
     // Small icon+label chips for arrival/shifting/Aziziya — only the
     // fields actually present on the package are rendered (see
-    // package-card.blade.php), never invented.
+    // package-card.blade.php), never invented. Capped at three there.
     .package-card-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem 0.75rem;
-        font-size: 0.8rem;
-        color: rgba(33, 37, 41, 0.7);
-        margin-bottom: 0.5rem;
+        gap: 0.4rem;
+        margin-bottom: 0.65rem;
 
-        span { display: inline-flex; align-items: center; gap: 0.3rem; }
-        i { color: $ub-gold-dark; }
+        span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba($ub-navy, 0.78);
+            background: rgba($ub-navy, 0.05);
+            border-radius: 999px;
+            padding: 0.25rem 0.6rem;
+        }
+
+        i { color: $ub-gold-dark; font-size: 0.8rem; }
+    }
+
+    .package-card-foot {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba($ub-navy, 0.08);
     }
 
     .package-card-price {
         font-family: $headings-font-family;
-        font-size: 1.15rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: $ub-navy;
+        line-height: 1.1;
+        white-space: nowrap;
 
         small {
             display: block;
             font-family: $font-family-sans-serif;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: rgba(33, 37, 41, 0.55);
+            letter-spacing: 0.08em;
+            color: rgba(33, 37, 41, 0.7);
+            margin-bottom: 0.15rem;
         }
+    }
+
+    .package-card-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        white-space: nowrap;
+
+        i {
+            transition: transform $ub-duration-fast $ub-ease;
+        }
+    }
+
+    @media (hover: hover) {
+        &:hover .package-card-cta i { transform: translateX(3px); }
     }
 
     // Release-gate cross-browser QA (2026-08-30): the summary paragraph has
@@ -474,37 +1011,1074 @@ html, body {
 .filter-panel {
     background: #fff;
     border-radius: $border-radius-lg;
-    border: 1px solid rgba($ub-navy, 0.08);
+    border: 1px solid rgba($ub-navy, 0.09);
     box-shadow: $ub-shadow-sm;
     padding: 1.5rem;
+
+    // Follows the page as the visitor scrolls a long results grid. Safe only
+    // because of the `overflow-x: clip` fix at the top of this file — any
+    // non-visible overflow on an ancestor silently kills `position: sticky`.
+    @media (min-width: 992px) {
+        position: sticky;
+        top: 6.5rem;
+        max-height: calc(100vh - 8rem);
+        overflow-y: auto;
+    }
 
     .form-label {
         font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: rgba(33, 37, 41, 0.65);
+        letter-spacing: 0.06em;
+        color: rgba(33, 37, 41, 0.7);
         margin-bottom: 0.35rem;
     }
 
     .form-select, .form-control {
         border-color: rgba($ub-navy, 0.15);
+        font-size: 0.9rem;
+
+        &:focus {
+            border-color: rgba($ub-gold, 0.6);
+            box-shadow: 0 0 0 0.2rem rgba($ub-gold, 0.18);
+        }
     }
+}
+
+.filter-panel-heading {
+    font-family: $headings-font-family;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $ub-navy;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.1rem;
+    border-bottom: 2px solid rgba($ub-gold, 0.35);
 }
 
 .filter-trigger-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 0 0 auto;
 }
 
-// Series/category pill filters — upgraded from plain btn-outline-primary
-// toggle buttons into a pill row matching the rest of the design system.
+// --- Series pill bar --------------------------------------------------------
+// Single scrollable row instead of a wrapping block. The real Hajj series
+// names are 30-45 characters each, so four of them wrapped onto three rows
+// of ragged, full-width pills above the results grid.
+.series-pill-bar {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid rgba($ub-navy, 0.09);
+    scrollbar-width: thin;
+
+    // Soft fade at the trailing edge so a half-visible pill reads as "there is
+    // more to scroll" rather than as a clipped, broken element.
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.5rem), transparent 100%);
+
+    // Hairline scrollbar rather than the OS default, which is heavy enough to
+    // read as a broken element under a row of pills.
+    &::-webkit-scrollbar { height: 4px; }
+    &::-webkit-scrollbar-thumb { background: rgba($ub-navy, 0.18); border-radius: 4px; }
+}
+
 .series-pill {
+    flex: 0 0 auto;
     border-radius: 50rem;
-    padding: 0.45rem 1.1rem;
-    font-size: 0.85rem;
+    padding: 0.5rem 1.1rem;
+    font-size: 0.82rem;
     font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    color: rgba($ub-navy, 0.75);
+    background: rgba($ub-navy, 0.05);
+    border: 1px solid transparent;
+    transition: background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
+
+    &:hover, &:focus {
+        background: rgba($ub-gold, 0.16);
+        color: $ub-navy;
+    }
+
+    &.is-active {
+        background: $ub-navy;
+        color: #fff;
+    }
+}
+
+// --- Listing toolbar --------------------------------------------------------
+.listing-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.listing-count {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(33, 37, 41, 0.7);
+
+    strong { color: $ub-navy; }
+}
+
+// --- Interior page banner ---------------------------------------------------
+// Replaces the per-page flat navy `.hero-slide` blocks.
+.page-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #fff;
+    padding: 4.5rem 0 3.5rem;
+
+    @media (max-width: 767.98px) {
+        padding: 2.75rem 0 2.5rem;
+    }
+}
+
+.page-hero--compact {
+    padding: 3.25rem 0 2.75rem;
+}
+
+.page-hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.page-hero-breadcrumb {
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+
+    .breadcrumb-item {
+        + .breadcrumb-item::before { color: rgba(255, 255, 255, 0.35); }
+
+        a { color: rgba(255, 255, 255, 0.72); text-decoration: none; }
+        a:hover, a:focus { color: $ub-gold-light; }
+
+        &.active { color: rgba(255, 255, 255, 0.5); }
+    }
+}
+
+.page-hero-eyebrow {
+    margin-bottom: 0.85rem;
+
+    &::before { display: none; }
+}
+
+.page-hero-title {
+    font-size: clamp(2.1rem, 3.4vw, 3.35rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.9rem;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+.page-hero-lead {
+    max-width: 44rem;
+    margin-bottom: 0;
+    font-size: 1.02rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.page-hero-aside {
+    background: rgba(8, 14, 36, 0.5);
+    border: 1px solid rgba($ub-gold, 0.25);
+    border-radius: $border-radius-lg;
+    padding: 1.35rem 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.page-hero-copy {
+    max-width: 40rem;
+    margin: 1rem 0 0;
+    font-size: 0.96rem;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+.page-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+}
+
+.page-hero--centered {
+    padding: 5rem 0 4.5rem;
+    text-align: center;
+
+    .page-hero-breadcrumb { justify-content: center; }
+    .page-hero-lead,
+    .page-hero-copy { margin-inline: auto; }
+    .page-hero-actions { justify-content: center; }
+
+    @media (max-width: 767.98px) {
+        padding: 3rem 0 2.75rem;
+    }
+}
+
+// --- Package detail hero ----------------------------------------------------
+.package-hero {
+    .page-hero-title {
+        // The full package names run past 60 characters ("Executive Platinum
+        // Intercon / Fairmont — Medinah First"), which set as one full-width
+        // display line was uncomfortably long to read.
+        max-width: 22ch;
+        font-size: clamp(1.85rem, 2.9vw, 2.9rem);
+    }
+
+    .page-hero-lead { max-width: 46rem; }
+}
+
+// When a real cover photograph exists it becomes the hero backdrop, sitting
+// above the generated stage and under the navy scrim.
+.package-hero-photo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.42;
+}
+
+.package-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 1.15rem 0 0;
+}
+
+// Top-level: the badge pills are shared by the package card's media overlay
+// AND the package detail hero. They were originally nested inside
+// `.package-card`, so on the detail page they rendered as unstyled inline text
+// with no pill, no padding and no colour.
+.pkg-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.36rem 0.7rem;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+// Glass treatment rather than a solid black pill — reads as an overlay on the
+// composition instead of a sticker dropped on top of it.
+.pkg-badge-code {
+    color: #fff;
+    background: rgba(6, 11, 30, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+}
+
+.pkg-badge-featured {
+    color: $ub-navy-dark;
+    background: $ub-gold;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.pkg-badge-outline {
+    color: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.09);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.package-hero-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 1.5rem 0 0;
+    font-family: $headings-font-family;
+    font-size: clamp(1.6rem, 2.2vw, 2.1rem);
+    font-weight: 700;
+    color: $ub-gold-light;
+
+    span, small {
+        font-family: $font-family-sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+    }
+}
+
+// --- Award medallions -------------------------------------------------------
+// Replaces six identical `bi-trophy-fill` glyphs with per-award geometric
+// medallions carrying the award's own initials.
+.award-medallion {
+    text-align: center;
+}
+
+.award-medallion-disc {
+    position: relative;
+    width: 100%;
+    max-width: 7.5rem;
+    margin: 0 auto 0.9rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    // Double ring — the outer gold hairline plus an inner inset line reads as
+    // a struck medal rather than a coloured circle.
+    border: 2px solid rgba($ub-gold, 0.55);
+    box-shadow: inset 0 0 0 5px rgba($ub-navy-dark, 0.55), inset 0 0 0 6px rgba($ub-gold, 0.28), $ub-shadow-sm;
+    overflow: hidden;
+    transition: transform $ub-duration-base $ub-ease, box-shadow $ub-duration-base $ub-ease;
+}
+
+.award-medallion-initials {
+    position: relative;
+    z-index: 2;
+    font-family: $headings-font-family;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: $ub-gold-light;
+}
+
+.award-medallion-img {
+    position: relative;
+    z-index: 2;
+    width: 78%;
+    height: 78%;
+    object-fit: contain;
+}
+
+.award-medallion-name {
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: $ub-navy;
+    margin-bottom: 0.2rem;
+}
+
+.award-medallion-meta {
+    font-size: 0.75rem;
+    color: rgba(33, 37, 41, 0.7);
+    margin-bottom: 0;
+}
+
+@media (hover: hover) {
+    .award-medallion:hover .award-medallion-disc {
+        transform: translateY(-4px);
+        box-shadow: inset 0 0 0 5px rgba($ub-navy-dark, 0.55), inset 0 0 0 6px rgba($ub-gold, 0.5), $ub-shadow-md;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .award-medallion:hover .award-medallion-disc { transform: none; }
+}
+
+// Award medallions sitting inside a dark section need light text.
+// One place for every label that flips to light text inside a dark section
+// (the homepage awards row and the About page's affiliations row both sit on
+// navy). Kept as a single block rather than repeated per component so a new
+// dark-context label has one obvious home.
+.bg-primary, .text-white {
+    .award-medallion-name,
+    .affiliation-name { color: rgba(255, 255, 255, 0.92); }
+
+    .award-medallion-meta,
+    .affiliation-year { color: rgba(255, 255, 255, 0.6); }
+}
+
+// --- Closing CTA band -------------------------------------------------------
+.page-cta {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #fff;
+    padding: $ub-section-py 0;
+
+    @media (max-width: 767.98px) {
+        padding: $ub-section-py-sm 0;
+    }
+}
+
+.page-cta-content {
+    position: relative;
+    z-index: 2;
+}
+
+.page-cta-eyebrow {
+    justify-content: center;
+    display: inline-flex;
+}
+
+.page-cta-title {
+    font-size: clamp(1.8rem, 2.9vw, 2.75rem);
+    margin-bottom: 0.9rem;
+}
+
+.page-cta-copy {
+    max-width: 40rem;
+    margin: 0 auto 2rem;
+    color: rgba(255, 255, 255, 0.76);
+    line-height: 1.75;
+}
+
+.page-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+// --- About page aside -------------------------------------------------------
+.about-aside {
+    position: sticky;
+    top: 6.5rem;
+}
+
+.about-aside-visual {
+    margin-bottom: 1.25rem;
+    box-shadow: $ub-shadow-md;
+}
+
+// Registration/licence facts, all read from the same CMS settings the rest of
+// the site uses — nothing here is hardcoded copy.
+.about-facts {
+    margin: 0;
+    padding: 1.35rem 1.5rem;
+    background: $ub-cream;
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+
+    > div {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        padding: 0.6rem 0;
+
+        + div { border-top: 1px solid rgba($ub-navy, 0.08); }
+    }
+
+    dt {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(33, 37, 41, 0.7);
+    }
+
+    dd {
+        margin: 0;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: $ub-navy;
+        text-align: right;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .about-aside { position: static; }
+}
+
+// --- News card (Media page) -------------------------------------------------
+.news-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: $ub-shadow-sm;
+    transition: transform $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover, &:focus-visible {
+        transform: translateY(-4px);
+        box-shadow: $ub-shadow-md;
+
+        .news-card-cta i { transform: translateX(4px); }
+    }
+}
+
+.news-card-media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+}
+
+.news-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.news-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.35rem 1.4rem 1.5rem;
+}
+
+.news-card-date {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $ub-gold-dark;
+    margin-bottom: 0.5rem;
+}
+
+.news-card-title {
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: $ub-navy;
+    margin-bottom: 0.55rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.news-card-excerpt {
+    flex: 1;
+    font-size: 0.87rem;
+    line-height: 1.6;
+    color: rgba(33, 37, 41, 0.72);
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.news-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: $ub-navy;
+
+    i { transition: transform $ub-duration-fast $ub-ease; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .news-card:hover, .news-card:focus-visible { transform: none; }
+    .news-card:hover .news-card-cta i { transform: none; }
+}
+
+// --- Testimonial card -------------------------------------------------------
+.testimonial-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 2rem 1.75rem 1.6rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    box-shadow: $ub-shadow-sm;
+    overflow: hidden;
+}
+
+.testimonial-quote-mark {
+    position: absolute;
+    top: -0.85rem;
+    right: 1.1rem;
+    font-family: $headings-font-family;
+    font-size: 6rem;
+    line-height: 1;
+    color: rgba($ub-gold, 0.16);
+    pointer-events: none;
+}
+
+// Gold, not the previous `.text-secondary` grey — a grey star row reads as a
+// disabled control rather than a five-star rating.
+.testimonial-rating {
+    margin-bottom: 0.85rem;
+    color: $ub-gold;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+}
+
+.testimonial-quote {
+    flex: 1;
+    margin: 0 0 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    font-style: italic;
+    color: rgba(33, 37, 41, 0.82);
+
+    // Quote lengths vary from one line to five, which left visibly ragged
+    // cards across a row. Four lines keeps every card the same height while
+    // still showing the substance of the testimonial.
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    &::before { content: '\201C'; }
+    &::after { content: '\201D'; }
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba($ub-navy, 0.08);
+}
+
+.testimonial-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: $ub-navy;
+    color: $ub-gold-light;
+    font-family: $headings-font-family;
+    font-weight: 700;
+}
+
+.testimonial-author-name {
+    display: block;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: $ub-navy;
+}
+
+.testimonial-author-tag {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $ub-gold-dark;
+}
+
+// --- Global reach band ------------------------------------------------------
+// Full-bleed dark band with the generated stage behind it. Gives the page a
+// third surface treatment beyond the white/cream alternation that every other
+// section used.
+.global-reach {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #fff;
+
+    .section-eyebrow { color: $ub-gold-light; }
+}
+
+.global-reach-content {
+    position: relative;
+    z-index: 2;
+}
+
+.global-reach-title {
+    font-size: clamp(1.9rem, 3vw, 2.9rem);
+    margin-bottom: 0.6rem;
+}
+
+.global-reach-lead {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $ub-gold-light;
+    margin-bottom: 1rem;
+}
+
+.global-reach-copy {
+    max-width: 42rem;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.76);
+    line-height: 1.75;
+}
+
+.reach-pillar {
+    height: 100%;
+    text-align: center;
+    padding: 1.85rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: $border-radius-lg;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(4px);
+
+    i {
+        display: inline-grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 1rem;
+        border-radius: 50%;
+        font-size: 1.3rem;
+        color: $ub-gold;
+        background: rgba($ub-gold, 0.14);
+        border: 1px solid rgba($ub-gold, 0.3);
+    }
+
+    h3 {
+        font-size: 1rem;
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.65;
+        color: rgba(255, 255, 255, 0.7);
+    }
+}
+
+// --- Service entry panels ---------------------------------------------------
+.service-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: $ub-shadow-sm;
+    transition: transform $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover, &:focus-visible {
+        transform: translateY(-4px);
+        box-shadow: $ub-shadow-lg;
+
+        .service-panel-cta i { transform: translateX(4px); }
+    }
+}
+
+.service-panel-visual {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+}
+
+.service-panel-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.6rem 1.65rem 1.75rem;
+}
+
+.service-panel-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    text-transform: uppercase;
+    color: $ub-gold-dark;
+    margin-bottom: 0.55rem;
+}
+
+.service-panel-title {
+    font-size: 1.65rem;
+    color: $ub-navy;
+    margin-bottom: 0.65rem;
+}
+
+.service-panel-copy {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: rgba(33, 37, 41, 0.72);
+    margin-bottom: 1.15rem;
+}
+
+.service-panel-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: $ub-navy;
+
+    i { transition: transform $ub-duration-fast $ub-ease; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .service-panel:hover, .service-panel:focus-visible { transform: none; }
+    .service-panel:hover .service-panel-cta i { transform: none; }
+}
+
+// --- Package finder ---------------------------------------------------------
+.package-finder-section { padding-top: 0; }
+
+.package-finder {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: $border-radius-lg;
+    background: linear-gradient(135deg, #16255c 0%, #0a1230 100%);
+    border: 1px solid rgba($ub-gold, 0.28);
+    box-shadow: $ub-shadow-lg;
+    padding: 2.5rem 2.25rem;
+    color: #fff;
+
+    @media (max-width: 575.98px) {
+        padding: 1.75rem 1.35rem;
+    }
+
+    .section-eyebrow { color: $ub-gold-light; }
+}
+
+.package-finder-title {
+    font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+    margin-bottom: 0.6rem;
+}
+
+.package-finder-copy {
+    max-width: 40rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 0;
+    font-size: 0.94rem;
+}
+
+.package-finder-intro { margin-bottom: 1.85rem; }
+
+.package-finder-form {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    align-items: end;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(3, 1fr) auto;
+    }
+}
+
+.package-finder-field {
+    label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.62);
+        margin-bottom: 0.4rem;
+    }
+
+    .form-select, .form-control {
+        min-height: 48px;
+        background-color: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+
+        &::placeholder { color: rgba(255, 255, 255, 0.42); }
+
+        &:focus {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: rgba($ub-gold, 0.7);
+            box-shadow: 0 0 0 0.2rem rgba($ub-gold, 0.2);
+            color: #fff;
+        }
+    }
+
+    // A dark <select> renders its option list from the page background on
+    // some platforms, which would be white text on white.
+    option { color: $ub-navy; background: #fff; }
+}
+
+.package-finder-action .btn {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    white-space: nowrap;
+}
+
+// --- Award citation list ----------------------------------------------------
+.award-citation-list {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.award-citation {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.35rem;
+    padding: 1.5rem 1.6rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-left: 3px solid $ub-gold;
+    border-radius: $border-radius-lg;
+    box-shadow: $ub-shadow-sm;
+    transition: box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover { box-shadow: $ub-shadow-md; }
+
+    @media (max-width: 575.98px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
+.award-citation-medal {
+    flex: 0 0 auto;
+    width: 4.75rem;
+    max-width: none;
+    margin: 0;
+}
+
+.award-citation-body { min-width: 0; }
+
+.award-citation-title {
+    font-size: 1.06rem;
+    line-height: 1.35;
+    color: $ub-navy;
+    margin-bottom: 0.5rem;
+}
+
+.award-citation-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    margin-bottom: 0.5rem;
+
+    span {
+        display: inline-flex;
+        align-items: flex-start;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: rgba(33, 37, 41, 0.7);
+    }
+
+    i { color: $ub-gold-dark; margin-top: 0.15rem; }
+}
+
+.award-citation-description {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: rgba(33, 37, 41, 0.72);
+}
+
+// --- Affiliation tiles ------------------------------------------------------
+.affiliation-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    text-align: center;
+}
+
+.affiliation-mark {
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 50%;
+    border: 1px solid rgba($ub-gold, 0.4);
+    flex: 0 0 auto;
+}
+
+.affiliation-name {
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: $ub-navy;
+    line-height: 1.3;
+}
+
+.affiliation-year {
+    font-size: 0.75rem;
+    color: rgba(33, 37, 41, 0.7);
+}
+
+// --- Affiliation roster card (Affiliations page) ----------------------------
+.affiliation-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.15rem;
+    height: 100%;
+    padding: 1.4rem 1.5rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    box-shadow: $ub-shadow-sm;
+    transition: box-shadow $ub-duration-fast $ub-ease, border-color $ub-duration-fast $ub-ease;
+
+    &:hover {
+        box-shadow: $ub-shadow-md;
+        border-color: rgba($ub-gold, 0.4);
+    }
+}
+
+.affiliation-card-seal {
+    flex: 0 0 auto;
+    width: 3.75rem;
+    height: 3.75rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba($ub-gold, 0.45);
+    box-shadow: inset 0 0 0 4px rgba($ub-navy-dark, 0.5);
+    overflow: hidden;
+}
+
+.affiliation-card-initials {
+    position: relative;
+    z-index: 2;
+    font-family: $headings-font-family;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: $ub-gold-light;
+}
+
+.affiliation-card-logo {
+    position: relative;
+    z-index: 2;
+    width: 74%;
+    height: 74%;
+    object-fit: contain;
+}
+
+.affiliation-card-body { min-width: 0; }
+
+.affiliation-card-name {
+    font-size: 1rem;
+    line-height: 1.35;
+    color: $ub-navy;
+    margin-bottom: 0.25rem;
+}
+
+.affiliation-card-since {
+    font-size: 0.76rem;
+    color: rgba(33, 37, 41, 0.7);
+    margin-bottom: 0.4rem;
+}
+
+.affiliation-card-description {
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: rgba(33, 37, 41, 0.72);
+    margin-bottom: 0.5rem;
+}
+
+.affiliation-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $ub-gold-dark;
+    text-decoration: none;
+
+    &:hover, &:focus { text-decoration: underline; }
 }
 
 // --- Package hero quick-overview strip --------------------------------------
@@ -543,11 +2117,11 @@ html, body {
     }
 
     .quick-overview-label {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: rgba(33, 37, 41, 0.55);
+        color: rgba(33, 37, 41, 0.7);
         margin-bottom: 0.15rem;
     }
 
@@ -585,7 +2159,7 @@ html, body {
     }
 
     .pricing-card-variant {
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -601,7 +2175,7 @@ html, body {
 
     .pricing-card-occupancy {
         font-size: 0.8rem;
-        color: rgba(33, 37, 41, 0.6);
+        color: rgba(33, 37, 41, 0.7);
         margin-bottom: 0.75rem;
     }
 
@@ -614,7 +2188,7 @@ html, body {
 
     .pricing-card-basis {
         font-size: 0.75rem;
-        color: rgba(33, 37, 41, 0.55);
+        color: rgba(33, 37, 41, 0.7);
     }
 
     &.pricing-card-na {
@@ -622,7 +2196,7 @@ html, body {
 
         .pricing-card-price {
             font-size: 1rem;
-            color: rgba(33, 37, 41, 0.55);
+            color: rgba(33, 37, 41, 0.7);
         }
     }
 }
@@ -751,7 +2325,78 @@ html, body {
     }
 }
 
-.reveal-on-scroll {
+// --- Composed statistic panel -----------------------------------------------
+// Replaces the lone `.stat-tile` numeral that used to float in an otherwise
+// empty half-column on the Experience / Pilgrims / Hajj-feature sections —
+// several hundred pixels of blank space per section on the live site.
+.stat-panel {
+    position: relative;
+    isolation: isolate;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    min-height: 20rem;
+    display: flex;
+    align-items: flex-end;
+    box-shadow: $ub-shadow-md;
+
+    @media (max-width: 575.98px) {
+        min-height: 15rem;
+    }
+}
+
+.stat-panel-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.stat-panel-body {
+    position: relative;
+    z-index: 2;
+    padding: 2rem 2.15rem;
+    width: 100%;
+
+    // The panel background is always dark, so the figure is always the
+    // light-on-dark gold treatment regardless of the surrounding section.
+    .stat-number {
+        font-family: $headings-font-family;
+        font-size: clamp(3rem, 2.2rem + 3vw, 4.75rem);
+        font-weight: 700;
+        line-height: 1;
+        color: $ub-gold-light;
+        margin-bottom: 0.75rem;
+    }
+}
+
+.stat-panel-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.stat-panel-note {
+    margin: 0.85rem 0 0;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.72) !important;
+    max-width: 24rem;
+}
+
+// Inside an already-navy section the panel needs a visible edge, otherwise
+// it dissolves into the background.
+.stat-panel-on-dark {
+    border: 1px solid rgba($ub-gold, 0.28);
+}
+
+// Gated on `html.js` (set by an inline script in the layout head before first
+// paint). Without that gate, a failed/blocked/errored app.js bundle left every
+// revealed element permanently at `opacity: 0` — i.e. a blank page. Content
+// visibility must not depend on a script succeeding.
+.js .reveal-on-scroll {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.6s ease, transform 0.6s ease;
@@ -761,6 +2406,29 @@ html, body {
         transform: none;
     }
 }
+
+// --- Skip link ---------------------------------------------------------------
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 2000;
+    padding: 0.7rem 1.15rem;
+    border-radius: 0 0 $border-radius $border-radius;
+    background: $ub-gold;
+    color: $ub-navy-dark;
+    font-weight: 700;
+    text-decoration: none;
+    transition: top $ub-duration-fast $ub-ease;
+
+    &:focus {
+        top: 0;
+        outline: 3px solid $ub-navy;
+        outline-offset: 2px;
+    }
+}
+
+main:focus { outline: none; }
 
 @media (prefers-reduced-motion: reduce) {
     .reveal-on-scroll {
@@ -853,18 +2521,38 @@ html, body {
 }
 
 
-// Release-gate touch-target QA: `.btn-sm` (package card CTAs, the currency
-// switcher) measured ~31px tall on a real mobile viewport — under the
-// ~44px minimum touch-target guideline (WCAG 2.5.5 AAA / Apple HIG /
-// Material Design). Scoped to mobile only, so the compact desktop density
-// this theme deliberately uses elsewhere is untouched.
+// Touch-target QA: originally scoped to just `.package-card .btn` and
+// `#currency-switcher .btn`, which were the two cases the earlier release
+// gate happened to measure. A full 17-page x 13-breakpoint sweep found the
+// same shortfall on every other control — plain `.btn`s at 38px, series
+// filter pills at 37.7px, media tabs at 40px, form inputs at 38px and the
+// itinerary accordion headers at 41.6px. The rule is now site-wide on touch
+// widths, so no interactive control anywhere falls under the ~44px minimum
+// (WCAG 2.5.5 AAA / Apple HIG / Material Design). Desktop density, which
+// this theme deliberately keeps compact, is untouched.
 @media (max-width: 767px) {
-    .package-card .btn,
-    #currency-switcher .btn {
+    .btn,
+    .series-pill,
+    .nav-pills .nav-link,
+    .accordion-button,
+    .form-control,
+    .form-select {
         min-height: 44px;
+    }
+
+    .btn,
+    .series-pill,
+    .nav-pills .nav-link {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+    }
+
+    // The accordion header is a block-level button with its own chevron, so
+    // it centres its label rather than being laid out as an inline control.
+    .accordion-button {
+        display: flex;
+        align-items: center;
     }
 }
 
@@ -969,8 +2657,54 @@ h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3;
     }
 }
 
+// This guard did not exist. A comment further up claimed the button hover
+// lift was "guarded further down"; it was not, so every primary/secondary
+// button on the site still moved under `prefers-reduced-motion` — a WCAG
+// 2.3.3 gap, and the same moving-bounding-box pattern that was already
+// proven to cause intermittent cross-browser click failures on package
+// cards. The remaining two ungated hover transforms are guarded here too.
+@media (prefers-reduced-motion: reduce) {
+    .btn-primary:hover, .btn-secondary:hover, .btn-whatsapp:hover, .btn-lg:hover {
+        transform: none;
+    }
+
+    .video-testimonial-card:hover {
+        transform: none;
+    }
+
+    .package-card:hover .package-card-cta i {
+        transform: none;
+    }
+}
+
 .btn-outline-light {
     border-width: 2px;
+}
+
+// Bootstrap derives `.btn-outline-secondary`'s text colour from `$secondary`,
+// which this theme sets to `$ub-gold` (#c9a227) — 2.42:1 on white, well under
+// the 4.5:1 AA minimum, and exactly the "never use raw $ub-gold as text on a
+// light background" rule the design system already documents. Measured on the
+// listing page's "Reset" control. Repointed to the AA-safe `$ub-gold-dark`
+// while keeping the gold border, so the button still reads as gold.
+.btn-outline-secondary {
+    color: $ub-gold-dark;
+    border-color: $ub-gold;
+
+    &:hover, &:focus, &:active {
+        background-color: $ub-gold-dark;
+        border-color: $ub-gold-dark;
+        color: #fff;
+    }
+}
+
+// Star ratings on the Hajj accommodation list used Bootstrap's `.text-warning`
+// (#ffc107) on white — 1.63:1. They carry real information (a hotel's star
+// rating), so they need to be legible, not just decorative.
+.star-rating {
+    color: $ub-gold-dark;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
 }
 
 // --- Elegant image placeholder --------------------------------------------
@@ -1125,22 +2859,163 @@ h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3;
 // and a slightly larger brand line — the existing 6-column navigation
 // structure (Hajj/Umrah/Tourism/Company/Support/Contact) is unchanged.
 .site-footer {
+    background: $ub-navy-dark;
+    color: rgba(255, 255, 255, 0.72);
     border-top: 3px solid $ub-gold;
+    margin-top: 0;
+    padding: 4rem 0 1.5rem;
 
-    h4 { font-size: 1.4rem; }
+    @media (max-width: 767.98px) {
+        padding: 2.75rem 0 1.25rem;
+    }
+}
 
-    h6 {
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: $ub-gold-light !important;
+.footer-main { padding-bottom: 2.5rem; }
+
+.footer-brand {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 1.35rem;
+}
+
+.footer-brand-name {
+    font-family: $headings-font-family;
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.2rem;
+    line-height: 1.25;
+}
+
+.footer-brand-tagline {
+    font-size: 0.84rem;
+    font-style: italic;
+    color: rgba($ub-gold-light, 0.85);
+    margin-bottom: 0;
+}
+
+.footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+
+    li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        font-size: 0.86rem;
+        line-height: 1.6;
+        margin-bottom: 0.6rem;
     }
 
-    a.text-secondary {
+    i { color: $ub-gold; margin-top: 0.2rem; flex: 0 0 auto; }
+
+    a {
+        color: rgba(255, 255, 255, 0.72);
+        text-decoration: none;
+
+        &:hover, &:focus { color: $ub-gold-light; }
+    }
+}
+
+.footer-credentials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 1.15rem;
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.79rem;
+        font-weight: 600;
+        padding: 0.36rem 0.7rem;
+        border-radius: 999px;
+        color: rgba(255, 255, 255, 0.78);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba($ub-gold, 0.25);
+    }
+
+    i { color: $ub-gold; }
+}
+
+// 2.4rem measured 38.4px — under the 44px minimum tap target.
+.footer-social a {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
+
+    &:hover, &:focus {
+        background: rgba($ub-gold, 0.18);
+        color: $ub-gold-light;
+    }
+}
+
+.footer-heading {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: $ub-gold-light;
+    margin-bottom: 1rem;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li { margin-bottom: 0.55rem; }
+
+    a {
+        font-size: 0.86rem;
+        color: rgba(255, 255, 255, 0.68);
+        text-decoration: none;
         transition: color $ub-duration-fast $ub-ease;
 
-        &:hover { color: #fff !important; }
+        &:hover, &:focus { color: #fff; }
+    }
+}
+
+.footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-copy {
+    margin: 0;
+    font-size: 0.79rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.15rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    a {
+        font-size: 0.79rem;
+        color: rgba(255, 255, 255, 0.55);
+        text-decoration: none;
+
+        &:hover, &:focus { color: $ub-gold-light; }
     }
 }
 

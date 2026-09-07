@@ -58,3 +58,51 @@ Firefox and WebKit Playwright projects were added (previously Chromium/mobile-Ch
 
 - **Real device testing** (an actual phone/tablet, not a viewport emulation) — not possible in this environment; Playwright's device profiles emulate viewport/UA/touch but are not a substitute for a real device pass before launch.
 - **The admin panel's mobile nav** was fixed in an earlier pass (see FINAL_AUDIT_REPORT.md §4 — an offcanvas fallback now exists below `md`, verified by a real Playwright test at 390×844).
+
+---
+
+# Measured responsive sweep — 2026-09-05 (visual overhaul)
+
+Screenshot review catches "this looks wrong"; it does not reliably catch a single clipped chip on one breakpoint, an 11px caption, or a 38px tap target. `.visual-audit/qa.mjs` loads every public page at every required breakpoint in a real browser, scrolls each page so reveals and counters fire, and then **measures**:
+
+- horizontal overflow (`scrollWidth > clientWidth`), naming the offending elements
+- text clipped by an `overflow: hidden/clip` ancestor
+- any font-size below 12px
+- any interactive control below 44px tall on touch widths
+- HTTP status
+
+**Coverage:** 17 pages × 13 breakpoints = **221 checks**.
+Pages: `/`, `/hajj`, `/umrah`, `/tourism`, `/hajj-services`, `/umrah-services`, `/about-us`, `/awards`, `/affiliations`, `/media`, `/testimonials`, `/faqs`, `/contact`, a Hajj package detail, and the three legal pages (which had no responsive coverage at all before this pass).
+Breakpoints: 1920 / 1600 / 1440 / 1366 / 1280 · 1024 / 900 / 768 · 430 / 414 / 390 / 375 / 360.
+
+## Findings and resolution
+
+| Round | Checks with findings | What was found |
+|---|---|---|
+| 1 | 221 / 221 | Tap targets and micro-label sizes across the global chrome |
+| 2 | 127 / 221 | Remaining tap targets; two false positives identified |
+| 3 | 78 / 221 | Residual sub-12px labels |
+| 4 | **0 / 221** | **Clean** |
+
+**Tap targets.** The pre-existing 44px rule covered only `.package-card .btn` and `#currency-switcher .btn`. The sweep found plain buttons at 38px, series pills at 37.7px, media tabs at 40px, form inputs at 38px, itinerary accordion headers at 41.6px, the footer social button at 38.4px and the brand link at 38px. The rule is now site-wide on touch widths.
+
+**Micro-labels.** 104 instances between 10.5px and 11.9px across eyebrows, badges, form labels and captions. Every sub-12px declaration was raised to a consistent 0.75rem floor. The brand tagline's tracking was tightened alongside so the larger size did not widen the brand lockup — verified separately that the nav still renders as a single row at 1280, 1366, 1440 and 1920.
+
+**Two false positives were identified as such and excluded from the checker rather than "fixed":**
+- A *collapsed* Bootstrap accordion panel is supposed to be clipped by its item.
+- `<option>` elements are drawn by the browser in a native popup, not inside the `<select>` box.
+
+## Final result
+
+```
+17 paths x 13 breakpoints = 221 checks, 0 with findings
+CLEAN — no issues found
+```
+
+Zero horizontal overflow, zero clipped text, zero sub-12px text, zero sub-44px tap targets, all 17 pages HTTP 200, at all 13 breakpoints.
+
+## Specific regressions closed by this sweep
+
+- **Trust strip clipping.** `.trust-ticker` used `white-space: nowrap` + `overflow: hidden`, so its last credential was cut mid-word at every width below desktop ("10,000+ Pilgrims S…", "IATA Registered Ope…"). It now wraps to centred rows. Verified non-clipping at 1440 / 1024 / 768 / 390 / 360 by measuring each span against its container.
+- **Desktop filter sidebar.** Previously `visibility: hidden` and 400px off-screen at ≥992px while its trigger was `display: none` — no way to filter Hajj packages on desktop at all, and a dead 25% column. See `FRONTEND_QA.md`.
+- **Legal pages** (`/privacy-policy`, `/terms-and-conditions`, `/refund-policy`) are now covered; they previously had no responsive testing of any kind.

@@ -10,32 +10,63 @@
 @endpush
 
 @section('content')
-    <div class="hero-slide" style="min-height: 38vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content py-4">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
-                    <li class="breadcrumb-item active text-white-50" aria-current="page">{{ $page->title }}</li>
-                </ol>
-            </nav>
-            @if($page->template === 'about')<span class="hero-eyebrow">Our Story</span>@endif
-            <h1>{{ $page->title }}</h1>
-        </div>
-    </div>
+    <x-page-hero
+        :eyebrow="$page->template === 'about' ? 'Our Story' : null"
+        :title="$page->title"
+        :breadcrumbs="['Home' => route('home'), $page->title => null]" />
 
     @if($page->template === 'about')
-        {{-- Beginning --}}
+        {{-- Beginning.
+             Two-column editorial rather than one narrow centred text column:
+             `.page-body` caps prose at 46rem, so inside the old `col-lg-9` the
+             right-hand third of the page was left permanently blank. The story
+             now sits beside a composed visual and a credentials panel built
+             from the same CMS settings the rest of the site reads. --}}
         <section class="section">
             <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-lg-9">
-                        @if($page->featured_image)
-                            <img src="{{ Storage::url($page->featured_image) }}" alt="{{ $page->title }}" class="img-fluid rounded mb-4" loading="lazy">
-                        @endif
+                <div class="row g-5">
+                    <div class="col-lg-7 reveal-on-scroll">
                         <span class="section-eyebrow">The Beginning</span>
                         <div class="page-body">
                             {!! $page->body !!}
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 reveal-on-scroll reveal-delay-2">
+                        <div class="about-aside">
+                            <x-visual
+                                :image="$page->featured_image"
+                                :alt="$page->title"
+                                seed="about-universal-brothers"
+                                surface="panel"
+                                caption="Serving the Guests of Allah"
+                                mark=""
+                                class="about-aside-visual" />
+
+                            <dl class="about-facts">
+                                <div>
+                                    <dt>Parent Group</dt>
+                                    <dd>{{ \App\Models\SiteSetting::get('parent_group', "Maxim's Group") }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Operating Brand</dt>
+                                    <dd>{{ \App\Models\SiteSetting::get('brand_name', 'Crown Packages') }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Hajj Licence No.</dt>
+                                    <dd>{{ \App\Models\SiteSetting::get('government_license_no', '2014') }}</dd>
+                                </div>
+                                <div>
+                                    <dt>Hajj Registration No.</dt>
+                                    <dd>{{ \App\Models\SiteSetting::get('hajj_registration_no', '4143') }}</dd>
+                                </div>
+                                @if(\App\Models\SiteSetting::get('mina_camp_location'))
+                                    <div>
+                                        <dt>Mina Camp</dt>
+                                        <dd>{{ \App\Models\SiteSetting::get('mina_camp_location') }}</dd>
+                                    </div>
+                                @endif
+                            </dl>
                         </div>
                     </div>
                 </div>
@@ -52,19 +83,19 @@
                 <div class="row g-4 text-center">
                     <div class="col-md-4">
                         <div class="stat-tile">
-                            <div class="stat-number" data-counter-target="{{ (int) preg_replace('/\D/', '', $stats['years']) ?: 0 }}">0</div>
+                            <x-stat-number :display="$stats['years']" />
                             <div class="small text-uppercase fw-semibold">Years of Experience</div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="stat-tile">
-                            <div class="stat-number" data-counter-target="{{ (int) preg_replace('/\D/', '', $stats['pilgrims']) ?: 0 }}">0</div>
+                            <x-stat-number :display="$stats['pilgrims']" />
                             <div class="small text-uppercase fw-semibold">Pilgrims Served</div>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="stat-tile">
-                            <div class="stat-number" data-counter-target="{{ (int) preg_replace('/\D/', '', (string) $stats['awards_count']) ?: 0 }}">0</div>
+                            <x-stat-number :display="(string) $stats['awards_count']" />
                             <div class="small text-uppercase fw-semibold">Awards &amp; Recognitions</div>
                         </div>
                     </div>

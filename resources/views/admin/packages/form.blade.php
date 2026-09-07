@@ -1,17 +1,22 @@
 @extends('layouts.admin')
 
 @section('title', $package->exists ? 'Edit Package' : 'New Package')
+@section('subtitle', 'For Umrah and Tourism packages. Hajj packages have their own dedicated form.')
+
+@section('actions')
+    <a href="{{ route('admin.packages.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Packages</a>
+@endsection
 
 @section('content')
     <form method="POST" action="{{ $package->exists ? route('admin.packages.update', $package) : route('admin.packages.store') }}" enctype="multipart/form-data">
         @csrf
         @if($package->exists) @method('PUT') @endif
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white fw-semibold">Basic Information</div>
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Basic Information</div>
             <div class="card-body row g-3">
                 <div class="col-md-4">
-                    <label for="pkg-category" class="form-label">Category</label>
+                    <label for="pkg-category" class="form-label">Category <span class="required-mark">*</span></label>
                     <select name="package_category_id" id="pkg-category" class="form-select" required>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" {{ old('package_category_id', $package->package_category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -33,17 +38,18 @@
                 </div>
 
                 <div class="col-md-8">
-                    <label for="pkg-name" class="form-label">Name</label>
+                    <label for="pkg-name" class="form-label">Name <span class="required-mark">*</span></label>
                     <input type="text" name="name" id="pkg-name" class="form-control" value="{{ old('name', $package->name) }}" required>
                 </div>
                 <div class="col-md-4">
-                    <label for="pkg-slug" class="form-label">Slug</label>
+                    <label for="pkg-slug" class="form-label">Slug <span class="required-mark">*</span></label>
                     <input type="text" name="slug" id="pkg-slug" class="form-control" value="{{ old('slug', $package->slug) }}" required>
                 </div>
 
                 <div class="col-12">
                     <label for="pkg-summary" class="form-label">Summary</label>
                     <textarea name="summary" id="pkg-summary" class="form-control" rows="2">{{ old('summary', $package->summary) }}</textarea>
+                    <div class="form-text">Shown on the package card and at the top of the package page.</div>
                 </div>
                 <div class="col-12">
                     <label for="pkg-description" class="form-label">Description</label>
@@ -102,15 +108,15 @@
                 <div class="col-md-3">
                     <label for="pkg-status" class="form-label">Status</label>
                     <select name="status" id="pkg-status" class="form-select">
-                        <option value="draft" {{ old('status', $package->status) === 'draft' ? 'selected' : '' }}>Draft</option>
-                        <option value="published" {{ old('status', $package->status) === 'published' ? 'selected' : '' }}>Published</option>
+                        <option value="draft" {{ old('status', $package->status) === 'draft' ? 'selected' : '' }}>Draft (hidden from the public site)</option>
+                        <option value="published" {{ old('status', $package->status) === 'published' ? 'selected' : '' }}>Published (live on the public site)</option>
                     </select>
                 </div>
                 <div class="col-md-6">
                     <label for="pkg-cover-image" class="form-label">Cover Image</label>
                     <input type="file" name="cover_image" id="pkg-cover-image" class="form-control" accept="image/*">
                     @if($package->cover_image)
-                        <img src="{{ Storage::url($package->cover_image) }}" class="mt-2" style="height:60px;" alt="Current cover image">
+                        <img src="{{ Storage::url($package->cover_image) }}" class="mt-2 rounded" style="height:60px;" alt="Current cover image">
                     @endif
                 </div>
 
@@ -125,16 +131,16 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white fw-semibold d-flex justify-content-between">
-                Itinerary
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <span><i class="bi bi-calendar-week me-2" aria-hidden="true"></i>Itinerary</span>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="add-itinerary-row">+ Add Day</button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm align-middle" id="itinerary-table">
                         <thead>
-                            <tr><th>Day #</th><th>Date</th><th>Hijri Label</th><th>City</th><th>Accommodation A</th><th>Accommodation B</th><th></th></tr>
+                            <tr><th>Day #</th><th>English Date</th><th>Islamic Date</th><th>City</th><th>Accommodation A</th><th>Accommodation B</th><th></th></tr>
                         </thead>
                         <tbody>
                             @php
@@ -165,12 +171,13 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white fw-semibold d-flex justify-content-between">
-                Price Tiers
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <span><i class="bi bi-cash-coin me-2" aria-hidden="true"></i>Price Tiers</span>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="add-tier-row">+ Add Tier</button>
             </div>
             <div class="card-body">
+                <p class="form-section-hint">Leave a room type blank if this package doesn't offer it — it will show as "N/A" rather than an invented price.</p>
                 <div id="tiers-container">
                     @php $tierRows = old('tiers', $package->priceTiers?->map(fn ($t) => ['label' => $t->label, 'prices' => $t->roomPrices->pluck('price', 'room_type')])->toArray() ?? []); @endphp
                     @forelse($tierRows as $i => $tier)
@@ -205,8 +212,8 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white fw-semibold">Inclusions &amp; Exclusions</div>
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-check2-square me-2" aria-hidden="true"></i>Inclusions &amp; Exclusions</div>
             <div class="card-body row g-3">
                 <div class="col-md-6">
                     <label for="pkg-inclusions" class="form-label">Inclusions (one per line)</label>
@@ -219,8 +226,10 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">{{ $package->exists ? 'Update Package' : 'Create Package' }}</button>
-        <a href="{{ route('admin.packages.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">{{ $package->exists ? 'Update Package' : 'Create Package' }}</button>
+            <a href="{{ route('admin.packages.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
     </form>
 
     {{-- Hidden templates for JS-added rows --}}

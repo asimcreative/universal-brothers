@@ -2,4 +2,9 @@
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 @import 'animations';
+// `visuals` before `components`: the generated-visual system defines the
+// motif/variant vocabulary that package cards, heroes and award tiles in
+// `components` then compose against.
+@import 'visuals';
 @import 'components';
+@import 'admin';

@@ -3,7 +3,7 @@
 @section('title', 'Affiliations')
 
 @section('actions')
-    <a href="{{ route('admin.affiliations.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Affiliation</a>
+    <a href="{{ route('admin.affiliations.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Affiliation</a>
 @endsection
 
 @section('content')
@@ -18,22 +18,27 @@
                                 @if($affiliation->logo)
                                     <img src="{{ Storage::url($affiliation->logo) }}" style="height:40px;" alt="{{ $affiliation->organization_name }}">
                                 @else
-                                    <i class="bi bi-diagram-3 fs-4 text-muted"></i>
+                                    <i class="bi bi-diagram-3 fs-4 text-muted" aria-hidden="true"></i>
                                 @endif
                             </td>
                             <td>{{ $affiliation->organization_name }}</td>
                             <td>{{ $affiliation->year ?? '—' }}</td>
-                            <td>{!! $affiliation->is_active ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
+                            <td><span class="status-pill {{ $affiliation->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $affiliation->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.affiliations.edit', $affiliation) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.affiliations.destroy', $affiliation) }}" class="d-inline" onsubmit="return confirm('Delete this affiliation?')">
+                                <form method="POST" action="{{ route('admin.affiliations.destroy', $affiliation) }}" class="d-inline" onsubmit="return confirm('Delete this affiliation? This cannot be undone.')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-muted py-4">No affiliations yet.</td></tr>
+                        <tr><td colspan="5">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                                No affiliations yet.
+                            </div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

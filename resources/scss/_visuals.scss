@@ -1,0 +1,396 @@
+// ---------------------------------------------------------------------
+// UB Generated Visual System  (visual overhaul, 2026-09-05)
+// ---------------------------------------------------------------------
+//
+// WHY THIS EXISTS
+//
+// This project ships with zero photography. The database confirms it:
+// 0 of 47 packages have a `cover_image`, 0 of 7 awards have an `image`,
+// 0 of 10 affiliations have a `logo`, and there are 0 sliders and 0 media
+// items. Every image slot on the public site was therefore rendering a
+// flat navy box containing the literal words "PHOTO COMING SOON" — 3 on
+// the homepage, 9 on the Hajj listing, 9 on Tourism, 7 on Awards, 6 on
+// Hajj Services. A company with twenty years of trading history was being
+// presented to clients as an unfinished prototype.
+//
+// The fix is NOT to invent photographs of hotels, staff or pilgrims, and
+// it is NOT to hotlink stock imagery. Instead every image slot falls back
+// to a *generated* composition built purely from CSS gradients and inline
+// SVG geometry, so it reads as a deliberate brand pattern rather than a
+// missing asset. The instant an admin uploads a real `cover_image`, the
+// photograph takes over and none of this is rendered.
+//
+// DESIGN LANGUAGE
+//
+// The motifs are drawn from Islamic geometric tradition — khatim (eight-
+// point star) tessellation, the overlapping-circle "construction grid",
+// girih strapwork, zellige octagons, muqarnas chevrons and an arcade of
+// ogee arches. They are strictly non-figurative: no depiction of people,
+// and no rendering of the Kaaba or the Haramain, which would be both
+// disrespectful and dishonest as a stand-in for real photography.
+//
+// VARIATION
+//
+// A twelve-card grid must not look like twelve identical boxes. Each
+// visual picks 1 of 8 variants from a *deterministic* seed (the package
+// code, award id, etc.), so a given package always renders the same
+// composition across page loads, pagination and cache — stable, not
+// random.
+
+// ---------------------------------------------------------------------
+// Motif library — inline SVG, URL-encoded (`#` must be written `%23`).
+// ---------------------------------------------------------------------
+
+// Khatim: the classic eight-point star, built the traditional way from a
+// square overlaid with the same square rotated 45°. Tessellates on a
+// half-drop so stars meet at every tile corner and at the centre.
+$ub-motif-khatim: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1.1'%3E%3Crect x='26' y='26' width='28' height='28'/%3E%3Crect x='26' y='26' width='28' height='28' transform='rotate(45 40 40)'/%3E%3Crect x='-14' y='-14' width='28' height='28'/%3E%3Crect x='-14' y='-14' width='28' height='28' transform='rotate(45 0 0)'/%3E%3Crect x='66' y='-14' width='28' height='28'/%3E%3Crect x='66' y='-14' width='28' height='28' transform='rotate(45 80 0)'/%3E%3Crect x='-14' y='66' width='28' height='28'/%3E%3Crect x='-14' y='66' width='28' height='28' transform='rotate(45 0 80)'/%3E%3Crect x='66' y='66' width='28' height='28'/%3E%3Crect x='66' y='66' width='28' height='28' transform='rotate(45 80 80)'/%3E%3C/g%3E%3C/svg%3E";
+
+// The overlapping-circle grid every Islamic pattern is compass-constructed
+// from — used here in its own right as the quietest motif in the set.
+$ub-motif-circles: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1'%3E%3Ccircle cx='0' cy='0' r='30'/%3E%3Ccircle cx='60' cy='0' r='30'/%3E%3Ccircle cx='0' cy='60' r='30'/%3E%3Ccircle cx='60' cy='60' r='30'/%3E%3Ccircle cx='30' cy='30' r='30'/%3E%3Ccircle cx='30' cy='30' r='11'/%3E%3C/g%3E%3C/svg%3E";
+
+// An arcade of ogee arches — the one architectural motif in the set. Reads
+// as a colonnade rather than a pattern, so it carries the larger surfaces.
+$ub-motif-arcade: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='120' viewBox='0 0 100 120'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1.2'%3E%3Cpath d='M14 120 V64 C14 40 32 28 50 8 C68 28 86 40 86 64 V120'/%3E%3Cpath d='M30 120 V72 C30 56 40 48 50 36 C60 48 70 56 70 72 V120'/%3E%3C/g%3E%3C/svg%3E";
+
+// Girih strapwork — interlaced diagonals through a diamond lattice.
+$ub-motif-girih: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1'%3E%3Cpath d='M24 0 L48 24 L24 48 L0 24 Z'/%3E%3Cpath d='M0 0 L48 48 M48 0 L0 48'/%3E%3C/g%3E%3C/svg%3E";
+
+// Muqarnas-inspired stacked chevrons — the most linear, most restrained
+// motif; used where a pattern must stay well behind foreground text.
+$ub-motif-chevron: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='32' viewBox='0 0 48 32'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1'%3E%3Cpath d='M0 24 L12 8 L24 24 L36 8 L48 24'/%3E%3Cpath d='M0 32 L12 16 L24 32 L36 16 L48 32'/%3E%3C/g%3E%3C/svg%3E";
+
+// Zellige: octagons separated by small rotated squares.
+$ub-motif-zellige: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1'%3E%3Cpath d='M18 0 H42 L60 18 V42 L42 60 H18 L0 42 V18 Z'/%3E%3Cpath d='M30 23 L37 30 L30 37 L23 30 Z'/%3E%3C/g%3E%3C/svg%3E";
+
+// A single large rosette — deliberately NOT a tile. Placed once, off-centre,
+// on hero and page-banner surfaces so those read as a composition rather
+// than as wallpaper.
+$ub-motif-rosette: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640' viewBox='0 0 640 640'%3E%3Cg fill='none' stroke='%23E8C766' stroke-width='1' opacity='0.9'%3E%3Ccircle cx='320' cy='320' r='300'/%3E%3Ccircle cx='320' cy='320' r='240'/%3E%3Ccircle cx='320' cy='320' r='168'/%3E%3Ccircle cx='320' cy='320' r='96'/%3E%3Cpath d='M320 20 V620' /%3E%3Cpath d='M320 20 V620' transform='rotate(30 320 320)'/%3E%3Cpath d='M320 20 V620' transform='rotate(60 320 320)'/%3E%3Cpath d='M320 20 V620' transform='rotate(90 320 320)'/%3E%3Cpath d='M320 20 V620' transform='rotate(120 320 320)'/%3E%3Cpath d='M320 20 V620' transform='rotate(150 320 320)'/%3E%3Crect x='150' y='150' width='340' height='340'/%3E%3Crect x='150' y='150' width='340' height='340' transform='rotate(45 320 320)'/%3E%3C/g%3E%3C/svg%3E";
+
+// Fine fractal grain. Breaks up the banding that large, low-contrast
+// gradients otherwise show on wide gamut displays.
+//
+// The filter reference is written `url%28%23g%29` rather than `url(#g)`.
+// Vite's CSS pipeline scans preprocessor source for `url(` tokens so it can
+// rebase asset paths, and it rewrote the one *inside* this data URI to
+// `url("%23g")` — the injected double quote closed the surrounding Sass
+// string early and the build died with `Undefined operation "…url(" % 23g`.
+// Percent-encoding the parentheses keeps the token invisible to that
+// scanner; the browser percent-decodes the data URI back to `url(#g)`
+// before the SVG parser ever sees it, so the filter still resolves.
+$ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url%28%23g%29'/%3E%3C/svg%3E";
+
+// ---------------------------------------------------------------------
+// Base component
+// ---------------------------------------------------------------------
+//
+// Layer order, back to front:
+//   1. base gradient      (per-variant hue)
+//   2. accent bloom       (soft gold radial, per-variant position)
+//   3. geometric motif    (per-variant, masked so it fades rather than
+//                          stopping at a hard edge)
+//   4. grain
+//   5. vignette
+//   6. foreground content (emblem / figure / caption)
+
+.ub-visual {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background-color: $ub-navy-dark;
+    color: rgba(255, 255, 255, 0.92);
+
+    // Per-variant custom properties, overridden by the `--vN` modifiers.
+    --ubv-from: #{$ub-navy};
+    --ubv-to: #{$ub-navy-dark};
+    --ubv-bloom-x: 78%;
+    --ubv-bloom-y: 22%;
+    --ubv-bloom-size: 62%;
+    --ubv-bloom-alpha: 0.3;
+    --ubv-motif: url("#{$ub-motif-khatim}");
+    --ubv-motif-size: 80px 80px;
+    --ubv-motif-alpha: 0.24;
+    --ubv-motif-angle: 0deg;
+
+    background-image: linear-gradient(145deg, var(--ubv-from) 0%, var(--ubv-to) 100%);
+
+    // Bloom + motif. Kept on ::before so the element's own background can
+    // stay the flat gradient and be safely overridden by page-level code.
+    &::before {
+        content: '';
+        position: absolute;
+        inset: -12%;
+        background-image:
+            radial-gradient(
+                circle at var(--ubv-bloom-x) var(--ubv-bloom-y),
+                rgba($ub-gold-light, var(--ubv-bloom-alpha)) 0%,
+                rgba($ub-gold, calc(var(--ubv-bloom-alpha) * 0.35)) 30%,
+                rgba($ub-navy-dark, 0) 68%
+            ),
+            var(--ubv-motif);
+        background-size: auto, var(--ubv-motif-size);
+        background-repeat: no-repeat, repeat;
+        background-position: center, center;
+        opacity: var(--ubv-motif-alpha);
+        transform: rotate(var(--ubv-motif-angle));
+        // Fade the pattern out toward the lower edge so foreground text
+        // (card titles sit right below) never fights a busy lattice.
+        mask-image: linear-gradient(200deg, #000 0%, #000 45%, rgba(0, 0, 0, 0.25) 100%);
+        pointer-events: none;
+    }
+
+    // Grain + vignette.
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            url("#{$ub-motif-grain}"),
+            radial-gradient(ellipse at 50% 40%, rgba(0, 0, 0, 0) 45%, rgba($ub-navy-dark, 0.55) 100%);
+        background-size: 140px 140px, cover;
+        opacity: 0.5;
+        mix-blend-mode: soft-light;
+        pointer-events: none;
+    }
+}
+
+// ---------------------------------------------------------------------
+// Variants — 8 distinct compositions.
+// ---------------------------------------------------------------------
+// Hues stay inside the brand's navy/indigo/teal-slate range; the gold is
+// carried by the bloom rather than by a second hue, so a grid of mixed
+// variants still reads as one family.
+
+.ub-visual--v0 {
+    --ubv-from: #16255c;
+    --ubv-to: #080f2a;
+    --ubv-motif: url("#{$ub-motif-khatim}");
+    --ubv-motif-size: 80px 80px;
+    --ubv-bloom-x: 80%;
+    --ubv-bloom-y: 18%;
+}
+
+.ub-visual--v1 {
+    --ubv-from: #14213f;
+    --ubv-to: #0b1733;
+    --ubv-motif: url("#{$ub-motif-circles}");
+    --ubv-motif-size: 66px 66px;
+    --ubv-motif-alpha: 0.2;
+    --ubv-bloom-x: 24%;
+    --ubv-bloom-y: 26%;
+    --ubv-bloom-size: 58%;
+}
+
+.ub-visual--v2 {
+    --ubv-from: #1b2a55;
+    --ubv-to: #0a1128;
+    --ubv-motif: url("#{$ub-motif-arcade}");
+    --ubv-motif-size: 118px 142px;
+    --ubv-motif-alpha: 0.28;
+    --ubv-bloom-x: 50%;
+    --ubv-bloom-y: 88%;
+    --ubv-bloom-alpha: 0.34;
+}
+
+.ub-visual--v3 {
+    --ubv-from: #122246;
+    --ubv-to: #070d24;
+    --ubv-motif: url("#{$ub-motif-girih}");
+    --ubv-motif-size: 54px 54px;
+    --ubv-motif-alpha: 0.18;
+    --ubv-bloom-x: 86%;
+    --ubv-bloom-y: 74%;
+}
+
+.ub-visual--v4 {
+    --ubv-from: #172d51;
+    --ubv-to: #0a1430;
+    --ubv-motif: url("#{$ub-motif-zellige}");
+    --ubv-motif-size: 72px 72px;
+    --ubv-motif-alpha: 0.22;
+    --ubv-bloom-x: 18%;
+    --ubv-bloom-y: 80%;
+}
+
+.ub-visual--v5 {
+    --ubv-from: #101d43;
+    --ubv-to: #0c1531;
+    --ubv-motif: url("#{$ub-motif-chevron}");
+    --ubv-motif-size: 56px 38px;
+    --ubv-motif-alpha: 0.2;
+    --ubv-bloom-x: 62%;
+    --ubv-bloom-y: 14%;
+    --ubv-bloom-alpha: 0.32;
+}
+
+.ub-visual--v6 {
+    --ubv-from: #1a2b4e;
+    --ubv-to: #080f27;
+    --ubv-motif: url("#{$ub-motif-khatim}");
+    --ubv-motif-size: 108px 108px;
+    --ubv-motif-alpha: 0.2;
+    --ubv-motif-angle: 12deg;
+    --ubv-bloom-x: 30%;
+    --ubv-bloom-y: 62%;
+}
+
+.ub-visual--v7 {
+    --ubv-from: #132444;
+    --ubv-to: #0a1229;
+    --ubv-motif: url("#{$ub-motif-circles}");
+    --ubv-motif-size: 96px 96px;
+    --ubv-motif-alpha: 0.16;
+    --ubv-bloom-x: 72%;
+    --ubv-bloom-y: 50%;
+    --ubv-bloom-alpha: 0.36;
+}
+
+// ---------------------------------------------------------------------
+// Foreground content
+// ---------------------------------------------------------------------
+
+.ub-visual__inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    padding: 1.25rem 1.35rem;
+}
+
+// The large ghosted numeral/word — a magazine-style figure drawn from real
+// data (a package's day count, an award's year). Never invented: the Blade
+// component simply omits it when the underlying field is empty.
+.ub-visual__figure {
+    font-family: $headings-font-family;
+    font-weight: 700;
+    line-height: 0.86;
+    font-size: clamp(3.25rem, 7vw, 5.25rem);
+    letter-spacing: -0.02em;
+    color: rgba($ub-gold-light, 0.9);
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+
+    small {
+        display: block;
+        font-family: $font-family-sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: $ub-eyebrow-letter-spacing;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.66);
+        margin-top: 0.5rem;
+    }
+}
+
+.ub-visual__caption {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+// Small gold rule that anchors the composition to the bottom-left corner.
+.ub-visual__rule {
+    width: 2.25rem;
+    height: 2px;
+    background: $ub-gold;
+    border-radius: 2px;
+    margin-bottom: 0.15rem;
+}
+
+// The corner monogram — quiet brand signature so the generated visual
+// reads as "designed by the brand" rather than "asset failed to load".
+.ub-visual__mark {
+    position: absolute;
+    z-index: 2;
+    top: 1rem;
+    right: 1.1rem;
+    font-family: $headings-font-family;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba($ub-gold-light, 0.55);
+}
+
+// ---------------------------------------------------------------------
+// Surface modifiers
+// ---------------------------------------------------------------------
+
+// Card media area — fixed ratio so a grid never goes ragged.
+.ub-visual--card {
+    aspect-ratio: 16 / 10;
+    width: 100%;
+}
+
+// Tall portrait tile, used by the split editorial sections.
+.ub-visual--panel {
+    aspect-ratio: 4 / 3;
+    width: 100%;
+    border-radius: $border-radius-lg;
+}
+
+.ub-visual--square {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+}
+
+// Full-bleed background layer for hero / page banners. Uses the single
+// large rosette instead of a repeating tile.
+.ub-visual--stage {
+    position: absolute;
+    inset: 0;
+    --ubv-from: #16255c;
+    --ubv-to: #060b1e;
+    --ubv-motif: url("#{$ub-motif-rosette}");
+    --ubv-motif-size: min(150vh, 1100px) min(150vh, 1100px);
+    --ubv-motif-alpha: 0.3;
+    --ubv-bloom-x: 74%;
+    --ubv-bloom-y: 26%;
+    --ubv-bloom-alpha: 0.38;
+
+    &::before {
+        background-repeat: no-repeat, no-repeat;
+        background-position: center, 78% 42%;
+        mask-image: radial-gradient(ellipse at 74% 40%, #000 0%, rgba(0, 0, 0, 0.35) 62%, rgba(0, 0, 0, 0) 88%);
+    }
+}
+
+// A quieter stage for interior page banners, so only the homepage hero
+// carries the full rosette at full strength.
+.ub-visual--stage-sm {
+    --ubv-motif-size: min(110vh, 780px) min(110vh, 780px);
+    --ubv-motif-alpha: 0.22;
+    --ubv-bloom-alpha: 0.3;
+    --ubv-bloom-x: 82%;
+    --ubv-bloom-y: 34%;
+}
+
+// ---------------------------------------------------------------------
+// Motion
+// ---------------------------------------------------------------------
+// A very slow drift on the hero rosette only — 60s per cycle, a few
+// percent of travel. Enough to stop the hero reading as a static JPEG,
+// far too slow to distract or to cost meaningful CPU.
+
+@keyframes ub-visual-drift {
+    0%   { transform: translate3d(0, 0, 0) scale(1); }
+    50%  { transform: translate3d(-1.5%, 1.2%, 0) scale(1.045); }
+    100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.ub-visual--stage::before {
+    animation: ub-visual-drift 60s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ub-visual--stage::before {
+        animation: none;
+    }
+}

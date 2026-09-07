@@ -4,30 +4,31 @@
 @section('meta_description', $package->meta_description ?: Str::limit($package->publicSummary() ?? '', 160))
 
 @section('content')
-    <div class="hero-slide" style="min-height: 42vh;">
-        <div class="hero-slide-bg" @if($package->cover_image) style="background-image: url('{{ Storage::url($package->cover_image) }}')" @else style="background-image: linear-gradient(135deg, #101B45, #0A1230)" @endif></div>
-        <div class="container hero-content py-4">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('packages.category', $package->category->slug) }}" class="text-light">{{ $package->category->name }}</a></li>
-                    <li class="breadcrumb-item active text-white-50" aria-current="page">{{ $package->name }}</li>
-                </ol>
-            </nav>
-            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                @if($package->code)<span class="badge bg-secondary">{{ $package->code }}</span>@endif
-                @if($package->season_label)<span class="badge bg-light text-dark">{{ $package->season_label }}</span>@endif
-                @if($package->duration_label)<span class="badge bg-light text-dark">{{ $package->duration_label }}</span>@endif
-                @if(!is_null($package->is_shifting))<span class="badge bg-light text-dark">{{ $package->is_shifting ? 'Shifting' : 'Non-Shifting' }}</span>@endif
-                @if(!is_null($package->has_aziziya))<span class="badge bg-light text-dark">{{ $package->has_aziziya ? 'With Aziziya' : 'Non-Aziziya' }}</span>@endif
-            </div>
-            <h1>{{ $package->name }}</h1>
-            @if($package->publicSummary())<p class="lead mb-0" style="max-width: 720px;">{{ $package->publicSummary() }}</p>@endif
-            @if($package->starting_price)
-                <p class="fs-5 fw-semibold mt-2 mb-0 text-white">From {{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}</p>
-            @endif
+    <x-page-hero
+        class="package-hero"
+        :eyebrow="$package->series?->name"
+        :title="$package->name"
+        :lead="$package->publicSummary()"
+        :breadcrumbs="['Home' => route('home'), $package->category->name => route('packages.category', $package->category->slug), $package->name => null]">
+        @if($package->cover_image)
+            <img src="{{ Storage::url($package->cover_image) }}" alt="{{ $package->name }}" class="package-hero-photo" decoding="async">
+        @endif
+
+        <div class="package-hero-badges">
+            @if($package->code)<span class="pkg-badge pkg-badge-featured">{{ $package->code }}</span>@endif
+            @if($package->season_label)<span class="pkg-badge pkg-badge-outline">{{ $package->season_label }}</span>@endif
+            @if($package->duration_label)<span class="pkg-badge pkg-badge-outline">{{ $package->duration_label }}</span>@endif
+            @if(!is_null($package->is_shifting))<span class="pkg-badge pkg-badge-outline">{{ $package->is_shifting ? 'Shifting' : 'Non-Shifting' }}</span>@endif
+            @if(!is_null($package->has_aziziya))<span class="pkg-badge pkg-badge-outline">{{ $package->has_aziziya ? 'With Aziziya' : 'Non-Aziziya' }}</span>@endif
         </div>
-    </div>
+
+        @if($package->starting_price)
+            <p class="package-hero-price">
+                <span>From</span>{{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}
+                <small>per person</small>
+            </p>
+        @endif
+    </x-page-hero>
 
     <div class="container py-5">
         <div class="row g-5">

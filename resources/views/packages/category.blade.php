@@ -4,34 +4,38 @@
 @section('meta_description', 'Browse real ' . $category->name . ' packages from Universal Brothers — IATA-registered Hajj, Umrah and Tourism operator.')
 
 @section('content')
-    <div class="hero-slide" style="min-height: 42vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content py-4">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
-                    <li class="breadcrumb-item active text-white-50" aria-current="page">{{ $category->name }}</li>
-                </ol>
-            </nav>
-            <span class="hero-eyebrow">{{ $packages->total() }} {{ Str::plural('Package', $packages->total()) }} Available</span>
-            <h1>{{ $category->name }} Packages</h1>
-            @if($category->description)<p class="lead mb-0" style="max-width: 720px;">{{ $category->description }}</p>@endif
-        </div>
-    </div>
+    <x-page-hero
+        :title="$category->name . ' Packages'"
+        :eyebrow="$packages->total() > 0 ? $packages->total() . ' ' . Str::plural('Package', $packages->total()) . ' Available' : null"
+        :lead="$category->description"
+        :breadcrumbs="['Home' => route('home'), $category->name => null]" />
 
     <div class="container py-5">
-        <div class="row g-4">
+        <div class="row g-4 g-xl-5">
             @if($hajjFilters)
                 <div class="col-lg-3">
-                    {{-- Bootstrap's responsive offcanvas: a slide-in drawer below
-                         `lg`, a plain static sidebar panel at `lg` and above —
-                         one form, no duplicated fields/ids between breakpoints. --}}
-                    <div class="offcanvas offcanvas-end offcanvas-lg filter-panel" tabindex="-1" id="hajjFilterPanel">
+                    {{-- `offcanvas-lg` ONLY — the plain `offcanvas` class must not
+                         be applied alongside it.
+
+                         Bootstrap's `.offcanvas` sets `position: fixed`,
+                         `visibility: hidden` and `transform: translateX(100%)`
+                         unconditionally, and `.offcanvas-lg`'s ≥992px block
+                         resets neither `position` nor `visibility`. With both
+                         classes present the panel was therefore still hidden and
+                         parked 400px off-screen at desktop widths, while its
+                         `.d-lg-none` trigger button was simultaneously display:none
+                         — so desktop visitors had NO way to filter packages at all,
+                         and the reserved col-lg-3 rendered as a dead empty column.
+                         Verified on the live site by reading the computed styles.
+                         The existing Playwright coverage only exercised 375px, so
+                         it never saw this. --}}
+                    <div class="offcanvas-end offcanvas-lg filter-panel" tabindex="-1" id="hajjFilterPanel">
                         <div class="offcanvas-header d-lg-none">
                             <h2 class="offcanvas-title h5 mb-0">Filter Packages</h2>
                             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#hajjFilterPanel" aria-label="Close filters"></button>
                         </div>
                         <div class="offcanvas-body d-block">
+                            <p class="filter-panel-heading d-none d-lg-block">Refine Packages</p>
                             <form method="GET" action="{{ route('packages.category', $category->slug) }}" class="row g-3">
                                 <div class="col-12">
                                     <label for="filter-days" class="form-label">Duration</label>
@@ -100,14 +104,26 @@
             @endif
 
             <div class="{{ $hajjFilters ? 'col-lg-9' : 'col-12' }}">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-                    @if($series->isNotEmpty())
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('packages.category', $category->slug) }}" class="btn series-pill {{ request('series') ? 'btn-outline-primary' : 'btn-primary' }}">All</a>
-                            @foreach($series as $s)
-                                <a href="{{ route('packages.category', [$category->slug, 'series' => $s->slug]) }}" class="btn series-pill {{ request('series') === $s->slug ? 'btn-primary' : 'btn-outline-primary' }}">{{ $s->name }}</a>
-                            @endforeach
-                        </div>
+                @if($series->isNotEmpty())
+                    {{-- Horizontal scroll rather than wrap: the real series names
+                         run to 45 characters, so on the live site four pills wrapped
+                         onto three ragged rows above the grid. --}}
+                    <div class="series-pill-bar" role="group" aria-label="Filter by series">
+                        <a href="{{ route('packages.category', $category->slug) }}" class="series-pill {{ request('series') ? '' : 'is-active' }}">All</a>
+                        @foreach($series as $s)
+                            <a href="{{ route('packages.category', [$category->slug, 'series' => $s->slug]) }}" class="series-pill {{ request('series') === $s->slug ? 'is-active' : '' }}">{{ $s->name }}</a>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="listing-toolbar">
+                    {{-- Suppressed at zero: "Showing 0 of 0 umrah packages" directly
+                         above an honest empty state that already says the same thing
+                         only made the page read as broken. --}}
+                    @if($packages->total() > 0)
+                        <p class="listing-count">
+                            Showing <strong>{{ $packages->count() }}</strong> of <strong>{{ $packages->total() }}</strong> {{ Str::lower($category->name) }} {{ Str::plural('package', $packages->total()) }}
+                        </p>
                     @endif
                     @if($hajjFilters)
                         <button type="button" class="btn btn-outline-primary filter-trigger-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#hajjFilterPanel" aria-controls="hajjFilterPanel">

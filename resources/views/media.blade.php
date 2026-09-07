@@ -4,19 +4,11 @@
 @section('meta_description', 'News, videos and photo gallery from Universal Brothers (Pvt) Ltd — Hajj, Umrah and Tourism operator.')
 
 @section('content')
-    <div class="hero-slide" style="min-height: 38vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content py-4">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
-                    <li class="breadcrumb-item active text-white-50" aria-current="page">Media</li>
-                </ol>
-            </nav>
-            <span class="hero-eyebrow">News &middot; Gallery &middot; Videos</span>
-            <h1>Media</h1>
-        </div>
-    </div>
+    <x-page-hero
+        eyebrow="News · Gallery · Videos"
+        title="Media"
+        lead="Press coverage, event photography and pilgrim stories from Universal Brothers."
+        :breadcrumbs="['Home' => route('home'), 'Media' => null]" />
 
     <div class="container section-tight">
         <ul class="nav nav-pills mb-4" id="mediaTabs" role="tablist">
@@ -39,16 +31,28 @@
                     <div class="row g-4">
                         @foreach($news as $article)
                             <div class="col-md-4">
-                                <a href="{{ route('news.show', $article->slug) }}" class="text-decoration-none text-reset">
-                                    <div class="card h-100 border-0 shadow-sm reveal-on-scroll">
-                                        @if($article->cover_image)
-                                            <img src="{{ Storage::url($article->cover_image) }}" class="card-img-top package-card-img" alt="{{ $article->title }}" loading="lazy">
+                                {{-- The news card had NO image fallback at all: an
+                                     article without a cover simply rendered a
+                                     headline floating on white with no media
+                                     area, so a mixed grid went ragged. --}}
+                                <a href="{{ route('news.show', $article->slug) }}" class="news-card reveal-on-scroll">
+                                    <div class="news-card-media">
+                                        <x-visual
+                                            :image="$article->cover_image"
+                                            :alt="$article->title"
+                                            :seed="$article->slug"
+                                            surface="card"
+                                            :caption="optional($article->published_at)->format('M Y')"
+                                            mark=""
+                                            class="news-card-img" />
+                                    </div>
+                                    <div class="news-card-body">
+                                        <p class="news-card-date">{{ optional($article->published_at)->format('d M Y') }}</p>
+                                        <h3 class="news-card-title">{{ $article->title }}</h3>
+                                        @if($article->excerpt)
+                                            <p class="news-card-excerpt">{{ Str::limit($article->excerpt, 100) }}</p>
                                         @endif
-                                        <div class="card-body">
-                                            <p class="small text-muted mb-1">{{ optional($article->published_at)->format('d M Y') }}</p>
-                                            <h3 class="h6">{{ $article->title }}</h3>
-                                            <p class="small text-secondary">{{ Str::limit($article->excerpt ?? '', 100) }}</p>
-                                        </div>
+                                        <span class="news-card-cta">Read More<i class="bi bi-arrow-right" aria-hidden="true"></i></span>
                                     </div>
                                 </a>
                             </div>
@@ -93,4 +97,6 @@
             </div>
         </div>
     </div>
+
+    <x-page-cta />
 @endsection

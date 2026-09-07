@@ -5,21 +5,18 @@
 
 @section('content')
     {{-- Hero --}}
-    <div class="hero-slide" style="min-height: 55vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content text-center py-5 text-white">
-            <div class="hero-anim mx-auto" style="max-width: 780px;">
-                <span class="hero-eyebrow">Umrah, Anytime</span>
-                <h1 class="display-5 fw-bold">Your Umrah. Your Time. Your Journey.</h1>
-                <p class="lead">Thoughtfully Planned From Pakistan to the Holy Lands</p>
-                <p class="mx-auto" style="max-width: 640px;">From a short spiritual retreat to an extended family journey, our Umrah services can be tailored around your preferred dates, duration, accommodation and travel requirements.</p>
-                <div class="d-flex justify-content-center flex-wrap gap-2 mt-4">
-                    <a href="{{ route('packages.category', 'umrah') }}" class="btn btn-secondary btn-lg">Explore Umrah Packages</a>
-                    <a href="{{ route('contact') }}" class="btn btn-outline-light btn-lg">Request a Customized Umrah</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-page-hero
+        centered
+        eyebrow="Umrah, Anytime"
+        title="Your Umrah. Your Time. Your Journey."
+        lead="Thoughtfully Planned From Pakistan to the Holy Lands"
+        copy="From a short spiritual retreat to an extended family journey, our Umrah services can be tailored around your preferred dates, duration, accommodation and travel requirements."
+        :breadcrumbs="['Home' => route('home'), 'Umrah Services' => null]">
+        <x-slot:actions>
+            <a href="{{ route('packages.category', 'umrah') }}" class="btn btn-secondary btn-lg">Explore Umrah Packages</a>
+            <a href="{{ route('contact') }}" class="btn btn-outline-light btn-lg">Request a Customized Umrah</a>
+        </x-slot:actions>
+    </x-page-hero>
 
     {{-- Services included --}}
     <section class="section">
@@ -52,10 +49,12 @@
                     <p class="text-secondary">Makkah and Madinah hotel choices, airport transfers and intercity transportation are arranged as part of every Umrah package — exact hotels and arrangements vary by package. See each package's detail page for full accommodation and transport information.</p>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    <div class="split-section-visual visual-placeholder">
-                        <i class="bi bi-building"></i>
-                        <span>Accommodation &amp; Transport</span>
-                    </div>
+                    <x-visual
+                        surface="panel"
+                        seed="umrah-accommodation-transport"
+                        caption="Accommodation & Transport"
+                        mark=""
+                        class="split-section-visual" />
                 </div>
             </div>
         </div>

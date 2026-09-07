@@ -74,3 +74,54 @@ A follow-up UI/UX quality pass explicitly built around *not* trusting the previo
 **Everything else reviewed** (homepage at all 13 breakpoints, Hajj listing at all 13, Hajj detail at all 13, plus every other public page at desktop+mobile): no additional horizontal overflow, no broken cards, no unreadable pricing, no broken accordions found. The mobile filter drawer, itinerary timeline, quick-overview strip, and currency switcher were all re-verified as both visually clean and functionally correct (including confirming the Hajj brochure genuinely contains USD-only pricing — zero of the 67 seeded room options have any SAR/PKR value — so the currency switcher's SAR/PKR views correctly and consistently show "N/A" rather than a fabricated conversion; disclosed as a real, pre-existing content characteristic, not a defect).
 
 **Regression**: PHPUnit 141/141 unchanged; package/business data integrity directly re-verified (12 Hajj packages, 47 total packages, 67 room options, 7 awards, 10 affiliations, 0 orphaned test records). Full 5-project Playwright suite run twice back-to-back after both fixes: **run 1 — 205 passed, 4 skipped, 0 failed, 0 flaky; run 2 — see `REGRESSION_TEST_RESULTS.md` for the exact figure.**
+
+---
+
+# Live-site visual audit and overhaul — 2026-09-05
+
+The owner reviewed the deployed site at `https://universal-brothers.iisol.co` and rejected the visual result. This audit was performed against the **live rendered pages**, not the source and not the test suite. 15 pages were captured at desktop (1440) and mobile (390) and reviewed as images; the automated pass alongside it measured overflow, broken images, console errors and placeholder text per page.
+
+## What actually looked bad
+
+| # | Finding | Evidence |
+|---|---|---|
+| 1 | **No photography anywhere.** Every image slot rendered a dark box reading "PHOTO COMING SOON" — 3 on the homepage, 9 on the Hajj listing, 9 on Tourism, 7 on Awards, 6 on Hajj Services. | DB: 0/47 packages with `cover_image`, 0/7 awards with `image`, 0/10 affiliations with `logo`, 0 sliders, 0 media items |
+| 2 | **Hero was a flat navy rectangle** — no media, centred text, ~900px of empty colour. | `home.blade.php` fallback branch used `background-image: linear-gradient(...)` |
+| 3 | **All 13 interior pages inlined the identical flat gradient hero** with per-file `min-height` of 38/42/48/55vh. | The direct cause of "every dark section looks the same" |
+| 4 | **Split sections had one empty half** — a lone numeral in several hundred pixels of blank white/cream. | Experience, Pilgrims-served, Hajj-feature sections |
+| 5 | **Header nav wrapped mid-phrase** — "About / Us", "Awards & / Recognition", "WhatsApp / Us". | 10 items + brand + 2 CTAs in a 992px bar |
+| 6 | **Awards were six identical trophy glyphs**; the Awards page grid went ragged because only some awards carry an issuing organisation. | `award-badge.blade.php` fell back to `bi-trophy-fill` for every record |
+| 7 | **Package cards read as Bootstrap admin rows** — five stacked lines of tiny icon+text metadata. | |
+| 8 | **Series filter pills wrapped onto three ragged rows.** | Real series names are 30–45 characters |
+| 9 | **Trust strip silently clipped its last item** at every width below desktop. | `white-space: nowrap` + `overflow: hidden` |
+| 10 | Brand was plain text with no mark; favicon was a deliberately blank `data:,`. | |
+
+## Genuine defects found that the passing test suite had not caught
+
+1. **CRITICAL — statistics server-rendered as `0`.** The HTML delivered to every visitor and every crawler read "0 Years of Experience / 0 Pilgrims Served / 0 Awards & Recognitions". Only JavaScript ever wrote the real value. Confirmed by curling the live HTML.
+2. **CRITICAL — desktop visitors could not filter Hajj packages at all.** The filter panel carried both `offcanvas` and `offcanvas-lg`; Bootstrap's plain `.offcanvas` sets `position:fixed; visibility:hidden; transform:translateX(100%)` unconditionally and `.offcanvas-lg`'s ≥992px block resets neither. Verified live via `getComputedStyle`: `visibility: hidden`, parked 400px off-screen, while its trigger button was `display:none`. A dead 25% column was left behind. The existing Playwright coverage only exercised 375px.
+3. **Raw database enum keys shown to visitors** — the Hajj Transportation section printed `airport_transfer`, `mashaer`, `train_or_bus`, `car_taxi`, `vip_gmc`. Fixed with a `transportLabel()` accessor on the model so every consumer resolves the same label.
+4. **Content visibility depended on JavaScript** — 19 homepage blocks sat at `opacity: 0` until `app.js` ran, with all four initialisers in one un-caught handler.
+5. **`IntersectionObserver` threshold unreachable** for tall elements — `threshold: 0.15` cannot be met by anything taller than ~6.7 viewports.
+6. **Ungated button hover lift** — a comment claimed it was "guarded further down"; no guard existed. `.package-card-cta` is a `.btn-primary`, so the "View Details" link was moving during click-actionability checks — the documented cause of the intermittent cross-browser click flake.
+7. Empty `<img src="">` in the lightbox modal (flagged as a broken image on every page), and a double-escaping bug that rendered "News &middot; Gallery &middot; Videos" literally on the Media page.
+
+## What changed, page by page
+
+- **Homepage** — cinematic composed hero with a credentials panel; three approved-but-never-built sections added ("Trusted by Pilgrims Around the World" with both approved sub-lines, the Servicing tri-panel including the previously-absent Tourism third, and the "Filter My Packages" widget); stat sections rebuilt as composed panels; awards row rebuilt as differentiated medallions.
+- **Package listings** — composed banner, working desktop filter sidebar (sticky), single scrollable series-pill row with a fade affordance, result count suppressed at zero, premium cards.
+- **Hajj package detail** — composed hero carrying the real cover photo when one exists, proper badge pills, prominent per-person price. **Every field verified still present** — 30-point checklist including Package A/B variants, all four room types, Aziziya pricing, Kaba View supplement, Qurbani, Mina/Arafat detail, day-by-day itinerary with Gregorian and Hijri dates, transportation, meals, inclusions and exclusions.
+- **Awards** — citation list with per-award medallions.
+- **Affiliations** — institutional roster cards with geometric seals; organisation name kept as accessible text in both the logo and no-logo branches.
+- **Media** — news cards gained an image fallback they never had.
+- **Testimonials** — quote-mark cards, gold ratings, clamped quotes so a row cannot go ragged.
+- **About Us** — two-column editorial with a credentials aside, replacing a narrow centred column that left the right third of the page permanently blank.
+- **Footer** — one balanced grid with credential badges and a legal bar, replacing a 4-column row followed by a half-empty second row.
+- **Contact / FAQs / Services pages** — shared banner, closing CTA.
+
+## Deliberately not changed
+
+- No business fact was invented. Every figure, credential, price and package field traces to `SiteSetting` or the real package tables.
+- No currency conversion was introduced. All Hajj room options carry `price_usd` only; the brochure is USD-only by design and a converted figure would be a fabricated commercial number.
+- Honest empty states ("No umrah packages are published yet…", "No news articles have been published yet.") keep their exact meaning — only their presentation improved.
+- The 7 award records remain provisional pending owner confirmation; the public "20+" figure is CMS-driven and deliberately decoupled from `Award::count()`.

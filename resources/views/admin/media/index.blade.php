@@ -3,7 +3,7 @@
 @section('title', 'Media Gallery')
 
 @section('actions')
-    <a href="{{ route('admin.media.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Media Item</a>
+    <a href="{{ route('admin.media.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Media Item</a>
 @endsection
 
 @section('content')
@@ -18,23 +18,28 @@
                                 @if($item->media_type === 'image' && $item->file_path)
                                     <img src="{{ Storage::url($item->file_path) }}" style="height:40px;" alt="{{ $item->title }}">
                                 @else
-                                    <i class="bi bi-play-circle fs-4 text-muted"></i>
+                                    <i class="bi bi-play-circle fs-4 text-muted" aria-hidden="true"></i>
                                 @endif
                             </td>
                             <td>{{ $item->title ?? '—' }}</td>
                             <td class="text-capitalize">{{ $item->media_type }}</td>
                             <td class="text-capitalize">{{ $item->gallery_type }}</td>
-                            <td>{!! $item->is_active ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
+                            <td><span class="status-pill {{ $item->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $item->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.media.edit', $item) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.media.destroy', $item) }}" class="d-inline" onsubmit="return confirm('Delete this media item?')">
+                                <form method="POST" action="{{ route('admin.media.destroy', $item) }}" class="d-inline" onsubmit="return confirm('Delete this media item? This cannot be undone.')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center text-muted py-4">No media items yet.</td></tr>
+                        <tr><td colspan="6">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-collection-play" aria-hidden="true"></i>
+                                No media items yet.
+                            </div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

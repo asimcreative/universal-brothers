@@ -1,67 +1,91 @@
 import { test, expect } from '@playwright/test';
+import { execFileSync } from 'child_process';
+
+const PHP_BIN = process.env.PHP_BIN || 'C:/laragon/bin/php/php-8.3.16-Win32-vs16-x64/php.exe';
+
+// See public.spec.js's identical helper for the full regression this closes
+// — these journeys submit real inquiries with no admin session available to
+// delete them through the UI, and were part of the 185-of-260 real
+// `inquiries` rows left as permanent test residue across this engagement.
+// `--env=testing` — see the identical helper in public.spec.js for why.
+function deleteTestInquiriesByEmail(email) {
+    execFileSync(PHP_BIN, ['artisan', 'tinker', '--env=testing', '--execute', `App\\Models\\Inquiry::where('email', '${email}')->delete();`], { stdio: 'ignore' });
+}
 
 test.describe('Full business journeys — visitor', () => {
     test('Journey A: Homepage -> Hajj -> Package Listing -> Package Detail -> Inquiry CTA -> Submit -> Confirmation', async ({ page }) => {
-        await page.goto('/');
-        // "Hajj & Umrah" is a mega-menu trigger (role="button" — it opens a
-        // panel, it isn't real navigation); the real "Hajj Packages" link
-        // lives inside that panel.
-        await page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
-        await page.locator('.mega-menu').getByRole('link', { name: 'Hajj Packages', exact: true }).click();
-        await expect(page).toHaveURL(/\/hajj$/);
+        try {
+            await page.goto('/');
+            // "Hajj & Umrah" is a mega-menu trigger (role="button" — it opens a
+            // panel, it isn't real navigation); the real "Hajj Packages" link
+            // lives inside that panel.
+            await page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
+            await page.locator('.mega-menu').getByRole('link', { name: 'Hajj Packages', exact: true }).click();
+            await expect(page).toHaveURL(/\/hajj$/);
 
-        await expect(page.locator('.package-card').first()).toBeVisible();
-        await page.getByRole('link', { name: 'View Details' }).first().click();
-        await expect(page).toHaveURL(/\/hajj\//);
+            await expect(page.locator('.package-card').first()).toBeVisible();
+            await page.getByRole('link', { name: 'View Details' }).first().click();
+            await expect(page).toHaveURL(/\/hajj\//);
 
-        await page.getByLabel('Full Name').fill('Journey A Tester');
-        await page.getByLabel('Email').fill('journey-a@example.com');
-        await page.getByLabel('Phone / WhatsApp').fill('+923001110001');
-        await page.getByLabel('Message').fill('Journey A automated test.');
-        await page.getByRole('button', { name: 'Submit Inquiry' }).click();
+            await page.getByLabel('Full Name').fill('Journey A Tester');
+            await page.getByLabel('Email').fill('journey-a@example.com');
+            await page.getByLabel('Phone / WhatsApp').fill('+923001110001');
+            await page.getByLabel('Message').fill('Journey A automated test.');
+            await page.getByRole('button', { name: 'Submit Inquiry' }).click();
 
-        await expect(page.getByText(/inquiry has been received/i)).toBeVisible();
+            await expect(page.getByText(/inquiry has been received/i)).toBeVisible();
+        } finally {
+            deleteTestInquiriesByEmail('journey-a@example.com');
+        }
     });
 
     test('Journey B: Homepage -> Umrah -> (no packages yet) -> Contact instead', async ({ page }) => {
-        await page.goto('/');
-        await page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
-        await page.locator('.mega-menu').getByRole('link', { name: 'Umrah Packages', exact: true }).click();
-        await expect(page).toHaveURL(/\/umrah$/);
+        try {
+            await page.goto('/');
+            await page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
+            await page.locator('.mega-menu').getByRole('link', { name: 'Umrah Packages', exact: true }).click();
+            await expect(page).toHaveURL(/\/umrah$/);
 
-        // Real content gap: Umrah has no packages yet (source data doesn't exist).
-        // The honest empty state must point the visitor somewhere useful, not dead-end.
-        await expect(page.getByText(/No umrah packages are published yet/i)).toBeVisible();
-        await page.getByRole('link', { name: 'contact us', exact: true }).click();
-        await expect(page).toHaveURL(/\/contact$/);
+            // Real content gap: Umrah has no packages yet (source data doesn't exist).
+            // The honest empty state must point the visitor somewhere useful, not dead-end.
+            await expect(page.getByText(/No umrah packages are published yet/i)).toBeVisible();
+            await page.getByRole('link', { name: 'contact us', exact: true }).click();
+            await expect(page).toHaveURL(/\/contact$/);
 
-        await page.getByLabel('Full Name').fill('Journey B Tester');
-        await page.getByLabel('Email').fill('journey-b@example.com');
-        await page.getByLabel('Phone').fill('+923001110002');
-        await page.getByLabel('Message').fill('Journey B automated test — asking about Umrah availability.');
-        await page.getByRole('button', { name: 'Send Message' }).click();
+            await page.getByLabel('Full Name').fill('Journey B Tester');
+            await page.getByLabel('Email').fill('journey-b@example.com');
+            await page.getByLabel('Phone').fill('+923001110002');
+            await page.getByLabel('Message').fill('Journey B automated test — asking about Umrah availability.');
+            await page.getByRole('button', { name: 'Send Message' }).click();
 
-        await expect(page.getByText(/thank you for contacting us/i)).toBeVisible();
+            await expect(page.getByText(/thank you for contacting us/i)).toBeVisible();
+        } finally {
+            deleteTestInquiriesByEmail('journey-b@example.com');
+        }
     });
 
     test('Journey C: Homepage -> Tourism -> Package -> Inquiry', async ({ page }) => {
-        await page.goto('/');
-        // "Tourism" is a dropdown trigger (role="button"); it reveals
-        // Domestic/International sub-links rather than navigating itself.
-        await page.locator('nav.navbar').getByRole('button', { name: 'Tourism', exact: true }).click();
-        await page.getByRole('link', { name: 'Domestic Tourism', exact: true }).click();
-        await expect(page.url()).toMatch(/\/tourism/);
+        try {
+            await page.goto('/');
+            // "Tourism" is a dropdown trigger (role="button"); it reveals
+            // Domestic/International sub-links rather than navigating itself.
+            await page.locator('nav.navbar').getByRole('button', { name: 'Tourism', exact: true }).click();
+            await page.getByRole('link', { name: 'Domestic Tourism', exact: true }).click();
+            await expect(page.url()).toMatch(/\/tourism/);
 
-        await page.getByRole('link', { name: 'View Details' }).first().click();
-        await expect(page.url()).toMatch(/\/tourism\//);
+            await page.getByRole('link', { name: 'View Details' }).first().click();
+            await expect(page.url()).toMatch(/\/tourism\//);
 
-        await page.getByLabel('Full Name').fill('Journey C Tester');
-        await page.getByLabel('Email').fill('journey-c@example.com');
-        await page.getByLabel('Phone / WhatsApp').fill('+923001110003');
-        await page.getByLabel('Message').fill('Journey C automated test.');
-        await page.getByRole('button', { name: 'Submit Inquiry' }).click();
+            await page.getByLabel('Full Name').fill('Journey C Tester');
+            await page.getByLabel('Email').fill('journey-c@example.com');
+            await page.getByLabel('Phone / WhatsApp').fill('+923001110003');
+            await page.getByLabel('Message').fill('Journey C automated test.');
+            await page.getByRole('button', { name: 'Submit Inquiry' }).click();
 
-        await expect(page.getByText(/inquiry has been received/i)).toBeVisible();
+            await expect(page.getByText(/inquiry has been received/i)).toBeVisible();
+        } finally {
+            deleteTestInquiriesByEmail('journey-c@example.com');
+        }
     });
 
     test('Journey D: Homepage -> Awards -> real award content displays', async ({ page }) => {

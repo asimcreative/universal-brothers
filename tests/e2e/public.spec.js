@@ -1,4 +1,26 @@
 import { test, expect } from '@playwright/test';
+import { execFileSync } from 'child_process';
+
+const PHP_BIN = process.env.PHP_BIN || 'C:/laragon/bin/php/php-8.3.16-Win32-vs16-x64/php.exe';
+
+// Regression: these two tests submit real inquiry/contact forms to prove the
+// real business flow works end-to-end — that's the point, so the resulting
+// row must actually be written, not mocked. But with no admin session in
+// this file (deliberately anonymous/visitor-only), neither test had any way
+// to remove what it created afterward, and after this whole engagement's
+// many Playwright runs that left 185 of 260 real `inquiries` rows as
+// permanent "Playwright Tester"/"E2E Inquiry Source ..." test residue —
+// found via an admin dashboard screenshot showing "234 New Inquiries" real
+// staff would see. This deletes only the exact rows this run's own tests
+// just created, by email, every time — safe as a no-op if the row already
+// doesn't exist.
+// `--env=testing` is required: the E2E server itself runs with it (see
+// playwright.config.js), so the rows this deletes have to be looked up in
+// the same `database/testing.sqlite` the server wrote them to. Without it
+// the cleanup silently no-ops against the dev database instead.
+function deleteTestInquiriesByEmail(email) {
+    execFileSync(PHP_BIN, ['artisan', 'tinker', '--env=testing', '--execute', `App\\Models\\Inquiry::where('email', '${email}')->delete();`], { stdio: 'ignore' });
+}
 
 test.describe('Public website', () => {
     test('1. homepage loads successfully', async ({ page }) => {
@@ -129,20 +151,24 @@ test.describe('Public website', () => {
         // is rendering/layout, covered by tests 13 and 14.
         test.skip(isMobile, 'Submission logic covered on desktop — avoids shared rate-limit contention.');
 
-        await page.goto('/hajj');
-        // Same click/navigation race as test 6 — arm the wait before clicking.
-        await Promise.all([
-            page.waitForURL(/\/hajj\/.+/),
-            page.getByRole('link', { name: 'View Details' }).first().click(),
-        ]);
+        try {
+            await page.goto('/hajj');
+            // Same click/navigation race as test 6 — arm the wait before clicking.
+            await Promise.all([
+                page.waitForURL(/\/hajj\/.+/),
+                page.getByRole('link', { name: 'View Details' }).first().click(),
+            ]);
 
-        await page.getByLabel('Full Name').fill('Playwright Tester');
-        await page.getByLabel('Email').fill('playwright@example.com');
-        await page.getByLabel('Phone / WhatsApp').fill('+923001234567');
-        await page.getByLabel('Message').fill('Automated E2E test inquiry.');
-        await page.getByRole('button', { name: 'Submit Inquiry' }).click();
+            await page.getByLabel('Full Name').fill('Playwright Tester');
+            await page.getByLabel('Email').fill('playwright@example.com');
+            await page.getByLabel('Phone / WhatsApp').fill('+923001234567');
+            await page.getByLabel('Message').fill('Automated E2E test inquiry.');
+            await page.getByRole('button', { name: 'Submit Inquiry' }).click();
 
-        await expect(page.getByText(/inquiry has been received/i)).toBeVisible();
+            await expect(page.getByText(/inquiry has been received/i)).toBeVisible();
+        } finally {
+            deleteTestInquiriesByEmail('playwright@example.com');
+        }
     });
 
     test('11. contact form: empty submit is blocked client-side by HTML5 required fields', async ({ page }) => {
@@ -177,13 +203,17 @@ test.describe('Public website', () => {
     test('11b. contact form submits successfully with valid data', async ({ page, isMobile }) => {
         test.skip(isMobile, 'Submission logic covered on desktop — avoids shared rate-limit contention.');
 
-        await page.goto('/contact');
-        await page.getByLabel('Full Name').fill('Playwright Contact Tester');
-        await page.getByLabel('Email').fill('contact-e2e@example.com');
-        await page.getByLabel('Phone').fill('+923009998888');
-        await page.getByLabel('Message').fill('Automated E2E contact form test.');
-        await page.getByRole('button', { name: 'Send Message' }).click();
-        await expect(page.getByText(/thank you for contacting us/i)).toBeVisible();
+        try {
+            await page.goto('/contact');
+            await page.getByLabel('Full Name').fill('Playwright Contact Tester');
+            await page.getByLabel('Email').fill('contact-e2e@example.com');
+            await page.getByLabel('Phone').fill('+923009998888');
+            await page.getByLabel('Message').fill('Automated E2E contact form test.');
+            await page.getByRole('button', { name: 'Send Message' }).click();
+            await expect(page.getByText(/thank you for contacting us/i)).toBeVisible();
+        } finally {
+            deleteTestInquiriesByEmail('contact-e2e@example.com');
+        }
     });
 
     test('12. footer shows real contact details and working links', async ({ page }) => {
@@ -222,6 +252,19 @@ test.describe('Public website', () => {
         const response = await page.goto('/about-us');
         expect(response.status()).toBe(200);
         await expect(page.getByRole('heading', { name: 'About Us', exact: true })).toBeVisible();
-        await expect(page.getByText(/10,000/)).toBeVisible();
+
+        // Two separate assertions rather than one loose `getByText(/10,000/)`.
+        //
+        // That single locator used to match exactly one element only because
+        // the stat counter server-rendered the literal string "0" and was
+        // rewritten to the real figure by JavaScript after load — so the
+        // pilgrims-served number was invisible to this assertion, and to
+        // crawlers, and to anyone whose JS had not run. Now that the counter
+        // renders "10,000+" server-side (see components/stat-number.blade.php)
+        // the page legitimately contains two matches: the prose sentence and
+        // the statistic. Asserting each one explicitly is both unambiguous and
+        // a stronger check than the regex ever was.
+        await expect(page.getByText('10,000 Hajis')).toBeVisible();
+        await expect(page.locator('.stat-number', { hasText: '10,000+' })).toBeVisible();
     });
 });

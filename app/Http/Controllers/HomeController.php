@@ -69,10 +69,24 @@ class HomeController extends Controller
             'industry_awards' => (int) preg_replace('/\D/', '', (string) $stats['awards_count']) ?: 0,
         ];
 
+        // "Filter My Packages" is an approved homepage block (see
+        // docs/source-documents/1a-website-flow-extracted.md, homepage item g)
+        // that had never been built. The duration options are read from the
+        // real published Hajj packages rather than hardcoded, so the widget can
+        // never offer a length that returns no results, and it submits straight
+        // to the existing listing filters — no parallel filtering logic.
+        $filterDurations = $hajjCategory
+            ? Package::where('package_category_id', $hajjCategory->id)->published()
+                ->whereNotNull('duration_days')->distinct()->orderBy('duration_days')
+                ->pluck('duration_days')
+            : collect();
+
+        $tourismCategory = PackageCategory::where('slug', 'tourism')->where('is_active', true)->first();
+
         return view('home', compact(
-            'hajjCategory', 'umrahCategory', 'hajjPackages', 'umrahPackages',
+            'hajjCategory', 'umrahCategory', 'tourismCategory', 'hajjPackages', 'umrahPackages',
             'sliders', 'videoTestimonials', 'textTestimonials', 'news',
-            'awards', 'affiliations', 'stats', 'counters'
+            'awards', 'affiliations', 'stats', 'counters', 'filterDurations'
         ));
     }
 }

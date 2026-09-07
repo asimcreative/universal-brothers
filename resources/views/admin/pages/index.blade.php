@@ -3,7 +3,7 @@
 @section('title', 'Pages')
 
 @section('actions')
-    <a href="{{ route('admin.pages.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Page</a>
+    <a href="{{ route('admin.pages.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Page</a>
 @endsection
 
 @section('content')
@@ -16,20 +16,25 @@
                         <tr>
                             <td>{{ $page->title }}</td>
                             <td><code>/{{ $page->slug }}</code></td>
-                            <td>{!! $page->is_active ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>' !!}</td>
+                            <td><span class="status-pill {{ $page->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $page->is_active ? 'Published' : 'Draft' }}</span></td>
                             <td class="text-end">
                                 @if($page->is_active)
                                     <a href="{{ url('/'.$page->slug) }}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
                                 @endif
                                 <a href="{{ route('admin.pages.edit', $page) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" class="d-inline" onsubmit="return confirm('Delete this page?')">
+                                <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" class="d-inline" onsubmit="return confirm('Delete this page? This cannot be undone.')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="text-center text-muted py-4">No pages yet.</td></tr>
+                        <tr><td colspan="4">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                                No pages yet.
+                            </div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

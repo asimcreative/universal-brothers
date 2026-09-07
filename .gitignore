@@ -27,3 +27,15 @@ Thumbs.db
 /test-results
 /blob-report
 /.claude
+.visual-audit/
+
+# Holds a generated APP_KEY. This repository is public, so the file itself
+# stays local — `.env.testing.example` documents how to recreate it, which is
+# what preserves the "all testing runs against the dedicated testing database,
+# never dev and never production" rule.
+/.env.testing
+
+# Internal work log: hours, time estimates and delivery notes kept for
+# management reporting. Business record, not source code, and not something to
+# publish in a public repository.
+/.project-worklog

@@ -92,7 +92,16 @@ export default defineConfig({
         // WAL — see `config/database.php`), which could turn a rare test
         // flake into a real `SQLITE_BUSY` error. Not worth trading a proven
         // risk for an unproven, untested fix.
-        command: `"${PHP_BIN}" artisan serve --port=${PORT}`,
+        // `--env=testing` points the E2E server at `.env.testing`, i.e. the
+        // dedicated `database/testing.sqlite` — never the dev database and
+        // never production. Playwright drives a real running server, so
+        // unlike PHPUnit (in-memory SQLite via phpunit.xml) its writes have
+        // to land in a real file; this is the one they land in. Two separate
+        // incidents of test data reaching real content (2 published
+        // "Playwright E2E Test Package" rows in the live Hajj catalogue, and
+        // 185 of 260 `inquiries` rows) came from this server previously
+        // running against the dev database.
+        command: `"${PHP_BIN}" artisan serve --port=${PORT} --env=testing`,
         url: `http://127.0.0.1:${PORT}`,
         reuseExistingServer: !process.env.CI,
         timeout: 30_000,

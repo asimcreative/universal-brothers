@@ -65,3 +65,55 @@ A full visual/UX pass — Avenix/GlobeTrek-inspired premium presentation layered
 **Known, deliberately limited scope**: the CMS-authored `Page::body`/`NewsArticle::body` rich-text content (About Us prose, news articles) is rendered as-authored — no timeline/card structure is imposed on arbitrary admin HTML, since doing so without knowing its actual structure risks breaking it. Long-form prose in these fields is capped to a `46rem` reading width (`.page-body p/ul/ol`, added in the final polish pass below) for line-length comfort, without touching the underlying content.
 
 **Final client-ready visual polish pass (2026-08-31)** — see `docs/audits/FINAL_AUDIT_REPORT.md` §23 for full findings. Superseded the note above about `Package::summary`: rather than leaving the internal data-recovery note visible to customers (the earlier pass's own disclosed limitation), `Package::publicSummary()` now substitutes an honest, non-invented "still being finalized" line for that one exact known internal string, and returns every other real summary completely unchanged — the raw `summary` column itself is still never rewritten. Also added this pass: `<x-empty-state>` (a designed icon+message "nothing published yet" card, replacing a bare `.alert-info` box across Media/Awards/Testimonials/Affiliations/FAQs/package-listing empty states), and a real keyless Google Maps embed on the Contact page for the office's own already-published address (no API key, no invented location). Fixed one CRITICAL layout regression discovered only through direct scroll-position measurement, not visual inspection: `html, body { overflow-x: hidden }` was silently forcing `overflow-y` to `auto` (the two axes resolve together in CSS), which broke `position: sticky` for every descendant on the site, including the Hajj package detail page's enquiry sidebar — switched to `overflow-x: clip`, the one non-`visible` value that doesn't force-promote the other axis.
+
+## Live-site visual overhaul (2026-09-05)
+
+The owner reviewed the deployed site and rejected the visual result. This pass was driven entirely by **rendered screenshots of the live site**, not by code review or by the (fully passing) test suite — a functional pass is not a visual pass. See `docs/audits/FRONTEND_QA.md` for the page-by-page findings, `docs/audits/RESPONSIVE_QA.md` for the measured 221-check sweep, and `docs/audits/FINAL_AUDIT_REPORT.md` §25 for the release-gate decision.
+
+### The generated visual system (`_visuals.scss` + `<x-visual>`)
+
+The single largest change, and the fix for the root cause of "it looks unfinished". The project has **no photography at all** — verified in the database: 0 of 47 packages have a `cover_image`, 0 of 7 awards an `image`, 0 of 10 affiliations a `logo`, 0 sliders, 0 media items. Every image slot was rendering a flat navy box reading **"PHOTO COMING SOON"** (3 on the homepage, 9 on the Hajj listing, 9 on Tourism, 7 on Awards, 6 on Hajj Services). No amount of typography or spacing work fixes a site with no visual layer.
+
+Rather than invent photographs or hotlink stock imagery, every image slot now falls back to a **generated composition** built purely from CSS gradients and inline SVG:
+
+- **Motif library** — `$ub-motif-khatim` (eight-point star tessellation), `-circles` (the overlapping-circle construction grid all Islamic geometry is compass-built from), `-arcade` (ogee arch colonnade), `-girih` (interlaced strapwork), `-chevron` (muqarnas-inspired), `-zellige` (octagon/square tiling), `-rosette` (a single large non-tiling composition for hero/banner surfaces), and `-grain` (fractal noise, to break gradient banding on wide-gamut displays).
+- **Eight variants** (`.ub-visual--v0` … `--v7`), each a distinct combination of base gradient, gold bloom position, motif and scale. The variant is chosen by `crc32(seed) % 8`, so a twelve-card grid shows eight genuinely different compositions and a given package always renders the same one across page loads, pagination and cache.
+- **Surfaces** — `--card` (16:10), `--panel` (4:3), `--square`, `--stage` (full-bleed hero backdrop with a 60s drift), `--stage-sm` (quieter interior-page banner).
+- **Content layer** — an optional large editorial figure drawn from real data (a package's `duration_days`, an award's `year`), a rule, and a caption.
+
+Constraints this system deliberately respects: strictly non-figurative (no people, and no depiction of the Kaaba or the Haramain, which would be both disrespectful and dishonest as a stand-in for real photography); no external asset dependency, so the site-wide CSP `img-src 'self' data:` is untouched; and it disappears entirely the moment an admin uploads a real image.
+
+### New shared components
+
+- **`<x-page-hero>`** — replaces thirteen separate copies of the same inline `linear-gradient(135deg,#101B45,#0A1230)` block with per-file `min-height` values. That duplication was the direct cause of "every dark section looks identical". Supports breadcrumbs, eyebrow, lead, copy, a centred feature variant, an actions slot and an aside slot.
+- **`<x-page-cta>`** — shared closing CTA band for interior pages that previously ran straight from their last card into the footer with several hundred pixels of empty white between.
+- **`<x-stat-number>`** — see "Statistics" below.
+- **`<x-stat-panel>`** — a statistic composed against a generated visual, replacing the lone numeral that used to float in an otherwise empty half-column.
+- **`.award-medallion` / `.award-citation`** — per-award struck medallions carrying the award's own initials, replacing six identical `bi-trophy-fill` glyphs.
+- **`.service-panel`**, **`.package-finder`**, **`.global-reach`**, **`.testimonial-card`**, **`.news-card`**, **`.affiliation-card`**, **`.series-pill-bar`**, **`.listing-toolbar`**, and a rebuilt `.site-footer` grid.
+
+`.visual-placeholder` is retained only for the admin panel; no public view references it any more.
+
+### Statistics
+
+`<x-stat-number>` server-renders the **approved figure** ("20+", "10,000+") as the element's text and lets JavaScript animate *up* to it. Previously the markup shipped a literal `0` and only JS wrote the real value, so crawlers, social previews, no-JS visitors and anyone with slow JS were told a twenty-year-old company had "0 Years of Experience". `data-counter-target` is unchanged, so the existing raw-HTML assertions still hold.
+
+### Navigation density
+
+The primary nav expands at **`xl`**, not `lg`. Ten required top-level items plus a brand and a CTA do not fit a 992px bar — they wrapped mid-phrase into "About / Us" and "Awards & / Recognition". Every one of those items must remain a *visible link inside `nav.navbar`* (nine E2E call sites scope to it), so hiding them behind a dropdown was not available. 992–1199px now gets the drawer, which is the better experience for that many items anyway. Verified by measurement: the bar holds a single row at 1280, 1366, 1440 and 1920.
+
+### Typographic floor
+
+Every font-size in the design system is now **≥ 0.75rem (12px)**. A measured sweep found 104 instances between 10.5px and 11.9px across eyebrows, badges, form labels and captions. The brand tagline's letter-spacing was tightened alongside its size increase so the larger type did not widen the brand lockup and re-crowd the 1280px nav.
+
+### Touch targets
+
+The 44px minimum is now applied site-wide on touch widths to `.btn`, `.series-pill`, `.nav-pills .nav-link`, `.accordion-button`, `.form-control` and `.form-select`. It previously covered only `.package-card .btn` and `#currency-switcher .btn` — the two selectors an earlier release gate happened to measure.
+
+### Motion
+
+Every new hover/entrance effect is gated under `prefers-reduced-motion: reduce`. This pass also closed a pre-existing gap where a comment claimed the button hover lift was "guarded further down" and no such guard existed — `.package-card-cta` **is** a `.btn-primary`, so that ungated `translateY(-2px)` was moving the "View Details" link's bounding box during Playwright's click-actionability check. That is the same moving-target pattern previously documented as the cause of intermittent cross-browser click failures.
+
+### Content visibility no longer depends on JavaScript
+
+`.reveal-on-scroll` is now gated on an `html.js` class set by an inline script before first paint. Nineteen homepage blocks sat at `opacity: 0` until `app.js` ran; a blocked, failed or errored bundle rendered a blank page. The four initialisers also ran inside one un-caught handler, so a throw in any of them prevented the reveal observer from ever attaching — each is now individually wrapped. The observer's `threshold: 0.15` was replaced with a `rootMargin` trigger, because `intersectionRatio` is measured against the element's own height and can never reach 0.15 for anything taller than ~6.7 viewports.

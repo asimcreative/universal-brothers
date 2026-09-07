@@ -28,19 +28,11 @@
 @endif
 
 @section('content')
-    <div class="hero-slide" style="min-height: 38vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content py-4">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-light">Home</a></li>
-                    <li class="breadcrumb-item active text-white-50" aria-current="page">FAQs</li>
-                </ol>
-            </nav>
-            <span class="hero-eyebrow">Answers &amp; Guidance</span>
-            <h1>Frequently Asked Questions</h1>
-        </div>
-    </div>
+    <x-page-hero
+        eyebrow="Answers & Guidance"
+        title="Frequently Asked Questions"
+        lead="Clear answers on Hajj and Umrah packages, payments, documentation and travel."
+        :breadcrumbs="['Home' => route('home'), 'FAQs' => null]" />
 
     <div class="container section-tight">
         @if($faqsByCategory->isEmpty())
@@ -73,4 +65,6 @@
             </div>
         @endif
     </div>
+
+    <x-page-cta />
 @endsection

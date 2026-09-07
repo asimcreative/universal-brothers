@@ -20,6 +20,58 @@ class PackageManagementTest extends TestCase
         $this->admin = User::factory()->create(['role' => 'super_admin', 'is_active' => true]);
     }
 
+    /**
+     * CRITICAL regression, admin panel redesign (2026-08-31): the generic
+     * (Tourism/Umrah) package controller had no category scoping at all —
+     * Route::resource's implicit `{package}` binding resolves ANY package
+     * by ID, Hajj included. `edit`/`update` built a form and sync around
+     * `priceTiers` (Hajj packages price via the separate `roomOptions`
+     * relation instead) whose `update()` unconditionally deletes and
+     * replaces `itineraryDays`/`inclusions`/`exclusions` — real Hajj
+     * package data — with whatever that mismatched form happened to
+     * submit. Found via a visual review of the redesigned admin listing
+     * showing real Hajj packages (UB001, UB003, ...) mixed into a page
+     * newly labeled "Umrah & Tourism Packages", not by reading either
+     * controller in isolation. Never caught by any prior audit because
+     * each admin surface was only ever tested reachable through its own
+     * intended route.
+     */
+    public function test_generic_controller_never_reaches_a_hajj_package(): void
+    {
+        $hajj = PackageCategory::factory()->create(['slug' => 'hajj']);
+        $package = Package::factory()->create(['package_category_id' => $hajj->id]);
+        $package->itineraryDays()->create(['day_number' => 1, 'city' => 'Real Hajj City', 'accommodation_a' => 'Real Hajj Hotel']);
+        $package->inclusions()->create(['type' => 'inclusion', 'description' => 'Real Hajj inclusion', 'sort_order' => 0]);
+
+        // The generic listing must never show a Hajj package.
+        $indexResponse = $this->actingAs($this->admin)->get('/admin/packages');
+        $indexResponse->assertDontSee($package->name);
+
+        // Editing it through the generic route must redirect to the real
+        // Hajj admin surface, not render a form built for the wrong schema.
+        $editResponse = $this->actingAs($this->admin)->get("/admin/packages/{$package->id}/edit");
+        $editResponse->assertRedirect(route('admin.hajj-packages.edit', $package));
+
+        // A crafted update POST against the generic route must redirect
+        // (not corrupt data) — the real itinerary/inclusions must survive
+        // completely untouched.
+        $updateResponse = $this->actingAs($this->admin)->put("/admin/packages/{$package->id}", [
+            'package_category_id' => $hajj->id,
+            'name' => 'Corrupted By Generic Form',
+            'slug' => $package->slug,
+            'currency' => 'USD',
+            'status' => 'published',
+            'itinerary' => [],
+        ]);
+        $updateResponse->assertRedirect(route('admin.hajj-packages.edit', $package));
+
+        $package->refresh();
+        $this->assertNotSame('Corrupted By Generic Form', $package->name);
+        $this->assertSame(1, $package->itineraryDays()->count());
+        $this->assertSame('Real Hajj City', $package->itineraryDays()->first()->city);
+        $this->assertSame(1, $package->inclusions()->count());
+    }
+
     public function test_guest_cannot_access_package_admin(): void
     {
         $response = $this->get('/admin/packages');
@@ -29,7 +81,13 @@ class PackageManagementTest extends TestCase
 
     public function test_admin_can_create_a_package_with_full_itinerary_and_pricing(): void
     {
-        $category = PackageCategory::factory()->create(['slug' => 'hajj']);
+        // Regression: this generic (Tourism/Umrah) package controller must
+        // never be reachable for a real Hajj-category package — 'hajj' is
+        // deliberately avoided here as a fixture slug so these tests can't
+        // silently start exercising that guard instead of what they mean to
+        // test. See PackageController::nonHajjCategories() and the new
+        // test_generic_controller_never_reaches_a_hajj_package below.
+        $category = PackageCategory::factory()->create(['slug' => 'tourism-test']);
 
         $response = $this->actingAs($this->admin)->post('/admin/packages', [
             'package_category_id' => $category->id,
@@ -76,7 +134,13 @@ class PackageManagementTest extends TestCase
      */
     public function test_an_unknown_room_type_key_is_silently_ignored_not_a_crash(): void
     {
-        $category = PackageCategory::factory()->create(['slug' => 'hajj']);
+        // Regression: this generic (Tourism/Umrah) package controller must
+        // never be reachable for a real Hajj-category package — 'hajj' is
+        // deliberately avoided here as a fixture slug so these tests can't
+        // silently start exercising that guard instead of what they mean to
+        // test. See PackageController::nonHajjCategories() and the new
+        // test_generic_controller_never_reaches_a_hajj_package below.
+        $category = PackageCategory::factory()->create(['slug' => 'tourism-test']);
 
         $response = $this->actingAs($this->admin)->post('/admin/packages', [
             'package_category_id' => $category->id,
@@ -100,7 +164,13 @@ class PackageManagementTest extends TestCase
 
     public function test_admin_can_update_a_package_and_nested_data_is_replaced_not_duplicated(): void
     {
-        $category = PackageCategory::factory()->create(['slug' => 'hajj']);
+        // Regression: this generic (Tourism/Umrah) package controller must
+        // never be reachable for a real Hajj-category package — 'hajj' is
+        // deliberately avoided here as a fixture slug so these tests can't
+        // silently start exercising that guard instead of what they mean to
+        // test. See PackageController::nonHajjCategories() and the new
+        // test_generic_controller_never_reaches_a_hajj_package below.
+        $category = PackageCategory::factory()->create(['slug' => 'tourism-test']);
         $package = Package::factory()->create(['package_category_id' => $category->id]);
         $package->itineraryDays()->create(['day_number' => 1, 'city' => 'Old City', 'accommodation_a' => 'Old Hotel']);
 

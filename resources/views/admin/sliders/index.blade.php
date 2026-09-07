@@ -3,7 +3,7 @@
 @section('title', 'Sliders')
 
 @section('actions')
-    <a href="{{ route('admin.sliders.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Slider</a>
+    <a href="{{ route('admin.sliders.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Slider</a>
 @endsection
 
 @section('content')
@@ -14,20 +14,25 @@
                 <tbody>
                     @forelse($sliders as $slider)
                         <tr>
-                            <td><img src="{{ Storage::url($slider->image) }}" style="height:40px;" alt=""></td>
+                            <td><img src="{{ Storage::url($slider->image) }}" style="height:40px;border-radius:4px;" alt="{{ $slider->title }}"></td>
                             <td>{{ $slider->title }}</td>
                             <td class="text-capitalize">{{ $slider->page_context }}</td>
-                            <td>{!! $slider->is_active ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
+                            <td><span class="status-pill {{ $slider->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $slider->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.sliders.edit', $slider) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.sliders.destroy', $slider) }}" class="d-inline" onsubmit="return confirm('Delete?')">
+                                <form method="POST" action="{{ route('admin.sliders.destroy', $slider) }}" class="d-inline" onsubmit="return confirm('Delete this slider? This cannot be undone.')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-muted py-4">No sliders yet.</td></tr>
+                        <tr><td colspan="5">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-images" aria-hidden="true"></i>
+                                No sliders yet.
+                            </div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

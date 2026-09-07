@@ -305,3 +305,104 @@ None of these were found by reading Blade files or CSS in isolation — each cam
 **Remaining business blockers**: individual award names/details (**PENDING FINAL OWNER CONTENT**); real Tourism package descriptions/itineraries/hotel details (the old live site's product pages returned server errors at recovery time — genuinely unrecoverable, not an engineering gap); client sign-off on reused testimonials, Mehram/visa policy claims, and current Hajj 2027 pricing (unchanged from §21).
 
 **Final release decision: READY FOR CLIENT REVIEW.** Unchanged reasoning — the fixes in this pass removed real defects a client would have immediately noticed (a non-functional sticky sidebar, an internal note shown as marketing copy, live test data in the catalog); no new blocker was introduced or discovered.
+
+## 24. Admin Panel + Login UI Redesign (2026-08-31)
+
+The public site had its visual redesign (§18-23); this pass is the equivalent for the CMS the client's staff actually use daily — login, the layout shell, the dashboard, all 14 listing/form pairs, and a full sectioned rebuild of the Hajj package form (the most complex single form in the project). Full design rationale in `docs/architecture/ADMIN_UI_DESIGN.md`; full QA evidence in `docs/testing/ADMIN_QA.md`. No route, model, migration, or policy changed except the one critical fix below.
+
+### CRITICAL finding — found via a screenshot, not by reading code
+
+A screenshot of the redesigned "Umrah & Tourism Packages" listing showed real Hajj packages (UB001, UB003, ...) mixed into it. The generic `Admin\PackageController` had **no category scoping at all** — `Route::resource('packages', ...)`'s implicit `{package}` model binding resolves any package by ID, Hajj included, and its `edit()`/`update()` built a form and ran a sync around `priceTiers` (Hajj packages price through the completely separate `roomOptions` relation instead), whose `update()` unconditionally deletes and replaces the package's real `itineraryDays`/`inclusions`/`exclusions` with whatever that mismatched form happened to submit. This has existed since the Hajj-specific admin surface was first added and was never caught by any of the 23 prior sections of this audit, because each admin surface was only ever verified reachable through its own intended route — never checked for cross-reachability.
+
+**Fixed** with defense in depth: the generic listing/create now exclude the Hajj category entirely, and `edit`/`update` redirect any Hajj package to the real `admin.hajj-packages.edit` route instead of rendering the wrong form. New regression test `PackageManagementTest::test_generic_controller_never_reaches_a_hajj_package` proves the listing excludes Hajj, edit redirects, and a crafted update POST cannot touch the package's real itinerary/inclusions at all.
+
+### Second finding — 185 of 260 real `inquiries` rows were test residue
+
+The redesigned dashboard's "New Inquiries" stat read 234, and the Recent Inquiries table was full of "Playwright Tester"/"E2E Inquiry Source ..." rows. Every inquiry/contact-form E2E test across this whole engagement (`public.spec.js`, `journeys-visitor.spec.js`, `admin.spec.js`) had no way to clean up what it created — three run as anonymous visitors with no admin session available to delete through the UI, and the admin inquiry-detail page had no delete action at all for the fourth. **Fixed**: a cleanup helper wrapped in `try/finally` in all four tests, plus a real Delete action added to the admin inquiry page. All 260 rows were confirmed 100% test data (a local dev database — no real customer ever used it) and safely deleted; the count read 0 and stayed 0 across every subsequent run.
+
+### Also fixed this pass
+
+An accessibility gap the redesign itself introduced (~35 new decorative icons missing `aria-hidden="true"`, across 21 admin views); 4 pre-existing tests that happened to exercise the now-closed Hajj/generic-controller path (corrected to test their real intent, not weakened); and a new logout E2E test whose first draft invalidated the shared authenticated session other admin tests reuse via `storageState`, breaking tests in an unrelated file — relocated to the file that logs in fresh per test.
+
+### Test results this pass
+
+- **PHPUnit: 145/145 passing, 516 assertions** (up from 144/507 — the new Hajj-category-guard regression test).
+- **Playwright: full 5-project suite, run alone (a run concurrent with another invocation was discarded as invalid, not counted — see `ADMIN_QA.md`), 0 unresolved failures on the final run.**
+
+### Final release status (updated)
+
+**BUSINESS STATUS**: Unchanged from §23.
+
+**TECHNICAL STATUS**: No unresolved CRITICAL/HIGH defect — the one CRITICAL found this pass (Hajj-package cross-controller data-loss risk) is fixed and regression-tested. Genuine external blockers unchanged.
+
+**TEST STATUS**: PHPUnit: **145/145**. Playwright: **0 unresolved failures**, full suite, run alone. E2E: **PASS**. Regression: **PASS**.
+
+**RESPONSIVE STATUS**: Admin panel — no horizontal-overflow finding at 1440/768/390 on login, dashboard, the Hajj form (all 14 sections), the generic package form, or any listing page.
+
+**DOCUMENTATION STATUS**: `docs/architecture/ADMIN_UI_DESIGN.md` (new), `docs/testing/ADMIN_QA.md` (new), this document, and `REGRESSION_TEST_RESULTS.md` Run 21 all updated with this pass's actual findings.
+
+**Remaining technical blockers**: unchanged from §23 (hosting/domain/SSL, production credentials, analytics/reCAPTCHA keys, real photography, real legal-policy copy). One disclosed, lower-priority item: the generic `admin.packages.*` `store()` action isn't guarded against a Hajj category id — unreachable through the UI (the create dropdown excludes Hajj) and only creates a new row rather than corrupting existing data, so it's a materially lower-severity gap than the `edit`/`update` path that was fixed.
+
+**Remaining business blockers**: unchanged from §23.
+
+**Final release decision: READY FOR CLIENT REVIEW.** The admin panel now matches the public site's visual quality bar, and this pass's own CRITICAL finding (a real, previously-invisible data-loss path for Hajj packages) is fixed and proven closed — a stronger position than before this pass started, not a new risk.
+
+---
+
+## §25 — Live-site visual overhaul (2026-09-05)
+
+The owner reviewed the deployed site and **rejected the visual result**. Everything in this section was found by looking at rendered screenshots of the live pages. The passing test suite, the previous "premium redesign complete" reports and the clean audits were all treated as untrustworthy for this purpose — **a functional pass is not a visual pass**, and two CRITICAL defects below had survived 212 passing Playwright tests.
+
+### Why the site looked unfinished — root cause
+
+**The site had no visual layer at all.** Verified in the database: 0 of 47 packages have a `cover_image`, 0 of 7 awards an `image`, 0 of 10 affiliations a `logo`, 0 sliders, 0 media items. Every image slot rendered a flat navy box reading **"PHOTO COMING SOON"** — 34 of them across the public site. The design had been built assuming photography would arrive; it never did, so what shipped was effectively a wireframe rendered in brand colours. Typography and spacing work cannot fix that.
+
+The fix is a **generated visual system** (`_visuals.scss`, `<x-visual>`): eight deterministic geometric compositions built from CSS gradients and inline Islamic-geometry SVG, seeded from the record's own key so a grid never repeats and a given package is always stable. No invented photography, no stock imagery, no external asset dependency, and it disappears the moment a real image is uploaded. See `docs/architecture/UI_DESIGN_SYSTEM.md`.
+
+### CRITICAL findings (both fixed)
+
+**C-1 — Every statistic was served to visitors and crawlers as `0`.**
+`<div class="stat-number" data-counter-target="20">0</div>` — the real value was written only by JavaScript. Any visitor with slow, blocked or failed JS, every search-engine crawler, every social preview and every pre-scroll screenshot was told a twenty-year-old company had **"0 Years of Experience", "0 Pilgrims Served", "0 Awards & Recognitions"**. Confirmed by curling the live HTML. Fixed: the approved figure is now server-rendered and JS only animates *up* to it.
+
+**C-2 — Desktop visitors could not filter Hajj packages at all.**
+The filter panel carried both `offcanvas` and `offcanvas-lg`. Bootstrap's plain `.offcanvas` sets `position:fixed; visibility:hidden; transform:translateX(100%)` unconditionally, and `.offcanvas-lg`'s ≥992px block resets neither. Verified on the live site via `getComputedStyle`: `visibility: hidden`, parked 400px off-screen, while its `.d-lg-none` trigger was simultaneously `display:none`. A dead 25% column was left in its place. The existing Playwright coverage exercised the filter only at 375px, so it never saw this.
+
+### HIGH findings (all fixed)
+
+- **Raw database enum keys rendered to visitors** — the Hajj Transportation section printed `airport_transfer`, `mashaer`, `train_or_bus`, `car_taxi`, `vip_gmc`. Fixed at the model with `transportLabel()` so every consumer resolves the same label.
+- **Content visibility depended on JavaScript succeeding** — 19 homepage blocks sat at `opacity: 0` until `app.js` ran, and all four initialisers shared one un-caught handler, so a throw in any of them left the page blank. Now gated on `html.js` set before first paint, each initialiser individually wrapped, plus a safety-net timer.
+- **`IntersectionObserver` threshold unreachable for tall sections** — `threshold: 0.15` cannot be satisfied by an element taller than ~6.7 viewports. Replaced with a `rootMargin` trigger.
+- **Ungated button hover lift** — a comment claimed it was guarded; it was not. Since `.package-card-cta` is a `.btn-primary`, the "View Details" link kept moving under `prefers-reduced-motion`, which is both a WCAG 2.3.3 gap and the documented cause of the intermittent cross-browser click flake. Adding the guard resolved the Firefox failures.
+- **Trust strip clipped its last credential** at every width below desktop.
+- **Touch targets** — the 44px rule covered two selectors; a measured sweep found seven more control types between 37.7px and 41.6px.
+- **Contrast** — an accurate, pixel-sampling audit found 10 text/background pairs between 2.29:1 and 4.45:1, including `.btn-outline-secondary` inheriting raw `$ub-gold` as text on white (2.29:1) and star ratings using Bootstrap's `#ffc107` (1.63:1) to convey real hotel-rating information.
+
+### Approved-but-never-built work delivered
+
+Three homepage blocks required by the approved flow had never been implemented and are now live: **"Trusted by Pilgrims Around the World"** (with both approved sub-lines), the **Servicing tri-panel** (Tourism was entirely absent from the homepage), and the **"Filter My Packages"** widget, which submits into the listing's existing filters rather than duplicating filtering logic.
+
+### Data integrity
+
+Nothing was invented. The Hajj detail page was verified field-by-field against a 30-point checklist — Package A/B variants, all room types, Aziziya accommodation and pricing, Kaba View supplement, Qurbani, Mina/Arafat detail, day-by-day itinerary with both Gregorian and Hijri dates, transportation, meals, inclusions and exclusions all still present. No currency conversion was introduced: Hajj room options carry `price_usd` only, and a converted figure would be a fabricated commercial number. Honest empty states keep their exact meaning.
+
+### Verification
+
+| Check | Result |
+|---|---|
+| PHPUnit | 165/165 passed (572 assertions) |
+| Playwright | 212/212 passed, 5 browser projects, exit 0 |
+| Responsive sweep (17 pages × 13 breakpoints) | 221/221 clean |
+| Contrast audit (pixel-sampled, 14 pages) | 547/547 pairs meet WCAG AA |
+| Hajj field preservation | 30/30 present |
+| Test-data residue | 0 in dev and testing DBs |
+
+### Release decision
+
+**READY FOR CLIENT REVIEW — visual.** The site now presents as a designed product rather than an unfinished prototype, and two CRITICAL defects invisible to the entire existing test suite are closed.
+
+**Still outstanding and owner-dependent:**
+- **Real photography remains the single biggest quality lever.** The generated system is a deliberate, defensible stand-in — it is not a substitute for real images of the company's hotels, groups and events.
+- The 7 award records remain **provisional** (their names were never traced to a source document). The public "20+" figure is CMS-driven and deliberately decoupled from `Award::count()`.
+- The public contact email is `info@maximsgroup.org` — legitimately configured (Maxim's Group is the recorded parent group), but an owner decision for a brand whose premise is institutional credibility.
+- Umrah has no packages, and Media has no news, gallery or video rows. The pages state this honestly; only the owner can change it.
+- `docs/requirements/FRONTEND_IMPLEMENTATION_PLAN.md` and `REQUIREMENTS_TRACEABILITY.md` still record the **stale** 50,000+/7 figures against the owner-confirmed 10,000+/20+. These should be corrected before a later pass "fixes" the right numbers back to the wrong ones.

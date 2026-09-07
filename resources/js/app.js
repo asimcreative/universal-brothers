@@ -36,6 +36,12 @@ function initScrollReveal() {
         return;
     }
 
+    // `threshold: 0.15` was unsafe: intersectionRatio is measured against the
+    // element's OWN height, so anything taller than ~6.7x the viewport can
+    // never reach 0.15 and would stay invisible forever. Several sections on
+    // this site are full-page-height wrappers. A zero threshold with a
+    // bottom rootMargin triggers as soon as the element's leading edge is
+    // meaningfully on screen, independent of how tall it is.
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
@@ -43,33 +49,56 @@ function initScrollReveal() {
                 observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.15 });
+    }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
 
     targets.forEach((el) => observer.observe(el));
+
+    // Last-resort safety net. Content visibility must never depend on an
+    // observer callback firing; anything still hidden shortly after load is
+    // revealed unconditionally.
+    window.setTimeout(() => {
+        document.querySelectorAll('.reveal-on-scroll:not(.is-visible)').forEach((el) => {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight) el.classList.add('is-visible');
+        });
+    }, 2500);
 }
 
+// The counters are server-rendered with their real, approved value already in
+// the markup (see components/stat-number.blade.php — the live site shipped a
+// literal "0" instead, so crawlers and any visitor with slow or blocked JS
+// were told a twenty-year-old company had "0 Years of Experience"). This
+// function's only job is the count-*up* flourish: it takes the final value
+// that is already on screen, rewinds to 0, animates back, and restores the
+// exact display string. Every early return below therefore leaves the correct
+// figure showing rather than a zero.
 function initCounters() {
     const counters = document.querySelectorAll('[data-counter-target]');
     if (!counters.length) return;
 
-    const reduced = prefersReducedMotion();
+    // Reduced motion: the value is already correct in the DOM, so there is
+    // simply nothing to do — never rewrite it to 0 first.
+    if (prefersReducedMotion()) return;
 
     const animate = (el) => {
         const target = parseInt(el.dataset.counterTarget, 10);
+        const display = el.dataset.counterDisplay || el.textContent;
 
-        if (reduced) {
-            el.textContent = target.toLocaleString();
-            return;
-        }
+        if (!Number.isFinite(target) || target <= 0) return;
 
         const duration = 1200;
         const start = performance.now();
 
         const step = (now) => {
             const progress = Math.min((now - start) / duration, 1);
-            el.textContent = Math.floor(progress * target).toLocaleString();
-            if (progress < 1) requestAnimationFrame(step);
-            else el.textContent = target.toLocaleString();
+            if (progress < 1) {
+                el.textContent = Math.floor(progress * target).toLocaleString();
+                requestAnimationFrame(step);
+            } else {
+                // Restore the approved string ("20+", "10,000+"), not a bare
+                // number — the "+" is part of the figure the owner approved.
+                el.textContent = display;
+            }
         };
         requestAnimationFrame(step);
     };
@@ -124,14 +153,42 @@ function initLightbox() {
             e.preventDefault();
             img.src = el.dataset.lightboxSrc;
             img.alt = el.dataset.lightboxCaption || '';
+            // The <img> ships with no `src` and `hidden` set, so it is not a
+            // broken image on every page load; reveal it now that it has one.
+            img.hidden = false;
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
         });
     });
 }
 
+// Homepage "Filter My Packages" widget. The service <select> holds the target
+// listing URL as its value; picking one just retargets the form. Everything
+// else is a plain GET submit into the listing's own existing filters, so there
+// is no duplicated filtering logic and the widget still works with JS disabled
+// (it falls back to submitting against the Hajj listing, its default action).
+function initPackageFinder() {
+    const form = document.getElementById('packageFinder');
+    if (!form) return;
+
+    const service = form.querySelector('[data-finder-service]');
+    if (!service) return;
+
+    const retarget = () => { form.action = service.value; };
+    service.addEventListener('change', retarget);
+    retarget();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    initScrollReveal();
-    initCounters();
-    initParallax();
-    initLightbox();
+    // Each initialiser is isolated: before this, all four ran in one
+    // un-caught handler, so a throw in any of them silently prevented
+    // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
+    // homepage stuck at `opacity: 0`.
+    [initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder].forEach((fn) => {
+        try {
+            fn();
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error(`[ub] ${fn.name} failed`, error);
+        }
+    });
 });

@@ -2,6 +2,10 @@
 
 @section('title', $category->name . ' — Category Settings')
 
+@section('actions')
+    <a href="{{ route('admin.categories.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Categories</a>
+@endsection
+
 @section('content')
     <div class="row g-4">
         <div class="col-lg-6">

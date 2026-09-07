@@ -9,8 +9,14 @@
                 <h2 class="modal-title visually-hidden" id="lightboxModalLabel">Image preview</h2>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            {{-- No `src=""`. An empty src is a *request for the current page*
+                 in every browser, so this element counted as a broken image on
+                 every page of the site (it was flagged on all 15 in the visual
+                 audit) and triggered a pointless extra document fetch. The
+                 element is created without a src and only revealed once
+                 `initLightbox()` has set one. --}}
             <div class="modal-body p-0 text-center">
-                <img src="" alt="" class="img-fluid" id="lightboxModalImage">
+                <img alt="" class="img-fluid" id="lightboxModalImage" hidden>
             </div>
         </div>
     </div>

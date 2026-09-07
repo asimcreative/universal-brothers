@@ -4,14 +4,11 @@
 @section('meta_description', 'Contact Universal Brothers — Karachi head office, phone, WhatsApp and email for Hajj, Umrah and Tourism inquiries.')
 
 @section('content')
-    <div class="hero-slide" style="min-height: 38vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content py-4">
-            <span class="hero-eyebrow">We're Here to Help</span>
-            <h1>Contact Us</h1>
-            <p class="lead mb-0">We'd love to help plan your Hajj, Umrah, or next trip.</p>
-        </div>
-    </div>
+    <x-page-hero
+        eyebrow="We're Here to Help"
+        title="Contact Us"
+        lead="We'd love to help plan your Hajj, Umrah, or next trip."
+        :breadcrumbs="['Home' => route('home'), 'Contact' => null]" />
 
     <div class="container section-tight">
         @if($primaryOffice?->phone_primary || $primaryOffice?->whatsapp || $primaryOffice?->email)

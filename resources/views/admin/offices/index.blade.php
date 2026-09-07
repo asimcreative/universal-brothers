@@ -3,7 +3,7 @@
 @section('title', 'Offices')
 
 @section('actions')
-    <a href="{{ route('admin.offices.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Office</a>
+    <a href="{{ route('admin.offices.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Office</a>
 @endsection
 
 @section('content')
@@ -17,17 +17,22 @@
                             <td>{{ $office->label }}</td>
                             <td>{{ Str::limit($office->address, 50) }}</td>
                             <td>{{ $office->phone_primary }}</td>
-                            <td>{!! $office->is_active ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>' !!}</td>
+                            <td><span class="status-pill {{ $office->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $office->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.offices.edit', $office) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.offices.destroy', $office) }}" class="d-inline" onsubmit="return confirm('Delete?')">
+                                <form method="POST" action="{{ route('admin.offices.destroy', $office) }}" class="d-inline" onsubmit="return confirm('Delete this office? This cannot be undone.')">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-muted py-4">No offices yet.</td></tr>
+                        <tr><td colspan="5">
+                            <div class="admin-empty-state">
+                                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                No offices yet.
+                            </div>
+                        </td></tr>
                     @endforelse
                 </tbody>
             </table>

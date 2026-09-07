@@ -5,21 +5,18 @@
 
 @section('content')
     {{-- Hero --}}
-    <div class="hero-slide" style="min-height: 55vh;">
-        <div class="hero-slide-bg" style="background-image: linear-gradient(135deg, #101B45, #0A1230)"></div>
-        <div class="container hero-content text-center py-5 text-white">
-            <div class="hero-anim mx-auto" style="max-width: 780px;">
-                <span class="hero-eyebrow">Hajj 2027</span>
-                <h1 class="display-5 fw-bold">Your Hajj. Our Responsibility.</h1>
-                <p class="lead">A sacred obligation deserves extraordinary preparation.</p>
-                <p class="mx-auto" style="max-width: 640px;">Universal Brothers brings decades of experience, detailed planning and dedicated assistance together to help make your Hajj journey organized, informed and spiritually focused.</p>
-                <div class="d-flex justify-content-center flex-wrap gap-2 mt-4">
-                    <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">View Hajj Packages</a>
-                    <a href="{{ route('contact') }}" class="btn btn-outline-light btn-lg">Start Your Hajj Enquiry</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-page-hero
+        centered
+        eyebrow="Hajj 2027"
+        title="Your Hajj. Our Responsibility."
+        lead="A sacred obligation deserves extraordinary preparation."
+        copy="Universal Brothers brings decades of experience, detailed planning and dedicated assistance together to help make your Hajj journey organized, informed and spiritually focused."
+        :breadcrumbs="['Home' => route('home'), 'Hajj Services' => null]">
+        <x-slot:actions>
+            <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">View Hajj Packages</a>
+            <a href="{{ route('contact') }}" class="btn btn-outline-light btn-lg">Start Your Hajj Enquiry</a>
+        </x-slot:actions>
+    </x-page-hero>
 
     {{-- Introduction --}}
     <section class="section">
@@ -84,10 +81,12 @@
                     </ul>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    <div class="split-section-visual visual-placeholder">
-                        <i class="bi bi-book"></i>
-                        <span>Guidance &amp; Ibadah Support</span>
-                    </div>
+                    <x-visual
+                        surface="panel"
+                        seed="hajj-guidance-support"
+                        caption="Guidance & Ibadah Support"
+                        mark=""
+                        class="split-section-visual" />
                 </div>
             </div>
         </div>
@@ -108,10 +107,12 @@
                     <p class="small text-muted">Exact hotel names, distances and transport arrangements vary by package — see each package's Accommodation &amp; Transportation sections for full detail.</p>
                 </div>
                 <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
-                    <div class="split-section-visual visual-placeholder">
-                        <i class="bi bi-building"></i>
-                        <span>Accommodation &amp; Transport</span>
-                    </div>
+                    <x-visual
+                        surface="panel"
+                        seed="hajj-accommodation-transport"
+                        caption="Accommodation & Transport"
+                        mark=""
+                        class="split-section-visual" />
                 </div>
             </div>
         </div>

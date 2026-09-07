@@ -19,6 +19,7 @@ class PackageController extends Controller
     {
         $packages = Package::query()
             ->with('category', 'series')
+            ->whereHas('category', fn ($q) => $q->where('slug', '!=', 'hajj'))
             ->when($request->filled('category'), fn ($q) => $q->where('package_category_id', $request->integer('category')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('q'), fn ($q) => $q->where('name', 'like', '%'.$request->string('q').'%'))
@@ -27,7 +28,7 @@ class PackageController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $categories = PackageCategory::orderBy('sort_order')->get();
+        $categories = $this->nonHajjCategories();
 
         return view('admin.packages.index', compact('packages', 'categories'));
     }
@@ -36,9 +37,31 @@ class PackageController extends Controller
     {
         return view('admin.packages.form', [
             'package' => new Package,
-            'categories' => PackageCategory::orderBy('sort_order')->get(),
+            'categories' => $this->nonHajjCategories(),
             'series' => PackageSeries::orderBy('sort_order')->get(),
         ]);
+    }
+
+    /**
+     * Hajj packages use a completely separate data model (variants,
+     * accommodations, Aziziya, Mashaer, room options — none of which this
+     * generic controller's form or sync logic knows about) and their own
+     * dedicated admin surface (`HajjPackageController`). Route::resource's
+     * implicit model binding on `{package}` has no category awareness, so
+     * without this exclusion the generic index/create/edit/update routes
+     * could reach a real Hajj package by ID and silently corrupt it: `edit`
+     * would use a form built for `priceTiers` (Hajj packages price through
+     * the unrelated `roomOptions` relation instead), and `update`'s sync
+     * unconditionally deletes and replaces the package's real
+     * `itineraryDays`/`inclusions`/`exclusions` with whatever that
+     * mismatched form happened to submit — found via a visual review of
+     * this listing showing real Hajj packages ("UB001", "UB003", ...)
+     * mixed into what the admin UI redesign relabeled "Umrah & Tourism
+     * Packages", not by reading either controller in isolation.
+     */
+    private function nonHajjCategories()
+    {
+        return PackageCategory::where('slug', '!=', 'hajj')->orderBy('sort_order')->get();
     }
 
     public function store(PackageRequest $request): RedirectResponse
@@ -57,19 +80,27 @@ class PackageController extends Controller
         return redirect()->route('admin.packages.index')->with('status', 'Package created.');
     }
 
-    public function edit(Package $package): View
+    public function edit(Package $package): View|RedirectResponse
     {
+        if ($package->isHajj()) {
+            return redirect()->route('admin.hajj-packages.edit', $package);
+        }
+
         $package->load('itineraryDays', 'priceTiers.roomPrices', 'inclusions', 'exclusions');
 
         return view('admin.packages.form', [
             'package' => $package,
-            'categories' => PackageCategory::orderBy('sort_order')->get(),
+            'categories' => $this->nonHajjCategories(),
             'series' => PackageSeries::orderBy('sort_order')->get(),
         ]);
     }
 
     public function update(PackageRequest $request, Package $package): RedirectResponse
     {
+        if ($package->isHajj()) {
+            return redirect()->route('admin.hajj-packages.edit', $package);
+        }
+
         $package->fill($request->safe()->except(['cover_image', 'inclusions_text', 'exclusions_text', 'itinerary', 'tiers']));
         $this->applyBooleans($package, $request);
 
