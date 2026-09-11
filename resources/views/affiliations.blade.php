@@ -29,11 +29,17 @@
                         @php $ubVariant = crc32('aff' . $affiliation->organization_name) % 8; @endphp
                         <div class="col-sm-6 col-lg-4">
                             <div class="affiliation-card reveal-on-scroll">
+                                {{-- No initials on this card. Eight of the ten affiliations
+                                     are acronyms, so the seal would have repeated the
+                                     organisation name sitting immediately beside it —
+                                     "IATA" printed twice, side by side. A purely geometric
+                                     seal reads better here, and is legible now that
+                                     `ub-seal-visual` scales the motif to the disc. The
+                                     homepage badge keeps its mark, because there the disc
+                                     is the whole logo chip. --}}
                                 <div class="affiliation-card-seal ub-visual ub-visual--v{{ $ubVariant }}">
                                     @if($affiliation->logo)
                                         <img src="{{ Storage::url($affiliation->logo) }}" alt="{{ $affiliation->organization_name }}" class="affiliation-card-logo" loading="lazy" decoding="async">
-                                    @else
-                                        <span class="affiliation-card-initials" aria-hidden="true">{{ Str::upper(Str::substr(preg_replace('/[^A-Za-z]/', '', $affiliation->organization_name), 0, 2)) }}</span>
                                     @endif
                                 </div>
                                 <div class="affiliation-card-body">

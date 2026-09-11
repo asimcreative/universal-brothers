@@ -21,4 +21,20 @@ class Office extends Model
             'is_active' => 'boolean',
         ];
     }
+
+    /**
+     * Public Google Maps link for this office's address.
+     *
+     * Used as the href of the map facade on the Contact page, so the facade is
+     * a genuinely working link before any JavaScript runs — a visitor with JS
+     * disabled still gets to the map, just in a new tab instead of inline.
+     * Built from the address with the same keyless query the stored embed uses
+     * (see OfficeSeeder), so the two can never point at different places.
+     */
+    public function mapsUrl(): ?string
+    {
+        return $this->address
+            ? 'https://www.google.com/maps?q='.rawurlencode($this->address)
+            : null;
+    }
 }

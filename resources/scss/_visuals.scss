@@ -319,6 +319,22 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
     color: rgba($ub-gold-light, 0.55);
 }
 
+// Small circular seals need the motif scaled DOWN to fit them.
+//
+// The generated variants size their tile for a card or a hero (60-108px), so
+// inside a 54px disc only a featureless fragment of the pattern lands — the
+// homepage affiliation marks rendered as plain dark blobs. Shrinking the tile
+// and lifting the alpha makes the geometry legible at seal size, and the
+// organisation's initials give the disc a focal point the way the award
+// medallions already had one.
+@mixin ub-seal-visual($tile: 22px, $motif: 0.5, $bloom: 0.55) {
+    --ubv-motif-size: #{$tile} #{$tile};
+    --ubv-motif-alpha: #{$motif};
+    --ubv-bloom-alpha: #{$bloom};
+    --ubv-bloom-x: 50%;
+    --ubv-bloom-y: 42%;
+}
+
 // ---------------------------------------------------------------------
 // Surface modifiers
 // ---------------------------------------------------------------------
@@ -360,6 +376,27 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
         background-position: center, 78% 42%;
         mask-image: radial-gradient(ellipse at 74% 40%, #000 0%, rgba(0, 0, 0, 0.35) 62%, rgba(0, 0, 0, 0) 88%);
     }
+}
+
+// A stage that is ALSO a parallax layer must overhang its container.
+//
+// `initParallax()` translates the layer by up to +/-6% of the layer's OWN
+// height. A layer sized exactly to its container (`inset: 0`) therefore slides
+// part of itself out of view and exposes the page background at one edge: a
+// pale seam between the navbar and the navy hero at rest, and the same seam
+// between the hero and the trust strip once the page is scrolled (the drift
+// changes sign as the element crosses the viewport). Measured on the homepage:
+// the stage sat 5.31px below its own parent.
+//
+// Required overhang X satisfies X >= 0.06 * (1 + 2X) -> X >= 6.8%, so 8% has
+// real margin. The overhang is clipped by the hero's `overflow: hidden`, so it
+// costs nothing in layout.
+//
+// Specificity note: this has to live here rather than on `.parallax-layer` in
+// `_animations.scss`. That file is imported BEFORE this one, so at equal
+// specificity `.ub-visual--stage { inset: 0 }` would win on source order.
+.ub-visual--stage.parallax-layer {
+    inset: -8%;
 }
 
 // A quieter stage for interior page banners, so only the homepage hero

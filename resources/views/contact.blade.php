@@ -62,7 +62,38 @@
                             @if($office->whatsapp)<p class="mb-1"><i class="bi bi-whatsapp me-2"></i>{{ $office->whatsapp }}</p>@endif
                             @if($office->email)<p class="mb-0"><i class="bi bi-envelope-fill me-2"></i>{{ $office->email }}</p>@endif
                             @if($office->google_maps_embed)
-                                <div class="ratio ratio-16x9 rounded overflow-hidden mt-3">{!! $office->google_maps_embed !!}</div>
+                                {{--
+                                    Click-to-load, not an always-on iframe.
+
+                                    The embed is the only third-party resource on the
+                                    site, and the browser's `load` event waits for it.
+                                    When Google was slow the Contact page simply never
+                                    finished loading — it produced 7 failures in a single
+                                    Playwright run, every one a `page.goto('/contact')`
+                                    timeout, and a real visitor sees the tab spinner keep
+                                    spinning. Holding the iframe markup inside a
+                                    <template> keeps it completely inert (browsers do not
+                                    fetch resources inside one), so the page now owns its
+                                    own load event.
+
+                                    The facade is a real link to Google Maps, so it works
+                                    with JavaScript disabled; app.js upgrades it to load
+                                    the map inline instead. Nothing is requested from
+                                    Google until the visitor asks for it.
+                                --}}
+                                <div class="map-embed mt-3" data-map-embed>
+                                    <a class="map-embed-facade ub-visual ub-visual--v3"
+                                       href="{{ $office->mapsUrl() ?: 'https://www.google.com/maps' }}"
+                                       target="_blank" rel="noopener"
+                                       data-map-load>
+                                        <span class="map-embed-body">
+                                            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+                                            <span class="map-embed-title">Show map</span>
+                                            <span class="map-embed-note">{{ $office->label ?: 'Office location' }}</span>
+                                        </span>
+                                    </a>
+                                    <template data-map-source>{!! $office->google_maps_embed !!}</template>
+                                </div>
                             @endif
                         </div>
                     </div>

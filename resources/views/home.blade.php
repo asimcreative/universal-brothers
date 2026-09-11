@@ -265,7 +265,10 @@
                 @if($hajjCategory)
                     <div class="col-md-4 reveal-on-scroll reveal-delay-1">
                         <a href="{{ route('hajj-services') }}" class="service-panel">
-                            <x-visual surface="card" seed="service-hajj" class="service-panel-visual" mark="" />
+                            {{-- Explicit variants, not seeded: this is a fixed row of three, and the
+                                     hash gave Hajj and Tourism the same motif. v2 is the arcade of
+                                     arches, v0 the khatim star, v4 the zellige tiling. --}}
+                                <x-visual surface="card" seed="service-hajj" :variant="2" class="service-panel-visual" mark="" />
                             <div class="service-panel-body">
                                 <span class="service-panel-eyebrow">Hajj 2027 &middot; 1448 AH</span>
                                 <h3 class="service-panel-title">Hajj</h3>
@@ -279,7 +282,7 @@
                 @if($umrahCategory)
                     <div class="col-md-4 reveal-on-scroll reveal-delay-2">
                         <a href="{{ route('umrah-services') }}" class="service-panel">
-                            <x-visual surface="card" seed="service-umrah" class="service-panel-visual" mark="" />
+                            <x-visual surface="card" seed="service-umrah" :variant="0" class="service-panel-visual" mark="" />
                             <div class="service-panel-body">
                                 <span class="service-panel-eyebrow">Any Time of Year</span>
                                 <h3 class="service-panel-title">Umrah</h3>
@@ -293,7 +296,7 @@
                 @if($tourismCategory)
                     <div class="col-md-4 reveal-on-scroll reveal-delay-3">
                         <a href="{{ route('packages.category', 'tourism') }}" class="service-panel">
-                            <x-visual surface="card" seed="service-tourism" class="service-panel-visual" mark="" />
+                            <x-visual surface="card" seed="service-tourism" :variant="4" class="service-panel-visual" mark="" />
                             <div class="service-panel-body">
                                 <span class="service-panel-eyebrow">Domestic &amp; International</span>
                                 <h3 class="service-panel-title">Tourism</h3>
@@ -524,7 +527,10 @@
                     <h2>Their Journeys. Their Words.</h2>
                     <p class="text-secondary mx-auto" style="max-width: 640px;">The most meaningful measure of our service is the experience of those who travelled with us. Hear directly from our Hajis and Umrah pilgrims as they share their experiences, memories and the service they received throughout their sacred journey.</p>
                 </div>
-                <div class="row g-4">
+                {{-- Centred: the row holds up to 6 cards in threes, so a 4th
+                     testimonial otherwise sat alone hard-left with half the row
+                     empty beside it. --}}
+                <div class="row g-4 justify-content-center">
                     @foreach($videoTestimonials as $testimonial)
                         <div class="col-md-6 col-lg-4">
                             <x-video-testimonial-card :testimonial="$testimonial" />
@@ -552,7 +558,10 @@
                     <h2>Connected with Trusted Institutions</h2>
                     <p class="text-secondary mx-auto" style="max-width: 640px;">Our professional affiliations and industry relationships reflect our commitment to responsible operations, established standards and dependable travel services.</p>
                 </div>
-                <div class="row g-4 justify-content-center align-items-center">
+                {{-- `align-items-start`, not `-center`: "Ministry of Religious
+                     Affairs (Pakistan)" wraps to two lines, and centring made its
+                     seal sit visibly higher than every other seal in the row. --}}
+                <div class="row g-4 justify-content-center align-items-start">
                     @foreach($affiliations as $affiliation)
                         <x-affiliation-badge :affiliation="$affiliation" />
                     @endforeach

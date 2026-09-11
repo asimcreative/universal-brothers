@@ -178,12 +178,32 @@ function initPackageFinder() {
     retarget();
 }
 
+// Map embeds are held in a <template> so the browser never fetches Google
+// until the visitor asks. The facade is already a working link to Google Maps;
+// this upgrades it to load the map inline instead. See contact.blade.php for
+// why the iframe cannot simply sit in the page.
+function initMapEmbeds() {
+    document.querySelectorAll('[data-map-embed]').forEach((wrap) => {
+        const trigger = wrap.querySelector('[data-map-load]');
+        const source = wrap.querySelector('[data-map-source]');
+        if (!trigger || !source || !('content' in source)) return;
+
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            wrap.classList.add('is-loaded');
+            trigger.remove();
+            wrap.appendChild(source.content.cloneNode(true));
+            source.remove();
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Each initialiser is isolated: before this, all four ran in one
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder].forEach((fn) => {
+    [initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds].forEach((fn) => {
         try {
             fn();
         } catch (error) {
