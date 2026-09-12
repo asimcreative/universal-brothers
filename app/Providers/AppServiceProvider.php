@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Listeners\VerifyRequiredPhpExtensions;
 use App\Models\Office;
 use App\Models\PackageCategory;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -61,5 +64,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('contact-form', fn ($request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('inquiry-form', fn ($request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('admin-login', fn ($request) => Limit::perMinute(5)->by($request->ip()));
+
+        // Registered explicitly rather than left to listener auto-discovery:
+        // discovery scans app/Listeners on every request unless `event:cache`
+        // has run, and this project's deploy caches config, routes and views
+        // but not events. One explicit line is cheaper and does not depend on
+        // a cache step nobody runs.
+        Event::listen(DiagnosingHealth::class, VerifyRequiredPhpExtensions::class);
     }
 }
