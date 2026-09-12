@@ -25,6 +25,22 @@ class RequiredPhpExtensionsTest extends TestCase
         $this->get('/up')->assertOk();
     }
 
+    public function test_the_check_is_actually_registered_on_the_health_event(): void
+    {
+        // Without this, a passing /up proves nothing: the endpoint would
+        // answer 200 just as happily if the listener were never wired up, and
+        // that false green is precisely the failure this whole change exists
+        // to remove.
+        $registered = Event::getRawListeners()[DiagnosingHealth::class] ?? [];
+
+        $this->assertContains(
+            VerifyRequiredPhpExtensions::class,
+            $registered,
+            'The extension check is not registered on DiagnosingHealth, so /up would report a healthy '
+            .'application on a host missing a required extension.'
+        );
+    }
+
     public function test_the_required_extensions_are_actually_loaded_here(): void
     {
         foreach (VerifyRequiredPhpExtensions::REQUIRED as $extension) {
