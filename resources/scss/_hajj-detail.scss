@@ -1,0 +1,1253 @@
+// =============================================================================
+// Hajj package detail
+// =============================================================================
+// One design system for all twelve published Hajj packages and every package
+// added after them. Nothing in this file keys off a package code or slug; the
+// only things that vary are how many option columns there are and which
+// sections have data, both of which are handled by the grid and by the
+// components simply not rendering.
+//
+// The layout problem this replaces: room prices were one flat two-column grid
+// with the hotel name as a small gold eyebrow on each card, so Package A and
+// Package B rows alternated down the page, and the block explaining what A and
+// B meant sat *below* the prices. A customer could not tell which hotel a
+// price belonged to without reading every caption.
+
+// --- Shared sticky aside -----------------------------------------------------
+// Used by both package detail templates. See `_variables.scss` for why the
+// offset is a custom property and not a hand-picked pixel value.
+.ub-sticky-aside {
+    top: var(--ub-sticky-top);
+
+    // Bootstrap's `.sticky-top` sets `z-index: 1020`, the SAME value
+    // `.site-header` uses. Equal z-index means paint order falls back to
+    // document order, and the sidebar comes after the header — so the enquiry
+    // card was rendering ON TOP of the navigation: the visitor could see the
+    // form, but the nav links and "Register Now" underneath it were
+    // unclickable. Anything below 1020 restores the intended stacking.
+    z-index: 1;
+
+    // A sticky element taller than the viewport can never be fully seen: its
+    // top pins at the offset and the remainder hangs below the fold forever.
+    // The old sidebar measured 830px, which overflows any 768px-high laptop.
+    // This is the same treatment the Hajj listing's filter panel already uses.
+    @media (min-width: 992px) {
+        max-height: calc(100vh - var(--ub-sticky-top) - #{$ub-sticky-gap});
+        overflow-y: auto;
+        // Room for the inner scrollbar so it never sits on top of the form.
+        padding-right: 0.25rem;
+        scrollbar-width: thin;
+    }
+}
+
+// --- Page shell --------------------------------------------------------------
+.hajj-detail {
+    padding: 3rem 0 4rem;
+
+    @media (min-width: 992px) {
+        padding: 4rem 0 5rem;
+    }
+}
+
+.hajj-intro {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: rgba(33, 37, 41, 0.85);
+    margin-bottom: 2.5rem;
+    padding-left: 1rem;
+    border-left: 3px solid rgba($ub-gold, 0.5);
+
+    p:last-child { margin-bottom: 0; }
+}
+
+// --- Section rhythm ----------------------------------------------------------
+// Every section on the old page invented its own heading level and margin
+// (`h4 mt-4 mb-3` here, `h5 mt-4 mb-3` with a stray icon there), so the page
+// had no vertical rhythm at all. One rule now owns it.
+.hajj-section {
+    padding-top: 2.75rem;
+    margin-top: 2.75rem;
+    border-top: 1px solid rgba($ub-navy, 0.08);
+
+    &:first-of-type {
+        padding-top: 0;
+        margin-top: 0;
+        border-top: none;
+    }
+}
+
+.hajj-section-head {
+    margin-bottom: 1.5rem;
+}
+
+.hajj-eyebrow {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: $ub-eyebrow-letter-spacing;
+    color: $ub-gold-dark;
+    margin-bottom: 0.4rem;
+}
+
+.hajj-section-title {
+    font-family: $headings-font-family;
+    font-size: clamp(1.5rem, 1.3rem + 0.7vw, 2rem);
+    font-weight: 700;
+    color: $ub-navy;
+    margin-bottom: 0.5rem;
+}
+
+.hajj-section-lead {
+    margin-bottom: 0;
+    color: rgba(33, 37, 41, 0.78);
+    max-width: 62ch;
+    line-height: 1.65;
+}
+
+.hajj-fineprint {
+    margin: 1.25rem 0 0;
+    font-size: 0.82rem;
+    color: rgba(33, 37, 41, 0.68);
+    font-style: italic;
+}
+
+// --- At-a-glance strip -------------------------------------------------------
+.hajj-summary {
+    background: $ub-cream;
+    padding: 1.75rem 0;
+
+    // `<dl>` semantics: each tile is a label/value pair, which is exactly what
+    // a definition list is for. `dd` carries a default indent that has to go.
+    .quick-overview-item dd {
+        margin: 0;
+    }
+}
+
+// --- In-page jump nav --------------------------------------------------------
+.hajj-jump {
+    border-bottom: 1px solid rgba($ub-navy, 0.08);
+    background: #fff;
+}
+
+.hajj-jump-list {
+    display: flex;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0.6rem 0;
+    // Narrow screens scroll this row rather than wrapping it into three lines
+    // of chips; `clip` on the page root means a wrapping row here would be the
+    // only thing able to cause horizontal overflow.
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+}
+
+.hajj-jump-link {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(33, 37, 41, 0.8);
+    text-decoration: none;
+    transition: background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
+
+    &:hover, &:focus {
+        background: rgba($ub-navy, 0.07);
+        color: $ub-navy;
+    }
+}
+
+// --- Journey strip -----------------------------------------------------------
+.hajj-journey {
+    background: linear-gradient(135deg, rgba($ub-navy, 0.04), rgba($ub-gold, 0.07));
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 2.5rem;
+}
+
+.hajj-journey-title {
+    font-family: $headings-font-family;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba($ub-navy, 0.7);
+    margin-bottom: 0.9rem;
+}
+
+.hajj-journey-stops {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: none;
+}
+
+.hajj-journey-stop {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    position: relative;
+
+    // The connector between stops. Drawn on the stop itself rather than as a
+    // separate element so a wrapped row never leaves a dangling line.
+    & + &::before {
+        content: '';
+        position: absolute;
+        left: -1.1rem;
+        width: 0.7rem;
+        height: 1px;
+        background: rgba($ub-navy, 0.3);
+    }
+}
+
+.hajj-journey-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: $ub-gold;
+    box-shadow: 0 0 0 3px rgba($ub-gold, 0.2);
+    flex: none;
+}
+
+.hajj-journey-name {
+    font-weight: 600;
+    color: $ub-navy;
+    font-size: 0.92rem;
+}
+
+// --- Currency switcher -------------------------------------------------------
+.hajj-currency {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.hajj-currency-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(33, 37, 41, 0.7);
+}
+
+.hajj-currency-group .btn {
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    padding-inline: 1.1rem;
+}
+
+// Says out loud what the data holds. Across the live catalogue every one of
+// the 63 room prices is recorded in US dollars and none in SAR or PKR, so
+// switching currency turned the whole table to "N/A" with no explanation.
+.hajj-currency-note {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(33, 37, 41, 0.7);
+
+    i { color: $ub-gold-dark; margin-right: 0.3rem; }
+}
+
+// --- Package options ---------------------------------------------------------
+.hajj-choice-title {
+    font-family: $headings-font-family;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $ub-navy;
+    margin-bottom: 1rem;
+}
+
+// Options sit side by side so the customer can compare them, which is the
+// whole task this section exists for. They collapse to one column below `md`,
+// where side-by-side would mean two unreadable 160px columns.
+.hajj-options {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    }
+}
+
+.hajj-option {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.12);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    transition: border-color $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover { border-color: rgba($ub-gold, 0.55); box-shadow: $ub-shadow-sm; }
+
+    // Set by the JS when the visitor clicks this option's CTA, so the page
+    // reflects the choice they just made on the way to the form.
+    &.is-chosen {
+        border-color: $ub-gold;
+        box-shadow: 0 0 0 3px rgba($ub-gold, 0.18);
+    }
+}
+
+.hajj-option-head {
+    background: linear-gradient(135deg, $ub-navy, $ub-navy-dark);
+    color: #fff;
+    padding: 1.15rem 1.25rem 1.25rem;
+}
+
+.hajj-option-topline {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.hajj-option-tag {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: rgba($ub-gold, 0.2);
+    border: 1px solid rgba($ub-gold, 0.55);
+    color: $ub-gold-light;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.hajj-option-from {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    color: #fff;
+}
+
+.hajj-option-from-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.hajj-option-from-value {
+    font-family: $headings-font-family;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: $ub-gold-light;
+}
+
+.hajj-option-title {
+    font-family: $headings-font-family;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.hajj-option-hotels {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hajj-option-hotel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.82);
+
+    & + & { margin-top: 0.3rem; }
+
+    .star-rating { color: $ub-gold-light; }
+}
+
+.hajj-option-city {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.hajj-option-hotel-name { font-weight: 600; color: #fff; }
+
+.hajj-option-nights,
+.hajj-option-distance { color: rgba(255, 255, 255, 0.7); }
+
+.hajj-option-foot {
+    padding: 0 1.25rem 1.25rem;
+    margin-top: auto;
+}
+
+// --- Room rows ---------------------------------------------------------------
+// A row, not a card. Six room types as six cards is what produced the flat
+// alternating grid in the first place; as rows inside their option they read
+// as a price list, which is what they are.
+.hajj-room-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 1.25rem;
+    flex: 1;
+
+    &--flush { padding-inline: 0; }
+}
+
+.hajj-room {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px dashed rgba($ub-navy, 0.1);
+
+    &:last-child { border-bottom: none; }
+
+    &--unavailable {
+        .hajj-room-name { color: rgba(33, 37, 41, 0.7); }
+    }
+}
+
+.hajj-room-id {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.hajj-room-name {
+    font-weight: 600;
+    color: $ub-navy;
+}
+
+.hajj-room-occ {
+    font-size: 0.78rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+.hajj-room-kind {
+    // `pricing_type` is a stored enum key, rendered verbatim in the markup so
+    // the value is never misrepresented; presentation-casing happens here.
+    text-transform: capitalize;
+}
+
+.hajj-room-cost {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    flex: none;
+}
+
+.hajj-room-price {
+    font-family: $headings-font-family;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $ub-navy;
+    line-height: 1.2;
+
+    // Same box as a real price, deliberately. Two options sit side by side to
+    // be compared row against row, and an "N/A" cell set smaller made its row
+    // shorter than the equivalent row in the next column — the drift
+    // accumulated down the card until the two price lists no longer lined up,
+    // which defeats the comparison the layout exists for.
+    &--na {
+        font-family: $font-family-sans-serif;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: rgba(33, 37, 41, 0.7);
+    }
+}
+
+.hajj-room-basis {
+    font-size: 0.75rem;
+    color: rgba(33, 37, 41, 0.68);
+    text-transform: lowercase;
+}
+
+.hajj-room-note {
+    flex-basis: 100%;
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+// --- Your stay ---------------------------------------------------------------
+// A fixed two-column track rather than `auto-fit`. With `auto-fit`, a package
+// whose only shared hotel is one Madinah row (UB001) collapsed to a single
+// track and stretched that one small card across the full content width, which
+// read as a rendering fault rather than as one hotel.
+.hajj-stay {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.hajj-stay-city {
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius-lg;
+    padding: 1.2rem 1.25rem;
+}
+
+.hajj-stay-city-name {
+    font-family: $headings-font-family;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $ub-gold-dark;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.85rem;
+}
+
+.hajj-stay-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hajj-stay-hotel {
+    & + & {
+        margin-top: 0.9rem;
+        padding-top: 0.9rem;
+        border-top: 1px dashed rgba($ub-navy, 0.1);
+    }
+}
+
+.hajj-stay-hotel-name {
+    display: block;
+    font-weight: 600;
+    color: $ub-navy;
+    margin-bottom: 0.2rem;
+}
+
+.hajj-stay-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.75rem;
+    font-size: 0.8rem;
+    color: rgba(33, 37, 41, 0.7);
+}
+
+.hajj-stay-note {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+// --- Aziziya -----------------------------------------------------------------
+.hajj-aziziya {
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius-lg;
+    padding: 1.35rem 1.4rem;
+}
+
+.hajj-aziziya-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.hajj-aziziya-name {
+    font-family: $headings-font-family;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $ub-navy;
+    margin: 0;
+}
+
+.hajj-aziziya-copy {
+    color: rgba(33, 37, 41, 0.8);
+    line-height: 1.65;
+}
+
+.hajj-aziziya-subtitle {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(33, 37, 41, 0.68);
+    margin: 1.4rem 0 0.5rem;
+}
+
+.hajj-aziziya-note {
+    margin: 1rem 0 0;
+    font-size: 0.82rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+// Status is the single most important fact about Aziziya on this page —
+// "included" and "optional at extra cost" are completely different offers and
+// were previously the same neutral info badge.
+.hajj-status {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid transparent;
+
+    &--included {
+        background: rgba(#1a7f4b, 0.1);
+        border-color: rgba(#1a7f4b, 0.35);
+        color: #14603a;
+    }
+
+    &--optional {
+        background: rgba($ub-gold, 0.14);
+        border-color: rgba($ub-gold, 0.5);
+        color: $ub-gold-dark;
+    }
+
+    &--not_included {
+        background: rgba(#b02a37, 0.08);
+        border-color: rgba(#b02a37, 0.3);
+        color: #8c2029;
+    }
+}
+
+// --- Fact grids (Aziziya, Mashaer, Meals) ------------------------------------
+.hajj-facts {
+    display: grid;
+    gap: 0.75rem 1.5rem;
+    grid-template-columns: 1fr;
+    margin: 0;
+
+    @media (min-width: 576px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &--wide {
+        @media (min-width: 576px) { grid-template-columns: 1fr; }
+    }
+}
+
+.hajj-fact {
+    dt {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(33, 37, 41, 0.68);
+        margin-bottom: 0.1rem;
+    }
+
+    dd {
+        margin: 0;
+        color: $ub-navy;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+}
+
+// --- Mashaer -----------------------------------------------------------------
+.hajj-mashaer {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    }
+}
+
+.hajj-mashaer-card {
+    background: $ub-cream;
+    border: 1px solid rgba($ub-gold, 0.25);
+    border-radius: $border-radius-lg;
+    padding: 1.25rem 1.3rem;
+}
+
+.hajj-mashaer-place {
+    font-family: $headings-font-family;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $ub-navy;
+    margin-bottom: 0.9rem;
+}
+
+.hajj-mashaer-note {
+    margin: 0.9rem 0 0;
+    font-size: 0.85rem;
+    color: rgba(33, 37, 41, 0.75);
+}
+
+// --- Itinerary timeline ------------------------------------------------------
+// Was a `data-bs-parent` accordion, so exactly one day could be open at a time
+// and reading a fourteen-day itinerary took fourteen clicks. Each day holds a
+// line or two, so it is simply shown.
+.hajj-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 2.75rem;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0.6rem;
+        bottom: 0.6rem;
+        width: 2px;
+        background: rgba($ub-gold, 0.35);
+    }
+}
+
+.hajj-day {
+    position: relative;
+    padding-bottom: 1.1rem;
+
+    &:last-child { padding-bottom: 0; }
+}
+
+.hajj-day-marker {
+    position: absolute;
+    left: -2.75rem;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: $ub-navy;
+    color: $ub-gold-light;
+    font-family: $headings-font-family;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.hajj-day-body {
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius;
+    padding: 0.85rem 1rem;
+}
+
+.hajj-day-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    margin-bottom: 0.4rem;
+}
+
+.hajj-day-number {
+    font-weight: 700;
+    color: $ub-navy;
+}
+
+.hajj-day-city {
+    font-weight: 600;
+    color: $ub-gold-dark;
+}
+
+.hajj-day-date,
+.hajj-day-hijri {
+    font-size: 0.8rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+.hajj-day-stays {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem;
+        font-size: 0.9rem;
+        color: rgba(33, 37, 41, 0.85);
+    }
+
+    li + li { margin-top: 0.25rem; }
+}
+
+.hajj-day-tag {
+    display: inline-block;
+    flex: none;
+    padding: 0.1rem 0.45rem;
+    border-radius: $border-radius-sm;
+    background: rgba($ub-navy, 0.08);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $ub-navy;
+}
+
+.hajj-day-stay {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(33, 37, 41, 0.85);
+}
+
+.hajj-day-note {
+    margin: 0.35rem 0 0;
+    font-size: 0.82rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+// Native `<details>`: no JavaScript, keyboard-accessible for free, and the
+// hidden days stay in the DOM for search engines.
+.hajj-timeline-more {
+    margin-top: 1rem;
+
+    > summary {
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.6rem 1.1rem;
+        border: 1px solid rgba($ub-navy, 0.2);
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: $ub-navy;
+        list-style: none;
+
+        &::-webkit-details-marker { display: none; }
+
+        &::after {
+            content: '\F282'; // bi-chevron-down
+            font-family: 'bootstrap-icons';
+            font-size: 0.75rem;
+        }
+
+        &:hover, &:focus-visible { border-color: rgba($ub-gold, 0.6); }
+    }
+
+    &[open] > summary::after { content: '\F286'; } // bi-chevron-up
+}
+
+.hajj-timeline--continued { margin-top: 1.1rem; }
+
+// --- Tick lists (transport, inclusions, Aziziya services) --------------------
+.hajj-tick-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px dashed rgba($ub-navy, 0.08);
+        line-height: 1.55;
+
+        &:last-child { border-bottom: none; }
+    }
+
+    i {
+        flex: none;
+        margin-top: 0.2rem;
+        color: $ub-gold-dark;
+    }
+
+    &--in i { color: #1a7f4b; }
+    &--out i { color: #b02a37; }
+}
+
+.hajj-tick-note {
+    display: block;
+    font-size: 0.8rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+.hajj-route {
+    color: rgba(33, 37, 41, 0.7);
+    margin-left: 0.35rem;
+}
+
+.hajj-inline-price {
+    margin-left: 0.4rem;
+    font-weight: 700;
+    color: $ub-navy;
+
+    small {
+        font-weight: 400;
+        color: rgba(33, 37, 41, 0.68);
+        text-transform: lowercase;
+    }
+}
+
+.hajj-chip {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba($ub-navy, 0.07);
+    color: rgba(33, 37, 41, 0.75);
+
+    &--yes {
+        background: rgba(#1a7f4b, 0.1);
+        color: #14603a;
+    }
+}
+
+// --- Inclusions / exclusions -------------------------------------------------
+.hajj-inex {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.hajj-inex-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: $headings-font-family;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $ub-navy;
+    margin-bottom: 0.65rem;
+
+    i { font-size: 1rem; }
+}
+
+.hajj-inex-col--in .hajj-inex-title i { color: #1a7f4b; }
+.hajj-inex-col--out .hajj-inex-title i { color: #b02a37; }
+
+// --- Upgrades ----------------------------------------------------------------
+.hajj-upgrades {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 576px) {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    }
+}
+
+.hajj-upgrade {
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius-lg;
+    padding: 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.hajj-upgrade-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $ub-navy;
+    margin-bottom: 0.35rem;
+}
+
+.hajj-upgrade-copy {
+    font-size: 0.85rem;
+    color: rgba(33, 37, 41, 0.72);
+    margin-bottom: 0.75rem;
+    line-height: 1.55;
+}
+
+.hajj-upgrade-price {
+    margin: auto 0 0;
+    font-family: $headings-font-family;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $ub-navy;
+
+    small {
+        display: block;
+        font-family: $font-family-sans-serif;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: rgba(33, 37, 41, 0.68);
+        text-transform: lowercase;
+    }
+}
+
+// Half the catalogue's upgrade rows carry no price at all, so this is a normal
+// state that has to read as a deliberate answer, not a missing value.
+.hajj-upgrade-onrequest {
+    font-family: $font-family-sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $ub-gold-dark;
+}
+
+.hajj-upgrade-note {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+// --- Notes -------------------------------------------------------------------
+.package-note-title { display: block; margin-bottom: 0.25rem; }
+
+// --- Gallery -----------------------------------------------------------------
+.hajj-gallery {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @media (min-width: 768px) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.hajj-gallery-item {
+    margin: 0;
+
+    img {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        border-radius: $border-radius;
+    }
+}
+
+.hajj-gallery-caption {
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+// --- Sticky aside ------------------------------------------------------------
+.hajj-aside-card {
+    background: linear-gradient(135deg, $ub-navy, $ub-navy-dark);
+    color: #fff;
+    border-radius: $border-radius-lg;
+    padding: 1.25rem 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.hajj-aside-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.hajj-aside-code {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: $border-radius-sm;
+    background: rgba($ub-gold, 0.2);
+    border: 1px solid rgba($ub-gold, 0.5);
+    color: $ub-gold-light;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.hajj-aside-meta {
+    margin: 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.hajj-aside-price {
+    margin: 0 0 0.9rem;
+    line-height: 1.25;
+}
+
+.hajj-aside-price-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.hajj-aside-price-value {
+    font-family: $headings-font-family;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: $ub-gold-light;
+}
+
+.hajj-aside-price-basis {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: 0.3rem;
+}
+
+// Outline-primary is navy-on-navy inside this card, so it gets the light
+// treatment rather than inheriting an invisible one.
+.hajj-aside-call {
+    --bs-btn-color: #{$ub-gold-light};
+    --bs-btn-border-color: rgba(255, 255, 255, 0.35);
+    --bs-btn-hover-color: #{$ub-navy};
+    --bs-btn-hover-bg: #{$ub-gold-light};
+    --bs-btn-hover-border-color: #{$ub-gold-light};
+    font-weight: 600;
+
+    i { margin-right: 0.4rem; }
+}
+
+// --- Related packages --------------------------------------------------------
+.hajj-related {
+    background: $ub-cream;
+    padding: 3.5rem 0;
+}
+
+.hajj-related-title {
+    font-family: $headings-font-family;
+    font-size: clamp(1.5rem, 1.3rem + 0.7vw, 2rem);
+    font-weight: 700;
+    color: $ub-navy;
+    margin-bottom: 1.5rem;
+}
+
+.hajj-related-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+
+    @media (min-width: 576px) {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    }
+}
+
+.hajj-related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius-lg;
+    padding: 1.1rem 1.2rem;
+    text-decoration: none;
+    transition: border-color $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover, &:focus-visible {
+        border-color: rgba($ub-gold, 0.6);
+        box-shadow: $ub-shadow-sm;
+    }
+}
+
+.hajj-related-code {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: $ub-gold-dark;
+}
+
+.hajj-related-name {
+    font-weight: 600;
+    color: $ub-navy;
+    line-height: 1.35;
+}
+
+.hajj-related-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    color: rgba(33, 37, 41, 0.7);
+}
+
+.hajj-related-price { font-weight: 600; color: $ub-navy; }
+
+.hajj-related-go {
+    margin-top: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $ub-gold-dark;
+
+    i { margin-left: 0.3rem; font-size: 0.75rem; }
+}
+
+// --- Mobile action bar -------------------------------------------------------
+// Below `lg` the enquiry form falls to the very bottom of a page several
+// thousand pixels long, so a phone visitor who decides to enquire while
+// reading the itinerary has no way to act on it.
+.hajj-action-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    // `env()` keeps it clear of the iOS home indicator.
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    // Fully opaque: at 0.97 the option card scrolling underneath showed
+    // through the bar and collided with its own label text.
+    background: #fff;
+    border-top: 1px solid rgba($ub-navy, 0.12);
+    box-shadow: 0 -4px 20px rgba(16, 27, 69, 0.12);
+}
+
+.hajj-action-price {
+    line-height: 1.15;
+    min-width: 0;
+}
+
+.hajj-action-price-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(33, 37, 41, 0.68);
+}
+
+.hajj-action-price-value {
+    font-family: $headings-font-family;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: $ub-navy;
+}
+
+.hajj-action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex: none;
+}
+
+.hajj-action-call i { margin-right: 0.3rem; }
+
+// The bar overlays the foot of the page, so the page needs room underneath it
+// or the last section's final line sits permanently behind it.
+@media (max-width: 991.98px) {
+    body:has(.hajj-action-bar) .site-footer {
+        padding-bottom: 5.5rem;
+    }
+}

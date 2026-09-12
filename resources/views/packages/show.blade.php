@@ -128,7 +128,16 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="sticky-top" style="top: 100px;">
+                {{-- `.ub-sticky-aside` rather than an inline `top: 100px`.
+                     Bootstrap's `.sticky-top` gives this the same `z-index:
+                     1020` the site header has, and on a z-index tie the later
+                     element in the document wins — so this card was painting
+                     straight over the navigation. The 100px offset was also
+                     smaller than the header's real height on every desktop
+                     width (measured: 107.75px, and 125.75px at exactly
+                     1200px), so it sat under the header as well. Both are
+                     fixed centrally; see `_components.scss`. --}}
+                <div class="sticky-top ub-sticky-aside">
                     <x-inquiry-form :package="$package" :category="$package->category" title="Enquire About This Package" />
 
                     <x-related-packages :related="$related" />

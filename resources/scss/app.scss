@@ -7,4 +7,8 @@
 // `components` then compose against.
 @import 'visuals';
 @import 'components';
+// After `components`: the Hajj detail system composes against tokens and
+// shared classes (`.star-rating`, `.package-note`, the touch-target rules)
+// defined there, and a few of its rules deliberately refine them.
+@import 'hajj-detail';
 @import 'admin';

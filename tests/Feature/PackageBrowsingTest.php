@@ -148,6 +148,16 @@ class PackageBrowsingTest extends TestCase
      * scoping makes the old name-matching test moot (see
      * FINAL_CODE_REVIEW.md-style reasoning: the correct value is
      * structurally guaranteed per package, not filtered post hoc).
+     *
+     * The value is asserted as the RENDERED price rather than a `data-usd`
+     * attribute. `package_upgrades` stores one `price` in one `currency` —
+     * there is no column per currency, unlike `package_room_options` — but the
+     * old template still fed upgrades through the room-price currency
+     * switcher, so choosing SAR blanked every upgrade on the page to "N/A"
+     * even though the price was perfectly well known. Upgrades are now printed
+     * in the currency they are actually sold in. The assertion's intent is
+     * unchanged and just as strict: each package shows its own upgrade value,
+     * and never the other package's.
      */
     public function test_package_detail_shows_its_own_upgrade_with_the_correct_value(): void
     {
@@ -162,12 +172,12 @@ class PackageBrowsingTest extends TestCase
         $nonAziziyaResponse->assertOk();
         $nonAziziyaResponse->assertSee('Optional Upgrades');
         $nonAziziyaResponse->assertSee('Kaba view supplement');
-        $nonAziziyaResponse->assertSee('data-usd="2200.00"', false);
+        $nonAziziyaResponse->assertSee('US$2,200');
 
         $aziziyaResponse = $this->get('/hajj/'.$aziziyaPackage->slug);
         $aziziyaResponse->assertOk();
-        $aziziyaResponse->assertSee('data-usd="1050.00"', false);
-        $aziziyaResponse->assertDontSee('data-usd="2200.00"', false);
+        $aziziyaResponse->assertSee('US$1,050');
+        $aziziyaResponse->assertDontSee('US$2,200');
     }
 
     public function test_draft_package_detail_returns_404(): void

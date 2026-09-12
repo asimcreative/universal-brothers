@@ -56,6 +56,31 @@ html, body {
     overflow-x: clip;
 }
 
+// --- Sticky offsets and in-page anchors -------------------------------------
+// See `$ub-header-h-fallback` in `_variables.scss` and `initHeaderOffset()` in
+// `app.js` for why this is measured rather than guessed. Every sticky element
+// and every in-page anchor target on the site derives from these two, so there
+// is exactly one place to change if the header ever grows a row.
+:root {
+    --ub-header-h: #{$ub-header-h-fallback};
+    --ub-sticky-top: calc(var(--ub-header-h) + #{$ub-sticky-gap});
+}
+
+// An `href="#pricing"` jump used to land the section heading underneath the
+// sticky header, so the visitor arrived looking at the middle of the section
+// they had just asked to see.
+[id] {
+    scroll-margin-top: var(--ub-sticky-top);
+}
+
+// Smooth scrolling for in-page jumps, but never for anyone who has asked the
+// system for less motion (WCAG 2.3.3).
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
 .btn-whatsapp {
     background-color: #25d366;
     border-color: #25d366;
@@ -1022,8 +1047,8 @@ html, body {
     // non-visible overflow on an ancestor silently kills `position: sticky`.
     @media (min-width: 992px) {
         position: sticky;
-        top: 6.5rem;
-        max-height: calc(100vh - 8rem);
+        top: var(--ub-sticky-top);
+        max-height: calc(100vh - var(--ub-sticky-top) - #{$ub-sticky-gap});
         overflow-y: auto;
     }
 
@@ -1512,7 +1537,7 @@ html, body {
 // --- About page aside -------------------------------------------------------
 .about-aside {
     position: sticky;
-    top: 6.5rem;
+    top: var(--ub-sticky-top);
 }
 
 .about-aside-visual {

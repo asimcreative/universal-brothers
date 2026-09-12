@@ -49,6 +49,18 @@ $ub-section-py-sm: 3.5rem;
 // every section header for consistent visual rhythm.
 $ub-eyebrow-letter-spacing: 0.12em;
 
+// Sticky offsets. Four sticky elements — the Hajj and Umrah detail sidebars,
+// the Hajj listing's filter panel and the About page aside — each picked their
+// own offset by eye (100px, 100px, 6.5rem, 6.5rem). Measured across the QA
+// breakpoints the site header is 63.97px below 1200px, 125.75px AT 1200px (the
+// nav wraps to two lines at exactly that width) and 107.75px above it, so all
+// four guesses left their element sitting UNDER the header on at least one
+// desktop width. `--ub-header-h` is set from the real element by
+// `initHeaderOffset()`; this value is the fallback used before that runs and
+// clears even the tallest case, so nothing is ever hidden.
+$ub-header-h-fallback: 126px;
+$ub-sticky-gap: 1.25rem;
+
 // Motion — a single easing/duration vocabulary for the whole animation
 // system (`_animations.scss`), so no two sections invent their own timing.
 $ub-ease: cubic-bezier(0.22, 1, 0.36, 1);

@@ -22,10 +22,15 @@ class SecurityHeaders
         // Office::google_maps_embed — all admin-authored, see the
         // release-gate security audit). `script-src`/`style-src` still allow
         // 'unsafe-inline' — the app genuinely uses inline `style=""`
-        // attributes and one inline `<script>` block (the Hajj detail
-        // currency switcher) that would otherwise break; eliminating those
-        // is a real refactor, not done in this pass, and is disclosed as a
-        // known limitation rather than silently working around it. Even
+        // attributes on the public side, and inline `onsubmit`/`onchange`
+        // handlers throughout the admin, that would otherwise break. (The one
+        // inline *executable* `<script>` block on the public site, the Hajj
+        // detail currency switcher, moved into the bundle with the package
+        // detail rebuild; the `application/ld+json` blocks that remain are
+        // data, not code, and are unaffected by `script-src`.) Eliminating
+        // the admin's inline handlers is a real refactor, not done in this
+        // pass, and is disclosed as a known limitation rather than silently
+        // worked around. Even
         // with that allowance, this still blocks loading a script/style/
         // image/font from an attacker-controlled external origin, blocks
         // <object>/<embed> entirely, and restricts framing/form-submission/

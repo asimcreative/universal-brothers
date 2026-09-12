@@ -198,12 +198,112 @@ function initMapEmbeds() {
     });
 }
 
+// Publish the site header's REAL rendered height as `--ub-header-h`.
+//
+// Four separate sticky elements (the Hajj and Umrah detail sidebars, the Hajj
+// listing's filter panel and the About page aside) each hard-coded their own
+// offset — 100px, 100px, 6.5rem, 6.5rem. Measured, the header is 63.97px below
+// 1200px, 125.75px AT 1200px (the nav wraps to two lines at exactly that
+// width) and 107.75px above it, so every one of those guesses left its sticky
+// element sitting UNDER the header on at least one desktop width. There is no
+// CSS-only way to read an element's height, so it is measured here and fed
+// back as a custom property; `_variables.scss` carries a fallback that already
+// clears the tallest case, so the layout is correct before this runs and
+// simply gets tighter afterwards.
+function initHeaderOffset() {
+    const header = document.querySelector('.site-header');
+    if (!header) return;
+
+    const apply = () => {
+        const height = Math.ceil(header.getBoundingClientRect().height);
+        if (height > 0) {
+            document.documentElement.style.setProperty('--ub-header-h', `${height}px`);
+        }
+    };
+
+    apply();
+
+    // The header's height changes with viewport width (the nav wraps), and on
+    // mobile when the offcanvas toggler reflows — a resize listener alone
+    // misses font-loading reflow, which ResizeObserver catches.
+    if ('ResizeObserver' in window) {
+        new ResizeObserver(apply).observe(header);
+    } else {
+        window.addEventListener('resize', apply, { passive: true });
+    }
+}
+
+// Hajj package detail: currency switching and option hand-off.
+//
+// Previously an inline <script> in show-hajj.blade.php. Two behavioural
+// changes came with the move:
+//
+//   - Prices are now server-rendered in the default currency (see
+//     components/hajj/price.blade.php). This function only ever SWAPS a value
+//     that is already correct in the markup, so a visitor with JS blocked, a
+//     crawler, or anyone reading before the bundle executes still sees every
+//     published price instead of a page of empty cells.
+//   - Only true multi-currency values participate. Transport fares, upgrades
+//     and Aziziya services store one price in one currency, so they are
+//     rendered in that currency and left alone; the old code pushed them
+//     through the switcher too, which blanked every one of them to "N/A" the
+//     moment a visitor clicked SAR.
+function initHajjDetail() {
+    const switcher = document.getElementById('currency-switcher');
+    const symbols = { USD: 'US$', SAR: 'SAR ', PKR: 'PKR ' };
+
+    if (switcher) {
+        const buttons = switcher.querySelectorAll('[data-currency]');
+
+        const render = (currency) => {
+            document.querySelectorAll('.currency-price').forEach((el) => {
+                const value = el.dataset[currency.toLowerCase()];
+                el.textContent = value ? symbols[currency] + Number(value).toLocaleString() : 'N/A';
+            });
+        };
+
+        buttons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                buttons.forEach((b) => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+                btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
+                render(btn.dataset.currency);
+            });
+        });
+    }
+
+    // Choosing an option marks it as selected and carries the choice into the
+    // enquiry message, so the office receives "Package B — Fairmont" rather
+    // than just the package name and a blank message. The links are plain
+    // `#enquire` anchors, so this is purely an enhancement: with JS off they
+    // still jump to the form.
+    const choosers = document.querySelectorAll('[data-hajj-choose]');
+    if (!choosers.length) return;
+
+    const message = document.querySelector('#enquire textarea[name="message"]');
+
+    choosers.forEach((link) => {
+        link.addEventListener('click', () => {
+            document.querySelectorAll('.hajj-option').forEach((card) => card.classList.remove('is-chosen'));
+            link.closest('.hajj-option')?.classList.add('is-chosen');
+
+            // Never overwrite something the visitor has already typed.
+            if (message && message.value.trim() === '') {
+                message.value = `I am interested in ${link.dataset.hajjChoose}. Please send me the details.`;
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Each initialiser is isolated: before this, all four ran in one
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds].forEach((fn) => {
+    [initHeaderOffset, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail].forEach((fn) => {
         try {
             fn();
         } catch (error) {
