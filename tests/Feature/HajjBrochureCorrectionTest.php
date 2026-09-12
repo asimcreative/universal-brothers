@@ -226,6 +226,88 @@ class HajjBrochureCorrectionTest extends TestCase
         $this->assertSame($beforeHotels, PackageAccommodation::orderBy('id')->pluck('hotel_name', 'id')->toArray());
     }
 
+    public function test_the_published_offer_price_follows_the_corrected_rooms(): void
+    {
+        $this->seedPackages();
+
+        // starting_price is derived from the room options, and the detail page
+        // publishes it as the Schema.org Offer price. A correction that moved
+        // the room prices but not this would show the right figure in the
+        // table while handing the superseded one to search engines — which is
+        // exactly what happened on the first pass at this fix.
+        foreach (['UB006' => 13850.0, 'UB008' => 12450.0, 'UB010' => 12200.0] as $code => $expected) {
+            $package = Package::where('code', $code)->firstOrFail();
+
+            $this->assertSame(
+                $expected,
+                (float) $package->starting_price,
+                "{$code}'s starting price does not match its cheapest corrected room."
+            );
+        }
+
+        $package = Package::where('code', 'UB010')->firstOrFail();
+        $response = $this->get(route('packages.show', ['category' => 'hajj', 'package' => $package->slug]));
+
+        $response->assertOk();
+        $response->assertSee('"price":12200', false);
+        $response->assertDontSee('"price":12750', false);
+    }
+
+    public function test_the_correction_seeder_repairs_a_stale_starting_price(): void
+    {
+        $this->seedPackages();
+
+        $package = Package::where('code', 'UB010')->firstOrFail();
+        $variantB = PackageVariant::where('package_id', $package->id)->where('code', 'B')->value('id');
+
+        // A database seeded from the old deck: cheapest room 12750, and
+        // starting_price derived from it.
+        PackageRoomOption::where('package_id', $package->id)
+            ->where('variant_id', $variantB)
+            ->whereIn('sharing_type', ['sharing_room', 'quad'])
+            ->update(['price_usd' => 12750]);
+        $package->forceFill(['starting_price' => 12750])->save();
+
+        $this->seed(HajjBrochureCorrectionSeeder::class);
+
+        $this->assertSame(12200.0, (float) $package->fresh()->starting_price);
+    }
+
+    public function test_it_repairs_a_starting_price_left_behind_by_the_earlier_fix(): void
+    {
+        $this->seedPackages();
+
+        // Production's exact state after the first half of this fix shipped:
+        // the room prices are already corrected, but starting_price still
+        // holds the superseded figure, so the visible table and the published
+        // Offer price disagree. A guard keyed off "the value before this run"
+        // would skip this case entirely.
+        $package = Package::where('code', 'UB010')->firstOrFail();
+        $package->forceFill(['starting_price' => 12750])->save();
+
+        $this->seed(HajjBrochureCorrectionSeeder::class);
+
+        $this->assertSame(12200.0, (float) $package->fresh()->starting_price);
+    }
+
+    public function test_an_editorial_starting_price_survives(): void
+    {
+        $this->seedPackages();
+
+        // starting_price is an admin-editable field. A value that is not the
+        // old derived minimum was set on purpose.
+        $package = Package::where('code', 'UB010')->firstOrFail();
+        $package->forceFill(['starting_price' => 9999])->save();
+
+        $this->seed(HajjBrochureCorrectionSeeder::class);
+
+        $this->assertSame(
+            9999.0,
+            (float) $package->fresh()->starting_price,
+            'The correction seeder overwrote a starting price that had been set deliberately.'
+        );
+    }
+
     public function test_pkr_and_sar_are_not_touched(): void
     {
         $this->seedPackages();

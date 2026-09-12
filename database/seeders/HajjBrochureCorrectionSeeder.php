@@ -121,16 +121,103 @@ class HajjBrochureCorrectionSeeder extends Seeder
         $hotels = $this->correctHotels();
         $labels = $this->correctVariantLabels();
 
+        // packages.starting_price is derived from the room options, so it has
+        // to be recomputed after they move — and it is NOT only a display
+        // nicety on the listing card: it is what the detail page publishes as
+        // the Schema.org Offer price, so leaving it stale feeds the superseded
+        // figure straight to search engines while the visible table shows the
+        // corrected one.
+        $starting = $this->correctStartingPrices();
+
         $this->command?->info(sprintf(
             'Brochure corrections — prices: %d updated, %d already correct, %d left alone; '
-            .'accommodations: %d; itinerary rows: %d; variant labels: %d.',
+            .'accommodations: %d; itinerary rows: %d; variant labels: %d; starting prices: %d.',
             $prices['updated'],
             $prices['already'],
             $prices['skipped'],
             $hotels['accommodations'],
             $hotels['itinerary'],
-            $labels
+            $labels,
+            $starting
         ));
+    }
+
+    /**
+     * Recompute starting_price the same way HajjPackageSeeder derives it —
+     * the lowest available USD room price — but only where it still holds a
+     * derived value rather than one somebody set on purpose.
+     *
+     * HajjPackagePresenter treats starting_price as an editorial field the
+     * admin can override, so anything that is neither the superseded minimum
+     * nor the corrected one was set deliberately and is left alone.
+     *
+     * Both minima are computed from the room options WITHOUT depending on
+     * whether correctPrices() has already run — which matters because the
+     * price half of this fix shipped a commit before the starting_price half,
+     * so on production the rooms are already corrected while starting_price
+     * still holds the superseded figure. Keying off "the value before this run"
+     * would have skipped exactly the environment that needs repairing.
+     */
+    private function correctStartingPrices(): int
+    {
+        $changed = 0;
+
+        foreach (Package::whereIn('code', array_keys(self::USD))->get() as $package) {
+            $corrected = $this->lowestUsd($package, 1);
+
+            if ($corrected === null || $this->isSameMoney($package->starting_price, $corrected)) {
+                continue;
+            }
+
+            if (! $this->isSameMoney($package->starting_price, $this->lowestUsd($package, 0))) {
+                continue;
+            }
+
+            $package->forceFill(['starting_price' => $corrected])->save();
+            $changed++;
+        }
+
+        return $changed;
+    }
+
+    /**
+     * The lowest available USD room price for a package, reading the const
+     * table's superseded ($index 0) or corrected ($index 1) figure for any row
+     * this seeder covers and the stored price for every other row.
+     */
+    private function lowestUsd(Package $package, int $index): ?float
+    {
+        $wanted = [];
+
+        foreach (self::USD[$package->code] ?? [] as $variantCode => $rooms) {
+            $variantId = $variantCode === '-'
+                ? null
+                : PackageVariant::where('package_id', $package->id)->where('code', $variantCode)->value('id');
+
+            foreach ($rooms as $sharingType => $pair) {
+                $wanted[$variantId.'|'.$sharingType] = (float) $pair[$index];
+            }
+        }
+
+        $lowest = null;
+
+        $options = PackageRoomOption::where('package_id', $package->id)
+            ->where('is_available', true)
+            ->get();
+
+        foreach ($options as $option) {
+            $price = $wanted[$option->variant_id.'|'.$option->sharing_type] ?? (
+                $option->price_usd === null ? null : (float) $option->price_usd
+            );
+
+            if ($price === null) {
+                continue;
+            }
+
+            $lowest = $lowest === null ? $price : min($lowest, $price);
+        }
+
+        return $lowest;
     }
 
     /** @return array{updated:int, already:int, skipped:int} */
