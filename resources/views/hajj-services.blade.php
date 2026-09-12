@@ -6,6 +6,7 @@
 @section('content')
     {{-- Hero --}}
     <x-page-hero
+        photo="kaaba-tawaf"
         centered
         eyebrow="Hajj 2027"
         title="Your Hajj. Our Responsibility."
@@ -26,6 +27,27 @@
                 <h2>A Journey Unlike Any Other</h2>
                 <p class="text-secondary">Hajj is one of the five pillars of Islam and one of life's most profound spiritual journeys. Millions answer the call each year, yet every pilgrim's Hajj is deeply personal.</p>
                 <p class="text-secondary">Understanding the rituals, preparing physically and spiritually, and making appropriate travel arrangements are all important parts of that journey. Universal Brothers helps pilgrims prepare for each stage with information, coordination and experienced support.</p>
+            </div>
+
+            {{-- The three places the journey actually happens. Captions name the
+                 place, nothing more — no claim is made about which of them a
+                 given package includes; that is on each package's own page. --}}
+            <div class="row g-4 mt-4">
+                @foreach([
+                    ['kaaba-tawaf', 'Makkah', 'Tawaf around the Kaaba'],
+                    ['arafat', 'Arafat', 'The standing at Jabal al-Rahmah'],
+                    ['nabawi-aerial', 'Madinah', 'Al-Masjid an-Nabawi'],
+                ] as [$ubKey, $ubPlace, $ubCaption])
+                    <div class="col-md-4 reveal-on-scroll">
+                        <div class="photo-figure photo-media">
+                            <x-photo :key="$ubKey" sizes="(min-width: 768px) 31vw, 92vw" />
+                            <div class="photo-caption">
+                                <span class="photo-caption-eyebrow">{{ $ubPlace }}</span>
+                                <p class="photo-caption-title">{{ $ubCaption }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -81,12 +103,9 @@
                     </ul>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    <x-visual
-                        surface="panel"
-                        seed="hajj-guidance-support"
-                        caption="Guidance & Ibadah Support"
-                        mark=""
-                        class="split-section-visual" />
+                    <div class="photo-figure photo-media photo-media--panel split-section-visual">
+                        <x-photo key="kaaba-close" sizes="(min-width: 992px) 46vw, 92vw" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -107,12 +126,9 @@
                     <p class="small text-muted">Exact hotel names, distances and transport arrangements vary by package — see each package's Accommodation &amp; Transportation sections for full detail.</p>
                 </div>
                 <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
-                    <x-visual
-                        surface="panel"
-                        seed="hajj-accommodation-transport"
-                        caption="Accommodation & Transport"
-                        mark=""
-                        class="split-section-visual" />
+                    <div class="photo-figure photo-media photo-media--panel split-section-visual">
+                        <x-photo key="mina-tents" sizes="(min-width: 992px) 46vw, 92vw" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -148,13 +164,18 @@
                     <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-primary btn-lg">View All Hajj Packages</a>
                 </div>
             @else
-                <x-empty-state icon="bi-bag">No Hajj packages are published yet. Please check back soon or <a href="{{ route('contact') }}">contact us</a>.</x-empty-state>
+                <x-empty-state icon="bi-bag" photo="kaaba-tawaf">No Hajj packages are published yet. Please check back soon or <a href="{{ route('contact') }}">contact us</a>.</x-empty-state>
             @endif
         </div>
     </section>
 
     {{-- Why Hajj With Universal Brothers --}}
-    <section class="section bg-primary text-white">
+    <section class="section bg-primary text-white position-relative">
+        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url('haram-panorama') }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset('haram-panorama') }}"
+                 sizes="100vw" alt="" loading="lazy" decoding="async">
+        </div>
         <div class="container text-center">
             <div class="mx-auto reveal-on-scroll" style="max-width: 720px;">
                 <h2>When the Journey Matters This Much, Experience Matters.</h2>

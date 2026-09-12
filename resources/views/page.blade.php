@@ -10,7 +10,10 @@
 @endpush
 
 @section('content')
+    {{-- A page that has uploaded its own featured image uses that; otherwise the
+         About page opens on the Haram and every other CMS page on the panorama. --}}
     <x-page-hero
+        :photo="$page->featured_image ? null : ($page->template === 'about' ? 'haram-dusk' : 'haram-panorama')"
         :eyebrow="$page->template === 'about' ? 'Our Story' : null"
         :title="$page->title"
         :breadcrumbs="['Home' => route('home'), $page->title => null]" />
@@ -34,14 +37,23 @@
 
                     <div class="col-lg-5 reveal-on-scroll reveal-delay-2">
                         <div class="about-aside">
-                            <x-visual
-                                :image="$page->featured_image"
-                                :alt="$page->title"
-                                seed="about-universal-brothers"
-                                surface="panel"
-                                caption="Serving the Guests of Allah"
-                                mark=""
-                                class="about-aside-visual" />
+                            {{-- A real photograph of what the company does, not a
+                                 generated motif. An uploaded featured image on the
+                                 page still wins; `.photo-media--panel` supplies the
+                                 4:3 box the generated panel used to provide, since
+                                 `.about-aside-visual` itself only carries spacing
+                                 and a shadow. --}}
+                            <div class="photo-figure photo-media photo-media--panel about-aside-visual">
+                                <x-photo
+                                    :image="$page->featured_image"
+                                    key="nabawi-aerial"
+                                    :alt="$page->title"
+                                    sizes="(min-width: 992px) 38vw, 92vw" />
+                                <div class="photo-caption">
+                                    <span class="photo-caption-eyebrow">Serving the Guests of Allah</span>
+                                    <p class="photo-caption-title">Makkah &amp; Madinah, every season</p>
+                                </div>
+                            </div>
 
                             <dl class="about-facts">
                                 <div>
@@ -74,7 +86,17 @@
         </section>
 
         {{-- Experiences --}}
-        <section class="section bg-light">
+        {{-- The credibility block gets a real photograph behind it. Because the
+             stat tiles are styled for a LIGHT surface (navy figures, dark
+             labels), the band carries `.ub-stats-band`, which flips them to
+             light-on-dark — the backdrop and the type are changed together,
+             never one without the other. --}}
+        <section class="section position-relative ub-stats-band">
+            <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+                <img src="{{ \App\Support\SiteImagery::url('haram-panorama') }}"
+                     srcset="{{ \App\Support\SiteImagery::srcset('haram-panorama') }}"
+                     sizes="100vw" alt="" loading="lazy" decoding="async">
+            </div>
             <div class="container">
                 <div class="text-center mb-5 reveal-on-scroll">
                     <span class="section-eyebrow d-flex justify-content-center">By the Numbers</span>

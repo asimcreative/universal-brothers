@@ -42,6 +42,15 @@ export default defineConfig({
         // target; the CSS itself also now honors `prefers-reduced-motion`
         // for real users (see _components.scss), so this isn't a
         // test-only workaround for a real-user hazard.
+        // CAVEAT (verified on Playwright 1.62.1): this value IS resolved into
+        // the project config, but is NOT applied to the browser context —
+        // `matchMedia('(prefers-reduced-motion: reduce)')` stays false until a
+        // test calls `page.emulateMedia()` itself. It is kept here because it
+        // expresses the intent and works on other versions, but nothing should
+        // RELY on it: a test that needs reduced motion must emulate it (see
+        // responsive.spec.js). The click-flake mitigation described above has
+        // therefore never actually been in effect either, which is the likelier
+        // explanation for the residual Firefox/WebKit click flakes.
         reducedMotion: 'reduce',
     },
     projects: [

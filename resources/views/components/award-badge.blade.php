@@ -17,18 +17,34 @@
     $ubInitials = Str::upper(implode('', array_map(fn ($w) => Str::substr($w, 0, 1), array_slice($ubWords, 0, 3))));
 @endphp
 
-<div class="col-6 col-md-4 col-lg-2 reveal-on-scroll">
-    <div class="award-medallion">
-        <div class="award-medallion-disc ub-visual ub-visual--v{{ $ubVariant }}">
-            @if($award->image)
-                <img src="{{ Storage::url($award->image) }}" alt="{{ $award->name }}" class="award-medallion-img" loading="lazy" decoding="async">
-            @else
+{{-- Six across was right for a row of struck-medal seals and wrong for real
+     photographs: at that width each badge is ~120px, and cropping a photograph
+     of an award ceremony into a 120px circle leaves an unreadable dark smudge.
+     Awards with a real photograph get a wider column and a landscape panel;
+     the circular seal is kept only where there is no photograph. --}}
+<div class="col-6 col-md-4 {{ $award->image ? 'col-lg-4' : 'col-lg-2' }} reveal-on-scroll">
+    @if($award->image)
+        <figure class="award-photo-card">
+            <div class="photo-media award-photo-card-media">
+                <img src="{{ \App\Support\SiteImagery::resolve($award->image) }}"
+                     alt="{{ $award->name }}" class="ub-photo" loading="lazy" decoding="async">
+            </div>
+            <figcaption class="award-photo-card-body">
+                <p class="award-photo-card-name">{{ $award->name }}</p>
+                @if($award->year)
+                    <p class="award-photo-card-meta">{{ $award->year }}</p>
+                @endif
+            </figcaption>
+        </figure>
+    @else
+        <div class="award-medallion">
+            <div class="award-medallion-disc ub-visual ub-visual--v{{ $ubVariant }}">
                 <span class="award-medallion-initials" aria-hidden="true">{{ $ubInitials !== '' ? $ubInitials : 'UB' }}</span>
+            </div>
+            <p class="award-medallion-name">{{ $award->name }}</p>
+            @if($award->year)
+                <p class="award-medallion-meta">{{ $award->year }}</p>
             @endif
         </div>
-        <p class="award-medallion-name">{{ $award->name }}</p>
-        @if($award->year)
-            <p class="award-medallion-meta">{{ $award->year }}</p>
-        @endif
-    </div>
+    @endif
 </div>

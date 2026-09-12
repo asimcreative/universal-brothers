@@ -5,6 +5,7 @@
 
 @section('content')
     <x-page-hero
+        photo="jeddah-airport"
         eyebrow="Trusted Institutions"
         title="Strong Relationships. Trusted Connections."
         lead="Recognised memberships and industry relationships that underpin how we operate."
@@ -37,11 +38,32 @@
                                      `ub-seal-visual` scales the motif to the disc. The
                                      homepage badge keeps its mark, because there the disc
                                      is the whole logo chip. --}}
-                                <div class="affiliation-card-seal ub-visual ub-visual--v{{ $ubVariant }}">
-                                    @if($affiliation->logo)
-                                        <img src="{{ Storage::url($affiliation->logo) }}" alt="{{ $affiliation->organization_name }}" class="affiliation-card-logo" loading="lazy" decoding="async">
-                                    @endif
-                                </div>
+                                {{-- A real organisation logo is artwork drawn for a
+                                     LIGHT ground — putting one inside the dark
+                                     geometric seal made every mark an unreadable
+                                     smudge. Logos now get their own light tile;
+                                     the seal is kept only for the affiliations we
+                                     hold no logo for, so the row stays even. --}}
+                                @if($affiliation->logo)
+                                    <div class="affiliation-card-mark">
+                                        <img src="{{ \App\Support\SiteImagery::resolve($affiliation->logo) }}" alt=""
+                                             {{-- Decorative: the organisation name is printed as visible text
+                                                  immediately beside this mark, so an alt would have a screen
+                                                  reader announce it twice. --}} loading="lazy" decoding="async">
+                                    </div>
+                                @else
+                                    {{-- No logo held for this organisation (DTS and
+                                         SECP are not in the client's brochure). A
+                                         light tile keeps the row visually even
+                                         instead of a dark disc that reads as a
+                                         missing image. Deliberately NOT the
+                                         initials: most of these names are
+                                         four-letter acronyms, so that would print
+                                         the name twice in a row. --}}
+                                    <div class="affiliation-card-mark affiliation-card-mark--blank">
+                                        <i class="bi bi-patch-check" aria-hidden="true"></i>
+                                    </div>
+                                @endif
                                 <div class="affiliation-card-body">
                                     <h2 class="affiliation-card-name">{{ $affiliation->organization_name }}</h2>
                                     @if($affiliation->year)<p class="affiliation-card-since">Affiliated since {{ $affiliation->year }}</p>@endif

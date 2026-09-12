@@ -5,6 +5,7 @@
 
 @section('content')
     <x-page-hero
+        photo="haram-dusk"
         eyebrow="Pilgrim Stories"
         title="Their Journeys. Their Words."
         lead="Hear directly from our Hajis and Umrah pilgrims as they share their experiences."

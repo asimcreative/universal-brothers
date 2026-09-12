@@ -221,6 +221,17 @@ test.describe('Reduced-motion QA', () => {
         // click, always with the URL never leaving `/hajj`. It's also a real
         // WCAG 2.3.3 gap for actual users with reduced motion set. Both are
         // fixed by the same CSS rule; this proves it's actually applied.
+        // Emulated explicitly, NOT left to `use: { reducedMotion: 'reduce' }` in
+        // playwright.config.js. Verified in Playwright 1.62.1: the value is
+        // resolved into the project config (`test.info().project.use.reducedMotion`
+        // reads "reduce") but never applied to the browser context —
+        // `matchMedia('(prefers-reduced-motion: reduce)').matches` is false until
+        // `emulateMedia()` is called. This test therefore spent weeks passing
+        // WITHOUT reduced motion in effect: it only went green because the reveal
+        // animation happened to finish before the hover on a light page. Adding
+        // photography slowed the reveal enough to catch a card mid-transition at
+        // translateY(18.6px), which is what exposed this.
+        await page.emulateMedia({ reducedMotion: 'reduce' });
         await page.goto('/hajj');
         const card = page.locator('.package-card').first();
         await card.hover();

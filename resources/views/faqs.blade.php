@@ -29,6 +29,7 @@
 
 @section('content')
     <x-page-hero
+        photo="nabawi-dome"
         eyebrow="Answers & Guidance"
         title="Frequently Asked Questions"
         lead="Clear answers on Hajj and Umrah packages, payments, documentation and travel."

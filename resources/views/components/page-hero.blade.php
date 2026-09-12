@@ -31,14 +31,34 @@
     'breadcrumbs' => [],
     'centered' => false,
     'compact' => false,
+    'photo' => null,
 ])
 
 <section {{ $attributes->class([
     'page-hero',
     'page-hero--compact' => $compact,
     'page-hero--centered' => $centered,
+    'page-hero--photo' => \App\Support\SiteImagery::has($photo),
 ]) }}>
-    <div class="ub-visual ub-visual--stage ub-visual--stage-sm" aria-hidden="true"></div>
+    {{-- A real photograph of the place the page is about, where one exists;
+         the generated stage otherwise. The banner is marked `aria-hidden`
+         either way — it is the page's backdrop, and the heading beside it
+         already says what the page is, so announcing the image to a screen
+         reader would only repeat that. The scrim that keeps the white text
+         at WCAG AA lives in `_photography.scss`. --}}
+    @if(\App\Support\SiteImagery::has($photo))
+        <div class="ub-photo-bg {{ $centered ? 'ub-photo-bg--centered' : '' }}" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url($photo) }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset($photo) }}"
+                 sizes="100vw"
+                 alt=""
+                 loading="eager"
+                 fetchpriority="high"
+                 decoding="async">
+        </div>
+    @else
+        <div class="ub-visual ub-visual--stage ub-visual--stage-sm" aria-hidden="true"></div>
+    @endif
 
     <div class="container page-hero-content">
         <div class="row {{ $centered ? 'justify-content-center' : 'align-items-end' }} g-4">

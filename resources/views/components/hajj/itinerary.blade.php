@@ -32,6 +32,21 @@
         title="Day-by-Day Itinerary"
         :lead="'The full '.$ubDays->count().'-day plan, including where you stay each night.'">
 
+        {{-- The two cities the itinerary moves between, as a pair rather than
+             one more full-width band — the timeline below is the substance of
+             this section and should not be pushed further down the page. --}}
+        <div class="hajj-itinerary-photos">
+            @foreach([['nabawi-aerial', 'Madinah'], ['haram-courtyard', 'Makkah']] as [$ubKey, $ubCity])
+                <div class="photo-media photo-media--wide">
+                    <x-photo :key="$ubKey" sizes="(min-width: 768px) 46vw, 92vw" />
+                    <div class="photo-caption">
+                        <p class="photo-caption-title">{{ $ubCity }}</p>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+
         <ol class="hajj-timeline">
             @foreach($ubHead as $ubDay)
                 <x-hajj.itinerary-day :day="$ubDay" :labels="$ubLabels" />

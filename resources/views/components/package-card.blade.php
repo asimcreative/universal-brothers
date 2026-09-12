@@ -47,16 +47,47 @@
 
 <div class="card package-card reveal-on-scroll">
     <div class="package-card-img-wrap">
-        <x-visual
-            :image="$package->cover_image"
-            :alt="$package->name"
-            :seed="$package->code ?: $package->slug"
-            surface="card"
-            :figure="$figure"
-            :figure-label="$figureLabel"
-            :caption="$caption"
-            mark=""
-            class="package-card-img" />
+        {{-- A real photograph of where this package actually goes. The subject
+             is derived from the package's own fields — the destination named
+             in a tourism package, or which holy city a Hajj/Umrah package
+             arrives in first — so twelve Hajj cards do not all show the same
+             Kaaba photograph, and a package added through the admin picks up
+             appropriate imagery with no code change. A cover image uploaded
+             through the CMS always wins over the library. --}}
+        @php $ubPhoto = \App\Support\SiteImagery::forPackage($package); @endphp
+
+        @if($package->cover_image || \App\Support\SiteImagery::has($ubPhoto))
+            {{-- No extra ratio box here: `.package-card-img-wrap` above already
+                 provides the 16/10 crop and the overflow, and `.package-card-img`
+                 belongs on the image itself — that is what the card's existing
+                 hover-scale rule targets. --}}
+            <x-photo
+                :image="$package->cover_image"
+                :key="$ubPhoto"
+                :alt="$package->name"
+                class="package-card-img"
+                sizes="(min-width: 992px) 30vw, (min-width: 576px) 45vw, 92vw" />
+
+            @if($figure || $caption)
+                <div class="photo-caption">
+                    @if($caption)<span class="photo-caption-eyebrow">{{ $caption }}</span>@endif
+                    @if($figure)
+                        <p class="photo-caption-title">{{ $figure }} {{ $figureLabel }}</p>
+                    @endif
+                </div>
+            @endif
+        @else
+            <x-visual
+                :image="$package->cover_image"
+                :alt="$package->name"
+                :seed="$package->code ?: $package->slug"
+                surface="card"
+                :figure="$figure"
+                :figure-label="$figureLabel"
+                :caption="$caption"
+                mark=""
+                class="package-card-img" />
+        @endif
 
         <div class="package-card-badges">
             @if($package->code)

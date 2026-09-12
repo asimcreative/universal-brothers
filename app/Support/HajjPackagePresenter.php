@@ -93,6 +93,12 @@ class HajjPackagePresenter
                 'hotels' => $hotels,
                 'rooms' => $rooms,
                 'fromPrice' => $this->lowestUsd($rooms),
+                // The cheapest room ITSELF, not just its dollar figure. The
+                // option card's "From" line used to be given the USD number
+                // alone, so it had no PKR or SAR value to switch to and went to
+                // "N/A" the moment a visitor changed currency — while the rows
+                // directly beneath it showed real prices.
+                'fromRoom' => $this->cheapestRoom($rooms),
                 'roomCount' => $rooms->count(),
             ]);
         }
@@ -113,6 +119,7 @@ class HajjPackagePresenter
                 'hotels' => collect(),
                 'rooms' => $unscoped,
                 'fromPrice' => $this->lowestUsd($unscoped),
+                'fromRoom' => $this->cheapestRoom($unscoped),
                 'roomCount' => $unscoped->count(),
             ]);
         }
@@ -190,6 +197,21 @@ class HajjPackagePresenter
     // ---------------------------------------------------------------------
     // Pricing
     // ---------------------------------------------------------------------
+
+    /**
+     * The cheapest available room in a group, by its USD price.
+     *
+     * USD is the ordering key because it is the one currency every package has
+     * always carried; the row that wins then supplies all three of its own
+     * figures, so the "From" line switches currency like everything else.
+     */
+    public function cheapestRoom(Collection $rooms): mixed
+    {
+        return $rooms
+            ->filter(fn ($r) => $r->is_available && ! is_null($r->price_usd))
+            ->sortBy(fn ($r) => (float) $r->price_usd)
+            ->first();
+    }
 
     public function lowestUsd(Collection $rooms): ?float
     {

@@ -21,6 +21,17 @@
             <div class="hajj-related-grid">
                 @foreach($related as $ubRelated)
                     <a href="{{ route('packages.show', [$ubRelated->category->slug, $ubRelated->slug]) }}" class="hajj-related-card">
+                        {{-- These are package cards, so they get the same
+                             data-derived photograph the listing gives a package:
+                             the city it arrives in, or the destination named in a
+                             tourism package. An uploaded cover still wins. --}}
+                        @php $ubRelatedPhoto = \App\Support\SiteImagery::forPackage($ubRelated); @endphp
+                        @if($ubRelated->cover_image || \App\Support\SiteImagery::has($ubRelatedPhoto))
+                            <span class="photo-media hajj-related-photo">
+                                <x-photo :image="$ubRelated->cover_image" :key="$ubRelatedPhoto"
+                                         :alt="$ubRelated->name" sizes="(min-width: 768px) 30vw, 92vw" />
+                            </span>
+                        @endif
                         @if($ubRelated->code)<span class="hajj-related-code">{{ $ubRelated->code }}</span>@endif
                         <span class="hajj-related-name">{{ $ubRelated->name }}</span>
                         <span class="hajj-related-meta">

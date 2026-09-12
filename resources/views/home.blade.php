@@ -45,14 +45,25 @@
             No slider rows exist yet, so this is what every visitor actually
             sees. It previously rendered as a flat navy rectangle with centred
             text and roughly 900px of empty colour — the single weakest thing
-            on the site. It is now a composed editorial hero: a generated
-            geometric stage (see `_visuals.scss`), a left-aligned type
-            hierarchy, and a credentials panel filling what used to be dead
-            space on the right. Every credential shown is real, admin-editable
-            site data — nothing here is invented.
+            on the site. It is now a composed editorial hero: a real photograph
+            of tawaf at Hajj, a left-aligned type hierarchy, and a credentials
+            panel filling what used to be dead space on the right. Every
+            credential shown is real, admin-editable site data — nothing here
+            is invented. Uploading slider rows through the admin still takes
+            over completely, which is the branch above.
         --}}
         <section class="hero-slide hero-editorial">
-            <div class="ub-visual ub-visual--stage parallax-layer" aria-hidden="true"></div>
+            {{-- The real thing the whole site is about: pilgrims performing
+                 tawaf during Hajj. Loaded eagerly with a high fetch priority
+                 because it IS the largest contentful paint — lazy-loading a
+                 hero is the classic way to make a page feel slower while
+                 looking like an optimisation. The scrim in `_photography.scss`
+                 is what keeps the white type at WCAG AA over it. --}}
+            <div class="ub-photo-bg parallax-layer" aria-hidden="true">
+                <img src="{{ \App\Support\SiteImagery::url('kaaba-tawaf') }}"
+                     srcset="{{ \App\Support\SiteImagery::srcset('kaaba-tawaf') }}"
+                     sizes="100vw" alt="" loading="eager" fetchpriority="high" decoding="async">
+            </div>
 
             <div class="container hero-content text-white">
                 <div class="row align-items-center g-5">
@@ -139,12 +150,21 @@
                     <p class="text-secondary">Our experience extends far beyond bookings and logistics. From pre-departure preparation to assistance in the Holy Lands and the journey home, our team understands the details that make Hajj and Umrah truly seamless.</p>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    <x-stat-panel
-                        :display="$stats['years']"
-                        :target="$counters['years']"
-                        label="Years of Experience"
-                        note="Specialised Hajj and Umrah operations, not general travel."
-                        :variant="0" />
+                    {{-- Matches the pilgrims-served figure below: the same
+                         approved statistic and the same count-up behaviour, now
+                         on a real photograph instead of a generated motif panel,
+                         so the two trust sections read as one design. --}}
+                    <div class="photo-figure photo-media photo-media--panel stat-photo">
+                        <x-photo key="jamarat" sizes="(min-width: 992px) 46vw, 92vw" />
+                        <div class="photo-caption stat-photo-caption">
+                            <span class="photo-caption-eyebrow">Years of Experience</span>
+                            <x-stat-number
+                                :display="$stats['years']"
+                                :target="$counters['years']"
+                                class="stat-photo-figure" />
+                            <span class="photo-caption-meta">Specialised Hajj and Umrah operations, not general travel.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -161,12 +181,27 @@
                     <p class="text-secondary">Over the years, Universal Brothers has had the honour of serving <strong>{{ $stats['pilgrims'] }} pilgrims</strong>, earning relationships that often continue across generations.</p>
                 </div>
                 <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
-                    <x-stat-panel
-                        :display="$stats['pilgrims']"
-                        :target="$counters['pilgrims']"
-                        label="Pilgrims Served"
-                        note="Relationships that often continue across generations."
-                        :variant="2" />
+                    {{-- The statistic now sits ON a real photograph of pilgrims
+                         rather than on a generated motif panel. The figure and
+                         its label are unchanged approved site data; only the
+                         surface behind them is different. --}}
+                    <div class="photo-figure photo-media photo-media--panel stat-photo">
+                        <x-photo key="mina-tents" sizes="(min-width: 992px) 46vw, 92vw" />
+                        <div class="photo-caption stat-photo-caption">
+                            <span class="photo-caption-eyebrow">Pilgrims Served</span>
+                            {{-- Still `x-stat-number`, not a plain string. Replacing
+                                 the generated stat panel with a photograph must not
+                                 quietly drop the count-up animation, nor the
+                                 server-rendered approved figure that keeps the
+                                 number correct for crawlers and for anyone whose
+                                 JavaScript never runs. --}}
+                            <x-stat-number
+                                :display="$stats['pilgrims']"
+                                :target="$counters['pilgrims']"
+                                class="stat-photo-figure" />
+                            <span class="photo-caption-meta">Relationships that often continue across generations.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,7 +219,13 @@
         registered under the licence number recorded in settings.
     --}}
     <section class="section global-reach">
-        <div class="ub-visual ub-visual--stage ub-visual--stage-sm" aria-hidden="true"></div>
+        {{-- Pilgrims arriving from around the world is what this section is
+             about, so it shows the Haram full of them rather than a gradient. --}}
+        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url('haram-dusk') }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset('haram-dusk') }}"
+                 sizes="100vw" alt="" loading="lazy" decoding="async">
+        </div>
         <div class="container global-reach-content">
             <div class="row justify-content-center text-center">
                 <div class="col-lg-8 reveal-on-scroll">
@@ -265,10 +306,13 @@
                 @if($hajjCategory)
                     <div class="col-md-4 reveal-on-scroll reveal-delay-1">
                         <a href="{{ route('hajj-services') }}" class="service-panel">
-                            {{-- Explicit variants, not seeded: this is a fixed row of three, and the
-                                     hash gave Hajj and Tourism the same motif. v2 is the arcade of
-                                     arches, v0 the khatim star, v4 the zellige tiling. --}}
-                                <x-visual surface="card" seed="service-hajj" :variant="2" class="service-panel-visual" mark="" />
+                            {{-- Each service now shows the thing it actually is: the Kaaba
+                                 at Hajj, Masjid an-Nabawi for Umrah, and a real Pakistani
+                                 destination for tourism. Three different photographs, so the
+                                 row reads as three services rather than three motifs. --}}
+                            <div class="photo-media photo-media--16x9">
+                                <x-photo key="haram-dusk" sizes="(min-width: 768px) 31vw, 92vw" />
+                            </div>
                             <div class="service-panel-body">
                                 <span class="service-panel-eyebrow">Hajj 2027 &middot; 1448 AH</span>
                                 <h3 class="service-panel-title">Hajj</h3>
@@ -282,7 +326,9 @@
                 @if($umrahCategory)
                     <div class="col-md-4 reveal-on-scroll reveal-delay-2">
                         <a href="{{ route('umrah-services') }}" class="service-panel">
-                            <x-visual surface="card" seed="service-umrah" :variant="0" class="service-panel-visual" mark="" />
+                            <div class="photo-media photo-media--16x9">
+                                <x-photo key="nabawi-aerial" sizes="(min-width: 768px) 31vw, 92vw" />
+                            </div>
                             <div class="service-panel-body">
                                 <span class="service-panel-eyebrow">Any Time of Year</span>
                                 <h3 class="service-panel-title">Umrah</h3>
@@ -296,7 +342,9 @@
                 @if($tourismCategory)
                     <div class="col-md-4 reveal-on-scroll reveal-delay-3">
                         <a href="{{ route('packages.category', 'tourism') }}" class="service-panel">
-                            <x-visual surface="card" seed="service-tourism" :variant="4" class="service-panel-visual" mark="" />
+                            <div class="photo-media photo-media--16x9">
+                                <x-photo key="hunza-attabad" sizes="(min-width: 768px) 31vw, 92vw" />
+                            </div>
                             <div class="service-panel-body">
                                 <span class="service-panel-eyebrow">Domestic &amp; International</span>
                                 <h3 class="service-panel-title">Tourism</h3>
@@ -322,7 +370,15 @@
         offer a length that returns nothing.
     --}}
     @if($hajjCategory || $umrahCategory)
-        <section class="section package-finder-section">
+        <section class="section package-finder-section position-relative">
+        {{-- A real photograph behind the band, with the centred scrim that keeps
+             the white type at WCAG AA over it. --}}
+        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url('nabawi-aerial') }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset('nabawi-aerial') }}"
+                 sizes="100vw" alt="" loading="lazy" decoding="async">
+        </div>
+
             <div class="container">
                 <div class="package-finder reveal-on-scroll">
                     <div class="package-finder-intro">
@@ -375,12 +431,22 @@
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 reveal-on-scroll">
-                    <x-visual
-                        surface="panel"
-                        seed="personalized-guidance"
-                        caption="Personalized Guidance"
-                        mark=""
-                        class="split-section-visual" />
+                    {{-- An image-and-text composition rather than another
+                         background: a main photograph with a second, smaller
+                         one overlapping it. The inset is hidden below `md`,
+                         where two stacked crops only eat vertical space. --}}
+                    <div class="photo-figure-stack">
+                        <div class="photo-figure photo-figure-main photo-media photo-media--panel">
+                            <x-photo key="haram-courtyard" sizes="(min-width: 992px) 46vw, 92vw" />
+                        </div>
+                        <div class="photo-figure-inset photo-media photo-media--square">
+                            {{-- `sizes` must never be 0px: the inset is hidden below `md` but is
+                                 visible from 768px up, and a zero descriptor left the
+                                 browser with no candidate to choose, so the image failed
+                                 to load at exactly that width. --}}
+                            <x-photo key="nabawi-dome" sizes="(min-width: 992px) 21vw, 35vw" />
+                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
                     <span class="section-eyebrow">Personalized Care</span>
@@ -489,12 +555,9 @@
             <div class="container">
                 <div class="row align-items-center g-5 mb-5">
                     <div class="col-lg-6 order-lg-2 reveal-on-scroll">
-                        <x-visual
-                            surface="panel"
-                            seed="umrah-journeys"
-                            caption="Umrah, Anytime"
-                            mark=""
-                            class="split-section-visual" />
+                        <div class="photo-figure photo-media photo-media--panel">
+                            <x-photo key="kaaba-close" sizes="(min-width: 992px) 46vw, 92vw" />
+                        </div>
                     </div>
                     <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
                         <span class="section-eyebrow">Umrah, Anytime</span>
@@ -574,7 +637,15 @@
     @endif
 
     {{-- 12. Final CTA section --}}
-    <section class="section final-cta bg-primary text-white text-center">
+    <section class="section final-cta bg-primary text-white text-center position-relative">
+        {{-- A real photograph behind the band, with the centred scrim that keeps
+             the white type at WCAG AA over it. --}}
+        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url('haram-panorama') }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset('haram-panorama') }}"
+                 sizes="100vw" alt="" loading="lazy" decoding="async">
+        </div>
+
         <div class="container">
             <span class="section-eyebrow d-flex justify-content-center">Speak to Universal Brothers</span>
             <h2>Your Sacred Journey Begins With a Conversation</h2>

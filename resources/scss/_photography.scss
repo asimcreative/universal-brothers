@@ -1,0 +1,590 @@
+// =============================================================================
+// Real photography
+// =============================================================================
+//
+// Until this pass every image slot on the public site rendered a generated
+// geometric composition, because the database holds zero images across all
+// nine of its image columns. This file is the treatment layer for actual
+// photographs: how they sit behind text, how they crop inside cards, and — the
+// part that is easy to get wrong — how text stays readable on top of them.
+//
+// The scrim is not decoration. The site passes a 588-pair WCAG AA contrast
+// audit, and white text dropped straight onto a photograph fails that
+// instantly and unpredictably (a bright sky behind one word, a dark arch
+// behind the next). Every photo-backed text surface here therefore paints a
+// deterministic dark gradient over the image, sized so the text column sits on
+// near-solid navy while the far edge keeps enough of the photograph to read as
+// photography. Contrast then depends on the scrim, which is fixed, rather than
+// on whatever happens to be in that corner of the picture.
+
+// The image element itself. Deliberately does NOT set `height: 100%`.
+//
+// It did at first, and that was the bug that broke the layout: a percentage
+// height resolves against the parent's height, and when the parent has no
+// resolved height it computes to `auto` — so the photograph rendered at its
+// intrinsic 1600px and burst out of its column. An image must be safe wherever
+// it is dropped, so the element only ever fills the WIDTH it is given, and the
+// crop-to-fill behaviour is applied by the sized boxes below, which by
+// definition do have a height.
+.ub-photo {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+// The three sized boxes. These own the geometry; the image just fills them.
+.photo-media,
+.photo-figure,
+.ub-photo-bg {
+    > img,
+    > picture > img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+// --- Photographic backdrop ---------------------------------------------------
+// Drop-in replacement for `.ub-visual--stage` on any banner. Same geometry
+// (absolute, inset 0, behind the content), so nothing about the host section's
+// layout has to change.
+.ub-photo-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background-color: $ub-navy-dark;
+
+    // No z-index. An earlier version used `z-index: -1`, which works inside
+    // `.page-hero` and `.page-cta` (both `isolation: isolate`) but NOT inside
+    // `.hero-slide`, which isolates nothing — there the backdrop dropped behind
+    // the section's own background and vanished. Every content layer on these
+    // sections is already `position: relative; z-index: 1`+, so plain document
+    // order puts this behind them, exactly as `.ub-visual--stage` has always
+    // relied on.
+
+    img {
+        // Favour the upper half of the frame. These photographs are skylines,
+        // domes and minarets, and a banner crops a 4:3 source to roughly 2.7:1 —
+        // centring that crop cut the top off every dome on the site. 42% keeps
+        // the subject and trims mostly foreground.
+        object-position: 50% 42%;
+    }
+
+    // The scrim. ONE directional gradient, not two stacked ones.
+    //
+    // The first version layered a 100deg gradient AND a 180deg wash. Alpha
+    // composites multiplicatively, so where the two overlapped the result was
+    // ~0.90 opaque and the photograph behind a short banner disappeared into
+    // navy murk — the page went back to looking like the gradient-and-text
+    // design this work exists to replace. The text column still sits on ~0.9,
+    // which is what carries contrast; everything past it now falls away far
+    // enough to actually read as a photograph.
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            96deg,
+            rgba($ub-navy-dark, 0.94) 0%,
+            rgba($ub-navy-dark, 0.90) 46%,
+            rgba($ub-navy-dark, 0.58) 68%,
+            rgba($ub-navy-dark, 0.24) 100%
+        );
+    }
+
+    // Drift needs somewhere to go. `initParallax` translates the layer by up to
+    // 6% of its OWN height, so a layer that is exactly the section's height
+    // exposes a strip of background at one edge as it moves — the white seam
+    // above and below the hero that was reported and fixed once already.
+    // Solving X >= 0.06 * (1 + 2X) gives X >= 6.8%, so 8% clears it with
+    // margin. Same rule and same reasoning as `.ub-visual--stage.parallax-layer`
+    // in `_visuals.scss`; if that one changes, change this one too.
+    &.parallax-layer {
+        inset: -8%;
+    }
+
+    // Centred layouts (page CTA, centred heroes) need the protection in the
+    // middle, not on one side.
+    &.ub-photo-bg--centered::after {
+        background: radial-gradient(
+            ellipse at 50% 45%,
+            rgba($ub-navy-dark, 0.93) 0%,
+            rgba($ub-navy-dark, 0.88) 42%,
+            rgba($ub-navy-dark, 0.62) 78%,
+            rgba($ub-navy-dark, 0.5) 100%
+        );
+    }
+
+    // Below `lg` the text is full-width and centred over the image, so the
+    // directional gradient stops helping and an even wash is safer.
+    // Below `lg` the text is full-width and centred over the image, so the
+    // directional gradient stops helping and an even wash is safer. Kept a
+    // little lighter than before for the same reason as above.
+    @media (max-width: 991.98px) {
+        &::after {
+            background: linear-gradient(180deg, rgba($ub-navy-dark, 0.82) 0%, rgba($ub-navy-dark, 0.78) 55%, rgba($ub-navy-dark, 0.88) 100%);
+        }
+    }
+}
+
+// --- Photographic media box --------------------------------------------------
+// A fixed-ratio crop for cards and figures. `aspect-ratio` keeps the grid tidy
+// whatever the source photograph's shape is, and reserves the box before the
+// image loads so nothing reflows.
+.photo-media {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background-color: rgba($ub-navy, 0.06);
+    aspect-ratio: 16 / 10;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform $ub-duration-base $ub-ease;
+    }
+
+    &.photo-media--wide { aspect-ratio: 21 / 9; }
+    &.photo-media--16x9 { aspect-ratio: 16 / 9; }
+    &.photo-media--square { aspect-ratio: 1 / 1; }
+    &.photo-media--portrait { aspect-ratio: 3 / 4; }
+    &.photo-media--panel { aspect-ratio: 4 / 3; }
+}
+
+// A slow push-in on hover, on the card rather than the image, so the caption
+// does not move with it. Motion is opt-out for anyone who asked for less.
+@media (prefers-reduced-motion: no-preference) {
+    a:hover > .photo-media img,
+    .photo-card:hover .photo-media img,
+    .package-card:hover .photo-media img {
+        transform: scale(1.05);
+    }
+}
+
+// --- Editorial figure --------------------------------------------------------
+// A photograph used as content beside text, rather than as a backdrop. This is
+// the composition the brief asks for — image + text, not another background.
+// Decoration only — radius and shadow. It deliberately sets no aspect-ratio,
+// so it can be combined with a `.photo-media--*` modifier that does, and the
+// two never fight over the same property.
+.photo-figure {
+    position: relative;
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    box-shadow: $ub-shadow-md;
+}
+
+// A second, smaller photograph overlapping the first — the standard premium
+// travel-site treatment for an image+text block. Hidden below `md`, where two
+// stacked crops just eat vertical space.
+.photo-figure-stack {
+    position: relative;
+    padding-bottom: 3rem;
+    padding-right: 3rem;
+
+    .photo-figure-main {
+        aspect-ratio: 4 / 3;
+    }
+
+    .photo-figure-inset {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 46%;
+        aspect-ratio: 1 / 1;
+        border: 6px solid #fff;
+        border-radius: $border-radius-lg;
+        overflow: hidden;
+        box-shadow: $ub-shadow-lg;
+    }
+
+    @media (max-width: 767.98px) {
+        padding-bottom: 0;
+        padding-right: 0;
+
+        .photo-figure-inset { display: none; }
+    }
+}
+
+// --- Caption over a photograph -----------------------------------------------
+// Used by destination and Mashaer cards, where the label has to sit on the
+// image itself. Same reasoning as the hero scrim: the gradient is what makes
+// the text legible, not luck about what is in the bottom of the frame.
+.photo-caption {
+    position: absolute;
+    inset: auto 0 0 0;
+    // The fade lives in the TOP PADDING, so by the time the gradient reaches
+    // any actual text it is already near-opaque. The first version faded to
+    // 0.55 at the point the eyebrow sits, which is fine over a dark photograph
+    // and fails badly over a bright one — the Mina tents image is almost white
+    // at the bottom and measured the gold eyebrow at 1.99:1, well under AA.
+    //
+    // 0.94 navy over pure white gives a background luminance of ~0.067, which
+    // holds $ub-gold-light at ~5.1:1 and white text far above that. Because the
+    // floor is fixed, contrast no longer depends on what happens to be in the
+    // bottom of the frame.
+    // Absolute stops, not percentages. A percentage gradient is measured
+    // against the caption's own height, so the taller the caption the EARLIER
+    // its text sits in the fade — the figure caption on the homepage is roughly
+    // twice the height of a package-card caption and its eyebrow landed at 0.75
+    // opacity while the card's landed at 0.94. Fixing the fade at 3rem makes it
+    // independent of how tall any particular caption turns out to be, and the
+    // 3.25rem top padding guarantees no text is ever inside the fade.
+    padding: 3.25rem 1.25rem 1.1rem;
+    color: #fff;
+    background: linear-gradient(
+        180deg,
+        rgba($ub-navy-dark, 0) 0,
+        rgba($ub-navy-dark, 0.55) 1.5rem,
+        rgba($ub-navy-dark, 0.94) 3rem,
+        rgba($ub-navy-dark, 0.97) 100%
+    );
+
+    .photo-caption-eyebrow {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: $ub-eyebrow-letter-spacing;
+        color: $ub-gold-light;
+        margin-bottom: 0.2rem;
+    }
+
+    .photo-caption-title {
+        font-family: $headings-font-family;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0;
+        color: #fff;
+    }
+
+    .photo-caption-meta {
+        display: block;
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.85);
+        margin-top: 0.15rem;
+    }
+}
+
+// --- Attribution -------------------------------------------------------------
+// Most of the library is CC BY / CC BY-SA, which obliges us to credit the
+// photographer. Rather than clutter every image, the credits are collected once
+// per page in a small print block; `docs/data/image-assets.md` carries the full
+// register.
+.photo-credits {
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(33, 37, 41, 0.62);
+
+    a {
+        color: inherit;
+        text-decoration: underline;
+    }
+}
+
+// --- Statistic over a photograph ---------------------------------------------
+// The homepage trust sections used to pair a figure with a generated motif
+// panel. The figure is the same approved site data; only the surface behind it
+// changed, so the caption block needs to grow to headline size without the
+// generic `.photo-caption` rules being disturbed elsewhere.
+.stat-photo-caption {
+    // Keeps the 3.25rem the fade needs; only the horizontal and bottom values
+    // differ from the base caption.
+    padding: 3.25rem 1.5rem 1.4rem;
+
+    // `.stat-photo-figure` is an `x-stat-number`, so it arrives carrying
+    // `.stat-number` too. Those base rules are tuned for a stat sitting on a
+    // light section (navy text, a gold underline); over a photograph it needs
+    // to be light, and the underline would land on the image. Both are reset
+    // here rather than by weakening the shared component.
+    .stat-photo-figure {
+        font-family: $headings-font-family;
+        font-weight: 700;
+        font-size: clamp(2.4rem, 2rem + 1.6vw, 3.4rem);
+        line-height: 1;
+        padding-bottom: 0;
+        margin-bottom: 0.35rem;
+        color: $ub-gold-light;
+
+        &::after { display: none; }
+    }
+}
+
+// --- Photographic empty state ------------------------------------------------
+// Only applies when an empty state is given a `photo`; without it the plain
+// cream block is unchanged. The backdrop needs a positioning context and its
+// own clipping, and the message flips to light type over the scrim.
+.empty-state--photo {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background-color: $ub-navy-dark;
+    color: #fff;
+
+    .empty-state-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .empty-state-icon {
+        background-color: rgba(255, 255, 255, 0.14);
+        color: $ub-gold-light;
+    }
+
+    p, a {
+        color: #fff;
+    }
+
+    a {
+        text-decoration: underline;
+        font-weight: 600;
+    }
+}
+
+// --- Statistics band over a photograph ---------------------------------------
+// `.stat-tile` and `.stat-number` are tuned for a light section: navy figures
+// with a gold underline, dark labels. Dropping a photograph behind them without
+// changing the type would have failed contrast outright, so the band flips both
+// together and nothing is left depending on how bright the photograph is.
+.ub-stats-band {
+    color: #fff;
+
+    .section-eyebrow,
+    h2 {
+        color: #fff;
+    }
+
+    .stat-tile .stat-number {
+        color: $ub-gold-light;
+    }
+
+    .stat-tile .small,
+    .stat-tile div {
+        color: rgba(255, 255, 255, 0.88);
+    }
+}
+
+// --- Award citation carrying a real photograph -------------------------------
+// `.award-citation` is a horizontal card: a 7.5rem medallion disc beside the
+// text. That disc is right for a struck-medal seal and wrong for a photograph
+// of an award ceremony — six people on a stage, cropped into a 120px circle,
+// read as a dark smudge. When a real photograph exists the card stacks instead,
+// with the photograph as a proper landscape panel across the top.
+.award-citation--photo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+
+    // `contain`, not `cover`. These seven images are genuinely different
+    // shapes — five are wide ceremony photographs, two are a trophy and a
+    // struck medal shot in portrait. Cropping them all to one landscape box
+    // sliced the trophy down to its stem and cut the medal's rim off. Letting
+    // each one sit whole on a neutral ground shows the actual award, and it
+    // also means a photograph the client uploads later works at any shape.
+    .award-citation-photo {
+        aspect-ratio: 16 / 7;
+        width: 100%;
+        background: $ub-cream;
+        border-bottom: 1px solid rgba($ub-navy, 0.08);
+
+        img {
+            object-fit: contain;
+        }
+    }
+
+    .award-citation-body {
+        padding: 1.25rem 1.5rem 1.45rem;
+    }
+}
+
+// --- Real organisation logos -------------------------------------------------
+// These marks are drawn for a light ground. The site's generated seal is a dark
+// navy disc, and dropping a logo inside one turned every affiliation into an
+// unreadable smudge. A logo therefore gets its own light tile, and the seal is
+// kept only where no logo exists.
+.affiliation-card-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 4.25rem;
+    height: 4.25rem;
+    padding: 0.4rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.12);
+    border-radius: $border-radius;
+
+    // This one already has a definite 4.25rem height, so a percentage
+    // max-height resolves and the simple form is enough.
+    img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+}
+
+.affiliation-mark--logo {
+    display: grid;
+    place-items: center;
+    padding: 0.5rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.12);
+    border-radius: $border-radius;
+
+    img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        // No grayscale. `.affiliation-logo` desaturated these to 80% opacity,
+        // which is a reasonable treatment for a wall of client logos and the
+        // wrong one for six marks the company is genuinely accredited by.
+        filter: none;
+        opacity: 1;
+    }
+}
+
+// Placeholder tile for an organisation whose logo we do not hold. Matches the
+// real-logo tile exactly so the grid stays even; the acronym inside says which
+// organisation it is, which a blank dark disc did not.
+.affiliation-card-mark--blank {
+    display: grid;
+    place-items: center;
+    font-size: 1.35rem;
+    // Same contrast correction as `.affiliation-plate--text`.
+    color: $ub-navy;
+    background: $ub-cream;
+}
+
+// --- Award card carrying a real photograph (homepage / About) ----------------
+// The homepage row of awards was designed as six small circular medallions.
+// That reads well for a struck seal and fails completely for a photograph of
+// an award being presented, which is what the client's own brochure actually
+// provides. This is the same decision as `.award-citation--photo` on the awards
+// page, sized for a three-across row instead of a two-column list.
+.award-photo-card {
+    margin: 0;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.1);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    box-shadow: $ub-shadow-sm;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow $ub-duration-fast $ub-ease;
+
+    &:hover { box-shadow: $ub-shadow-md; }
+}
+
+.award-photo-card-media {
+    aspect-ratio: 16 / 9;
+    background: $ub-cream;
+    border-bottom: 1px solid rgba($ub-navy, 0.08);
+
+    // `contain`, for the same reason as the awards page: five of these are wide
+    // ceremony photographs and two are a portrait trophy and medal.
+    img { object-fit: contain; }
+}
+
+.award-photo-card-body {
+    padding: 0.9rem 1.05rem 1rem;
+    text-align: center;
+}
+
+.award-photo-card-name {
+    font-family: $headings-font-family;
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1.3;
+    color: $ub-navy;
+    margin: 0;
+}
+
+.award-photo-card-meta {
+    font-size: 0.78rem;
+    color: rgba(33, 37, 41, 0.68);
+    margin: 0.2rem 0 0;
+}
+
+// --- Affiliation logo plate (homepage row) -----------------------------------
+// The first pass reused `.affiliation-mark`, a 3.4rem circle built for the
+// generated seal. A real organisation logo at that size is a 58px smudge with a
+// lot of empty row around it — which is what it looked like. A logo wall wants
+// the marks to be the substance of the row, so the plate is more than twice the
+// size, rectangular (logos are drawn on rectangles, not discs), and white.
+// The image is absolutely positioned into the plate's content box rather than
+// laid out as a centred grid item. Measured, `height: 100%` on a `place-items:
+// center` grid item does NOT resolve — every logo was being sized by width with
+// its height following its own aspect ratio, so the one nearly-square mark
+// (FPCCI, 160x155) rendered 158px tall inside a 133px plate and spilled over
+// its caption. Pinning all four edges makes the box definite, and `contain`
+// then letterboxes inside it whatever shape the next logo happens to be.
+// --- Affiliation logo plate (homepage row) -----------------------------------
+// An explicit `height`, NOT `aspect-ratio`.
+//
+// This took three attempts and the reason is worth recording. A percentage
+// `max-height` on a child only resolves when the parent's height is *definite*,
+// and a height that comes from `aspect-ratio` is not definite for that purpose.
+// So `max-height: 100%` silently did nothing: with grid the logos were sized by
+// width alone (the near-square FPCCI mark rendered 158px tall in a 133px
+// plate), and absolutely positioning them was worse still, because `width:auto`
+// on a REPLACED element means its intrinsic size, not "stretch to the insets" —
+// every logo then drew at full natural size and was clipped along the bottom.
+//
+// A fixed height makes the percentage resolve, and the logos finally letterbox
+// inside the plate whatever shape they are.
+.affiliation-plate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 12.5rem;
+    height: 8rem;
+    padding: 0.9rem 1.1rem;
+    background: #fff;
+    border: 1px solid rgba($ub-navy, 0.12);
+    border-radius: $border-radius;
+    box-shadow: $ub-shadow-sm;
+    transition: border-color $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    img {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        // Not desaturated. These are marks the company is genuinely accredited
+        // by, not a decorative client wall.
+        filter: none;
+        opacity: 1;
+    }
+
+    &:hover {
+        border-color: rgba($ub-gold, 0.55);
+        box-shadow: $ub-shadow-md;
+    }
+}
+
+// Placeholder plate, identical in size so the row stays level.
+.affiliation-plate--blank {
+    display: grid;
+    place-items: center;
+    font-size: 1.9rem;
+    // Full-strength navy, not a 50% tint. Measured at 0.5 alpha on the cream
+    // ground this read 3.21:1 — under the 4.5:1 AA minimum for text. The muted
+    // look was not worth failing contrast for; solid navy is 12.9:1 and still
+    // reads as secondary next to a real logo.
+    color: $ub-navy;
+    background: $ub-cream;
+}
+
+// The tile is now a plate plus a caption, so it needs a little more room.
+.affiliation-tile {
+    gap: 0.7rem;
+}

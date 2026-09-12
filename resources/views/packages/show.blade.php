@@ -4,8 +4,11 @@
 @section('meta_description', $package->meta_description ?: Str::limit($package->publicSummary() ?? '', 160))
 
 @section('content')
+    @php $ubHeroPhoto = $package->cover_image ? null : \App\Support\SiteImagery::forPackage($package); @endphp
+
     <x-page-hero
         class="package-hero"
+        :photo="$ubHeroPhoto"
         :eyebrow="$package->series?->name"
         :title="$package->name"
         :lead="$package->publicSummary()"
@@ -35,6 +38,32 @@
             <div class="col-lg-8">
                 @if($package->description)
                     <p>{{ $package->description }}</p>
+                @endif
+
+                {{-- A second look at the destination before the price table.
+                     `forDestination` reads the destination out of the package's
+                     own name, so a tour added through the admin gets relevant
+                     imagery without a code change; the block simply does not
+                     render for a package whose destination we hold no
+                     photograph of, rather than showing a generic filler. --}}
+                @php
+                    // A DIFFERENT photograph of the same destination from the one
+                    // in the hero. Returns null when we only hold one photograph
+                    // of that place, and the block is then skipped rather than
+                    // repeating the hero image or padding with generic filler.
+                    $ubDestination = \App\Support\SiteImagery::secondaryForDestination($package->name.' '.$package->slug);
+                    $ubDestinationAlt = \App\Support\SiteImagery::alt($ubDestination);
+                @endphp
+                @if($ubDestination)
+                    <figure class="photo-figure photo-media photo-media--wide my-4">
+                        <x-photo :key="$ubDestination" sizes="(min-width: 992px) 62vw, 92vw" />
+                        @if($ubDestinationAlt)
+                            <figcaption class="photo-caption">
+                                <span class="photo-caption-eyebrow">Where you are going</span>
+                                <p class="photo-caption-title">{{ $ubDestinationAlt }}</p>
+                            </figcaption>
+                        @endif
+                    </figure>
                 @endif
 
                 {{-- Pricing --}}
@@ -145,4 +174,6 @@
             </div>
         </div>
     </div>
+
+    <x-page-cta />
 @endsection

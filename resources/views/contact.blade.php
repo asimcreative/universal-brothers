@@ -5,6 +5,7 @@
 
 @section('content')
     <x-page-hero
+        photo="karachi"
         eyebrow="We're Here to Help"
         title="Contact Us"
         lead="We'd love to help plan your Hajj, Umrah, or next trip."

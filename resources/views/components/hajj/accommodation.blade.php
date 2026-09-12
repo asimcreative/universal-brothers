@@ -28,7 +28,25 @@
     <x-hajj.section id="stay" eyebrow="Accommodation" title="Your Stay" :lead="$ubLead">
         <div class="hajj-stay">
             @foreach($ubShared as $ubLocation => $ubHotels)
+                @php $ubCityPhoto = \App\Support\SiteImagery::forCity($ubLocation, $hajj->package()->code ?? ''); @endphp
                 <div class="hajj-stay-city">
+                    {{-- A photograph of the CITY, captioned as the city. We do not
+                         hold photography of the individual properties, and dressing
+                         a stock hotel interior up as "your hotel" would be inventing
+                         a fact — so the image shows Makkah or Madinah, which is true
+                         of every package, and the hotel's own name, star rating and
+                         distance stay as text beside it. A property photograph
+                         uploaded through the admin later replaces this. --}}
+                    @if($ubCityPhoto)
+                        <div class="photo-media photo-media--wide hajj-stay-photo">
+                            <x-photo :key="$ubCityPhoto" sizes="(min-width: 992px) 62vw, 92vw" />
+                            <div class="photo-caption">
+                                <span class="photo-caption-eyebrow">Your stay in</span>
+                                <p class="photo-caption-title">{{ $hajj->locationLabel($ubLocation) }}</p>
+                            </div>
+                        </div>
+                    @endif
+
                     <h3 class="hajj-stay-city-name">{{ $hajj->locationLabel($ubLocation) }}</h3>
 
                     <ul class="hajj-stay-list">

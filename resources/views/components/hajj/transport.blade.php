@@ -17,6 +17,17 @@
 
 @if($ubLegs->isNotEmpty())
     <x-hajj.section id="transport" eyebrow="Getting Around" title="Transportation">
+        {{-- Chosen from the transport rows the package actually carries: a
+             package whose legs are flights shows an aircraft, one that uses the
+             Haramain line shows the train, and everything else shows the Jeddah
+             airport a pilgrim genuinely arrives through. --}}
+        @php $ubTransportPhoto = \App\Support\SiteImagery::forTransport($ubLegs->pluck('transport_type')->filter()->implode(' ')); @endphp
+        @if($ubTransportPhoto)
+            <div class="photo-media photo-media--wide hajj-transport-photo">
+                <x-photo :key="$ubTransportPhoto" sizes="(min-width: 992px) 62vw, 92vw" />
+            </div>
+        @endif
+
         <ul class="hajj-tick-list">
             @foreach($ubLegs as $ubLeg)
                 <li>

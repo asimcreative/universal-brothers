@@ -1,10 +1,12 @@
 {{--
     Package detail hero.
 
-    Carries the real cover photograph when one exists and the generated
-    geometric stage when it does not. The badge row is built only from fields
-    the package actually holds, so a package missing `season_label` or
-    `is_shifting` simply shows fewer badges rather than an empty chip.
+    Carries the package's own uploaded cover photograph when one exists, and
+    otherwise a real photograph chosen from the package's own data — which holy
+    city it arrives in first — so the twelve Hajj packages do not all open with
+    the same picture. The badge row is built only from fields the package
+    actually holds, so a package missing `season_label` or `is_shifting` simply
+    shows fewer badges rather than an empty chip.
 
     Props
       hajj  the presenter
@@ -14,6 +16,9 @@
 @php
     $ubPackage = $hajj->package();
     $ubFrom = $hajj->startingFrom();
+    // Only fall back to the library when the package has no cover of its own;
+    // an uploaded image always wins, and the hero renders it over the top.
+    $ubHeroPhoto = $ubPackage->cover_image ? null : \App\Support\SiteImagery::forPackage($ubPackage);
 @endphp
 
 <x-page-hero
@@ -21,6 +26,7 @@
     :eyebrow="$ubPackage->series?->name"
     :title="$ubPackage->name"
     :lead="$ubPackage->publicSummary()"
+    :photo="$ubHeroPhoto"
     :breadcrumbs="['Home' => route('home'), $ubPackage->category->name => route('packages.category', $ubPackage->category->slug), $ubPackage->name => null]">
 
     @if($ubPackage->cover_image)

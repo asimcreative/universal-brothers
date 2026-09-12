@@ -22,7 +22,19 @@
 
         <div class="hajj-mashaer">
             @foreach($ubRows as $ubRow)
+                @php $ubPhoto = \App\Support\SiteImagery::forMashaer($ubRow->location); @endphp
                 <article class="hajj-mashaer-card">
+                    {{-- Mina, Arafat and Muzdalifah are places a pilgrim can
+                         actually be shown. The Mina photograph is the real
+                         air-conditioned tent city, which is precisely what the
+                         Tent Type / Air Conditioning / Maktab fields below
+                         describe — the image and the data say the same thing. --}}
+                    @if($ubPhoto)
+                        <div class="photo-media hajj-mashaer-photo">
+                            <x-photo :key="$ubPhoto" sizes="(min-width: 768px) 30vw, 92vw" />
+                        </div>
+                    @endif
+
                     <h3 class="hajj-mashaer-place">{{ Str::title($ubRow->location) }}</h3>
 
                     @php $ubFacts = $hajj->mashaerFacts($ubRow); @endphp

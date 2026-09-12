@@ -7,6 +7,10 @@
 // `components` then compose against.
 @import 'visuals';
 @import 'components';
+// After `components`: photographic treatments compose against the same tokens
+// and deliberately supersede the generated-visual backdrop on banners that now
+// carry a real photograph.
+@import 'photography';
 // After `components`: the Hajj detail system composes against tokens and
 // shared classes (`.star-rating`, `.package-note`, the touch-target rules)
 // defined there, and a few of its rules deliberately refine them.

@@ -5,6 +5,7 @@
 
 @section('content')
     <x-page-hero
+        photo="haram-courtyard"
         eyebrow="Recognized for Excellence"
         title="Excellence Recognized. Trust Earned."
         :lead="'Over ' . \App\Models\SiteSetting::get('industry_awards_count', '20+') . ' Recognitions. One Consistent Commitment.'"
@@ -36,14 +37,23 @@
                             ));
                             $ubInitials = Str::upper(implode('', array_map(fn ($w) => Str::substr($w, 0, 1), array_slice($ubWords, 0, 3))));
                         @endphp
-                        <article class="award-citation reveal-on-scroll">
-                            <div class="award-citation-medal award-medallion-disc ub-visual ub-visual--v{{ $ubVariant }}">
-                                @if($award->image)
-                                    <img src="{{ Storage::url($award->image) }}" alt="{{ $award->name }}" class="award-medallion-img" loading="lazy" decoding="async">
-                                @else
+                        {{-- A real award photograph is a PHOTOGRAPH — a ceremony,
+                             a medal, a trophy — and squeezing one into the 7.5rem
+                             medallion disc made every one of them an unreadable
+                             dark blob. When an image exists the citation switches
+                             to a proper landscape media panel; the struck-medal
+                             disc is kept for awards that still have no photo. --}}
+                        <article class="award-citation reveal-on-scroll {{ $award->image ? 'award-citation--photo' : '' }}">
+                            @if($award->image)
+                                <div class="photo-media award-citation-photo">
+                                    <img src="{{ \App\Support\SiteImagery::resolve($award->image) }}"
+                                         alt="{{ $award->name }}" class="ub-photo" loading="lazy" decoding="async">
+                                </div>
+                            @else
+                                <div class="award-citation-medal award-medallion-disc ub-visual ub-visual--v{{ $ubVariant }}">
                                     <span class="award-medallion-initials" aria-hidden="true">{{ $ubInitials !== '' ? $ubInitials : 'UB' }}</span>
-                                @endif
-                            </div>
+                                </div>
+                            @endif
                             <div class="award-citation-body">
                                 <h2 class="award-citation-title">{{ $award->name }}</h2>
                                 <div class="award-citation-meta">

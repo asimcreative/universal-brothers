@@ -23,6 +23,13 @@ class DatabaseSeeder extends Seeder
             AboutPageSeeder::class,
             LegalPageSeeder::class,
             AdminUserSeeder::class,
+
+            // These two run AFTER the content seeders above, because they
+            // enrich rows those seeders create rather than creating their own.
+            // Both are idempotent and both leave anything the client has
+            // uploaded or edited alone.
+            HajjPriceCurrencySeeder::class,
+            CompanyImageSeeder::class,
         ]);
     }
 }

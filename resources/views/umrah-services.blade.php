@@ -6,6 +6,7 @@
 @section('content')
     {{-- Hero --}}
     <x-page-hero
+        photo="kaaba-close"
         centered
         eyebrow="Umrah, Anytime"
         title="Your Umrah. Your Time. Your Journey."
@@ -26,6 +27,27 @@
                 <h2>One Journey. Designed Around You.</h2>
                 <p class="text-secondary">Services can include:</p>
                 <p class="fw-semibold">Visa Assistance • Flights • Makkah Hotels • Madinah Hotels • Airport Transfers • Intercity Transportation • Ziyarat • Group Arrangements • Family Packages • Customized Itineraries</p>
+            </div>
+
+            {{-- The places an Umrah actually takes you. Captions name the place
+                 and nothing more — which of these a given package includes is
+                 stated on that package's own page, not implied by a picture. --}}
+            <div class="row g-4 mt-4 text-start">
+                @foreach([
+                    ['kaaba-close', 'Makkah', 'Tawaf and Sa’i at Masjid al-Haram'],
+                    ['nabawi-dome', 'Madinah', 'Al-Masjid an-Nabawi'],
+                    ['quba-mosque', 'Ziyarat', 'Quba Mosque and the sites of Madinah'],
+                ] as [$ubKey, $ubPlace, $ubCaption])
+                    <div class="col-md-4 reveal-on-scroll">
+                        <div class="photo-figure photo-media">
+                            <x-photo :key="$ubKey" sizes="(min-width: 768px) 31vw, 92vw" />
+                            <div class="photo-caption">
+                                <span class="photo-caption-eyebrow">{{ $ubPlace }}</span>
+                                <p class="photo-caption-title">{{ $ubCaption }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </section>
@@ -49,12 +71,9 @@
                     <p class="text-secondary">Makkah and Madinah hotel choices, airport transfers and intercity transportation are arranged as part of every Umrah package — exact hotels and arrangements vary by package. See each package's detail page for full accommodation and transport information.</p>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    <x-visual
-                        surface="panel"
-                        seed="umrah-accommodation-transport"
-                        caption="Accommodation & Transport"
-                        mark=""
-                        class="split-section-visual" />
+                    <div class="photo-figure photo-media photo-media--panel split-section-visual">
+                        <x-photo key="haram-dusk" sizes="(min-width: 992px) 46vw, 92vw" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,7 +106,7 @@
                     <a href="{{ route('packages.category', 'umrah') }}" class="btn btn-primary btn-lg">View All Umrah Packages</a>
                 </div>
             @else
-                <x-empty-state icon="bi-bag">No Umrah packages are published yet. Please check back soon or <a href="{{ route('contact') }}">contact us</a>.</x-empty-state>
+                <x-empty-state icon="bi-bag" photo="kaaba-close">No Umrah packages are published yet. Please check back soon or <a href="{{ route('contact') }}">contact us</a>.</x-empty-state>
             @endif
         </div>
     </section>

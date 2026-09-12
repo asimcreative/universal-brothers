@@ -1251,3 +1251,70 @@
         padding-bottom: 5.5rem;
     }
 }
+
+// --- Photography inside the detail page --------------------------------------
+// The photo boxes themselves are sized by `.photo-media` in `_photography.scss`;
+// these rules only place them. Added after the first pass shipped the images
+// with no spacing rules at all, which left them jammed against the text above
+// and inset awkwardly inside the Mashaer card's own padding.
+
+// A city photograph introduces each stay, so it sits above the heading it
+// belongs to and carries the section's own corner radius.
+.hajj-stay-photo {
+    border-radius: $border-radius-lg;
+    margin-bottom: 1rem;
+}
+
+// The option card already clips to its own radius (`overflow: hidden`), so the
+// photograph is deliberately flush to the card's top edge — no radius and no
+// margin here, or it would sit in a white gutter inside the card.
+.hajj-option-photo {
+    border-bottom: 1px solid rgba($ub-navy, 0.1);
+}
+
+// The Mashaer card has its own padding, so the photograph is bled back out to
+// the card edges rather than floating inside a frame.
+.hajj-mashaer-photo {
+    margin: -1.25rem -1.3rem 1rem;
+    border-bottom: 1px solid rgba($ub-gold, 0.25);
+}
+
+.hajj-transport-photo {
+    border-radius: $border-radius-lg;
+    margin-bottom: 1.25rem;
+}
+
+// Two city photographs introducing the itinerary, side by side so they frame
+// the timeline rather than pushing it down the page.
+.hajj-itinerary-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+
+    > * { border-radius: $border-radius-lg; }
+
+    @media (max-width: 575.98px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.hajj-aziziya-photo {
+    border-radius: $border-radius-lg;
+    margin-bottom: 1.25rem;
+}
+
+// Related-package cards are a link with stacked spans; the photograph sits at
+// the top and bleeds out to the card's own edges. The negative margins mirror
+// `.hajj-related-card`'s `padding: 1.1rem 1.2rem` exactly — if that padding
+// changes, change these with it.
+.hajj-related-card {
+    // Needed so the bled photograph is clipped by the card's corner radius.
+    overflow: hidden;
+}
+
+.hajj-related-photo {
+    display: block;
+    margin: -1.1rem -1.2rem 0.9rem;
+    border-bottom: 1px solid rgba($ub-navy, 0.1);
+}

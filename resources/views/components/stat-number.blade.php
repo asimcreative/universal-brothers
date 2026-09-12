@@ -24,6 +24,6 @@
         : (int) preg_replace('/\D/', '', (string) $display);
 @endphp
 
-<div class="stat-number"
+<div {{ $attributes->class('stat-number') }}
      data-counter-target="{{ $ubTarget }}"
      data-counter-display="{{ $display }}">{{ $display }}</div>

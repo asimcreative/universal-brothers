@@ -5,6 +5,7 @@
 
 @section('content')
     <x-page-hero
+        photo="mina-tents"
         eyebrow="News · Gallery · Videos"
         title="Media"
         lead="Press coverage, event photography and pilgrim stories from Universal Brothers."
@@ -26,7 +27,7 @@
         <div class="tab-content" id="mediaTabsContent">
             <div class="tab-pane fade show active" id="news-pane" role="tabpanel" aria-labelledby="news-tab" tabindex="0">
                 @if($news->isEmpty())
-                    <x-empty-state icon="bi-newspaper">No news articles have been published yet.</x-empty-state>
+                    <x-empty-state icon="bi-newspaper" photo="mina-tents">No news articles have been published yet.</x-empty-state>
                 @else
                     <div class="row g-4">
                         @foreach($news as $article)

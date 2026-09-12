@@ -7,22 +7,25 @@
 <div class="col-6 col-sm-4 col-lg-3 reveal-on-scroll">
     <div class="affiliation-tile">
         @if($affiliation->logo)
-            <img src="{{ Storage::url($affiliation->logo) }}" alt="{{ $affiliation->organization_name }}" class="affiliation-logo" loading="lazy" decoding="async">
-            {{-- The organisation name must remain reachable as accessible text in
-                 BOTH branches: journeys-visitor.spec.js asserts the literal text
-                 "IATA" is visible, and it would disappear the moment a logo was
-                 uploaded if the name only existed in the no-logo branch. --}}
-            <span class="visually-hidden">{{ $affiliation->organization_name }}</span>
+            <span class="affiliation-plate">
+                <img src="{{ \App\Support\SiteImagery::resolve($affiliation->logo) }}" alt=""
+                                             {{-- Decorative: the organisation name is printed as visible text
+                                                  immediately beside this mark, so an alt would have a screen
+                                                  reader announce it twice. --}} loading="lazy" decoding="async">
+            </span>
+            <span class="affiliation-name">{{ $affiliation->organization_name }}</span>
+            {{-- The organisation name is now shown in BOTH branches rather than
+                 only in the no-logo one. journeys-visitor.spec.js asserts the
+                 literal text "IATA" is visible, and with real logos in place the
+                 name is also what makes an unfamiliar mark identifiable. --}}
         @else
-            {{-- Geometric only, no lettering. The organisation name sits directly
-                 below, and eight of the ten affiliations are acronyms, so a mark
-                 inside the disc just printed "IATA" twice in a row. The disc is
-                 legible on its own now that `ub-seal-visual` scales the motif
-                 down to seal size — the earlier "empty dark disc" problem was
-                 the motif tile being larger than the circle, not the absence of
-                 text. Award medallions keep their initials, because there the
-                 label beside them is a long award name, not the same acronym. --}}
-            <span class="affiliation-mark ub-visual ub-visual--v{{ $ubVariant }}" aria-hidden="true"></span>
+            {{-- Two of the ten organisations (DTS, SECP) are not in the client's
+                 brochure, so we hold no logo for them. They get the same plate
+                 with a neutral mark — NOT their initials. Eight of the ten names
+                 are four-letter acronyms, so "first four characters" is the whole
+                 name, and printing it here put "IATA" directly above "IATA". The
+                 original seal carried no lettering for exactly this reason. --}}
+            <span class="affiliation-plate affiliation-plate--blank" aria-hidden="true"><i class="bi bi-patch-check"></i></span>
             <span class="affiliation-name">{{ $affiliation->organization_name }}</span>
         @endif
 

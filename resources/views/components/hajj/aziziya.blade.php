@@ -18,6 +18,25 @@
 
 @if($ubAziziya && $ubStatus)
     <x-hajj.section id="aziziya" eyebrow="Mina-Side Accommodation" title="Aziziya">
+        {{-- Aziziya is a residential district of Makkah, so the Makkah skyline
+             is the honest illustration. The building itself is named in the text
+             beside it; we hold no photograph of that specific property. --}}
+        @php $ubAziziyaPhoto = \App\Support\SiteImagery::forCity('aziziya'); @endphp
+        @if($ubAziziyaPhoto)
+            <div class="photo-media photo-media--wide hajj-aziziya-photo">
+                <x-photo :key="$ubAziziyaPhoto" sizes="(min-width: 992px) 62vw, 92vw" />
+                {{-- The caption names the DISTRICT, not the property. The
+                     accommodation's own name is printed immediately below, and
+                     repeating it here put it on the page twice — which the
+                     currency-invariance test correctly caught, because a fact
+                     appearing twice is exactly what that test guards against. --}}
+                <div class="photo-caption">
+                    <span class="photo-caption-eyebrow">Mina-side accommodation</span>
+                    <p class="photo-caption-title">Aziziya, Makkah</p>
+                </div>
+            </div>
+        @endif
+
         <div class="hajj-aziziya">
             <div class="hajj-aziziya-head">
                 <span class="hajj-status hajj-status--{{ $ubAziziya->status }}">{{ $ubStatus }}</span>

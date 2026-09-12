@@ -14,10 +14,19 @@
     'eyebrow' => 'Speak to Universal Brothers',
     'title' => 'Your Sacred Journey Begins With a Conversation',
     'copy' => 'Whether you are preparing for Hajj, planning Umrah or simply need guidance before making a decision, our experienced team is ready to assist you.',
+    'photo' => 'haram-panorama',
 ])
 
 <section class="page-cta">
-    <div class="ub-visual ub-visual--stage ub-visual--stage-sm" aria-hidden="true"></div>
+    @if(\App\Support\SiteImagery::has($photo))
+        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url($photo) }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset($photo) }}"
+                 sizes="100vw" alt="" loading="lazy" decoding="async">
+        </div>
+    @else
+        <div class="ub-visual ub-visual--stage ub-visual--stage-sm" aria-hidden="true"></div>
+    @endif
     <div class="container page-cta-content">
         <div class="row justify-content-center text-center">
             <div class="col-lg-8 reveal-on-scroll">

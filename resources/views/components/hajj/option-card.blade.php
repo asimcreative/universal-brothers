@@ -21,15 +21,49 @@
     $ubHotels = $group['hotels'];
 @endphp
 
+@php
+    // The option's own hotel tells us which city this choice is about, so the
+    // photograph follows the data rather than an assumption that every package
+    // varies its Makkah hotel (four of them vary Madinah instead).
+    //
+    // Three of the twelve packages have no variants at all, so their single
+    // group carries no hotel of its own and this would otherwise leave the
+    // page's most important section with no imagery. In that case fall back to
+    // the package's own accommodation — still its real data, just read from the
+    // shared rows instead of the variant-scoped ones.
+    $ubOptionLocation = $ubHotels->first()?->location
+        ?? $hajj->package()->accommodations->sortBy('sort_order')->first()?->location;
+
+    $ubOptionPhoto = \App\Support\SiteImagery::forCity($ubOptionLocation, $group['key']);
+@endphp
+
 <article class="hajj-option" data-hajj-option="{{ $group['key'] }}">
+    @if($ubOptionPhoto)
+        <div class="photo-media photo-media--wide hajj-option-photo">
+            <x-photo :key="$ubOptionPhoto" sizes="(min-width: 992px) 30vw, 92vw" />
+        </div>
+    @endif
+
     <header class="hajj-option-head">
         <div class="hajj-option-topline">
             <span class="hajj-option-tag">{{ $group['title'] }}</span>
 
-            @if(! is_null($group['fromPrice']))
+            {{-- "From" only when there is genuinely a range to be "from".
+                 A group holding one room has no cheapest — printing
+                 "From US$9,999" directly above "Quint Sharing US$9,999" states
+                 the same figure twice and implies a choice that does not exist.
+                 (It also put the identical `data-usd` on the page twice, which
+                 is how this surfaced.) --}}
+            @if($group['fromRoom'] && $group['roomCount'] > 1)
                 <span class="hajj-option-from">
                     <span class="hajj-option-from-label">From</span>
-                    <x-hajj.price class="hajj-option-from-value" :usd="$group['fromPrice']" />
+                    {{-- All three currencies, from the cheapest room itself, so
+                         this line switches with the rest of the page instead of
+                         blanking to N/A. --}}
+                    <x-hajj.price class="hajj-option-from-value"
+                                  :pkr="$group['fromRoom']->price_pkr"
+                                  :sar="$group['fromRoom']->price_sar"
+                                  :usd="$group['fromRoom']->price_usd" />
                 </span>
             @endif
         </div>

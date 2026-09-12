@@ -4,7 +4,17 @@
 @section('meta_description', 'Browse real ' . $category->name . ' packages from Universal Brothers — IATA-registered Hajj, Umrah and Tourism operator.')
 
 @section('content')
+    {{-- The banner shows what this category is actually about, chosen from the
+         category's own slug rather than hard-coded per page. --}}
+    @php $ubCategoryPhoto = match($category->slug) {
+        'hajj' => 'kaaba-tawaf',
+        'umrah' => 'haram-dusk',
+        'tourism' => 'hunza-valley',
+        default => 'haram-panorama',
+    }; @endphp
+
     <x-page-hero
+        :photo="$ubCategoryPhoto"
         :title="$category->name . ' Packages'"
         :eyebrow="$packages->total() > 0 ? $packages->total() . ' ' . Str::plural('Package', $packages->total()) . ' Available' : null"
         :lead="$category->description"
@@ -133,7 +143,7 @@
                 </div>
 
                 @if($packages->isEmpty())
-                    <x-empty-state icon="bi-bag">
+                    <x-empty-state icon="bi-bag" photo="haram-dusk">
                         No {{ strtolower($category->name) }} packages are published yet. Please check back soon or <a href="{{ route('contact') }}">contact us</a> for the latest availability.
                     </x-empty-state>
                 @else
