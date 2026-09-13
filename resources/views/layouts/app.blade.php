@@ -12,6 +12,10 @@
 <html lang="en" class="no-js">
 <head>
     <meta charset="utf-8">
+    {{-- Read by the AI assistant's fetch() calls. The public site is otherwise
+         entirely form-based, so this is the first thing here that posts from
+         JavaScript and needs the token out of band. --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
     <title>@yield('title', 'Universal Brothers — Hajj, Umrah & Tourism')</title>
@@ -61,6 +65,10 @@
     @include('layouts.partials.footer')
 
     <x-lightbox-modal />
+
+    {{-- Renders nothing at all unless the assistant is enabled, has public
+         access switched on, and has an API key — see AiConfig::publiclyAvailable(). --}}
+    <x-ai-assistant />
 
     @stack('scripts')
 </body>

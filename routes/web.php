@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AffiliationController as AdminAffiliationController;
+use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\AwardController as AdminAwardController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Admin\SliderController as AdminSliderController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AffiliationController;
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\AwardController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FaqPageController;
@@ -56,6 +58,26 @@ Route::get('/{category}', [PackageController::class, 'category'])
 Route::get('/{category}/{package:slug}', [PackageController::class, 'show'])
     ->whereIn('category', ['hajj', 'umrah', 'tourism'])
     ->name('packages.show');
+
+// Public AI assistant endpoints. Declared before the admin group and well
+// before the catch-all `/{slug}` page route at the bottom, which would
+// otherwise swallow anything under /ai.
+//
+// These are POST-only and session-backed: the conversation is resolved from
+// the session cookie, never from a client-supplied id, so one visitor can
+// never reach another's chat. Rate limiting is applied inside the controller
+// because the budget is admin-configurable rather than a fixed middleware
+// string.
+Route::prefix('ai')->name('ai.')->group(function () {
+    Route::post('/chat', [AiChatController::class, 'send'])->name('chat');
+    // Reuses the same per-IP budget as the site's own inquiry form: this
+    // writes to the same `inquiries` table, so it is the same abuse surface
+    // and should not be a way around that limit.
+    Route::post('/lead', [AiChatController::class, 'lead'])
+        ->middleware('throttle:inquiry-form')
+        ->name('lead');
+    Route::post('/reset', [AiChatController::class, 'reset'])->name('reset');
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login')->middleware('guest');
@@ -114,6 +136,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('settings', [SiteSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SiteSettingController::class, 'update'])->name('settings.update');
+
+        Route::get('ai', [AiAssistantController::class, 'index'])->name('ai.index');
+        Route::put('ai', [AiAssistantController::class, 'update'])->name('ai.update');
+        Route::delete('ai/key', [AiAssistantController::class, 'clearKey'])->name('ai.key.clear');
+        Route::post('ai/reindex', [AiAssistantController::class, 'reindex'])->name('ai.reindex');
+        Route::match(['get', 'post'], 'ai/test', [AiAssistantController::class, 'test'])->name('ai.test');
+        Route::get('ai/conversations', [AiAssistantController::class, 'conversations'])->name('ai.conversations');
+        // Declared after the collection route so `ai/conversations` is never
+        // matched as a {conversation} id.
+        Route::get('ai/conversations/{conversation}', [AiAssistantController::class, 'conversation'])->name('ai.conversation');
 
         // Restricted separately to super_admin via UserPolicy — every other
         // admin route above is reachable by both roles (documented, deliberate

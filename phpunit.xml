@@ -32,5 +32,13 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <!-- The AI tests all fake the provider, but the developer's own .env
+             now holds a real, billable key. Pinning an obviously-fake one here
+             means a future test that forgets Http::fake() fails against an
+             unreachable host instead of quietly spending the client's credit —
+             and .invalid is reserved by RFC 2606 precisely so it can never
+             resolve. -->
+        <env name="OPENAI_API_KEY" value="sk-phpunit-fake-key-do-not-use"/>
+        <env name="OPENAI_BASE_URL" value="https://api.openai.invalid/v1"/>
     </php>
 </phpunit>

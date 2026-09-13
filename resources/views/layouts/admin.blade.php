@@ -31,6 +31,11 @@
             'Leads' => [
                 ['route' => 'admin.inquiries.index', 'pattern' => 'admin.inquiries.*', 'icon' => 'bi-envelope', 'label' => 'Inquiries', 'badge' => \App\Models\Inquiry::where('status', 'new')->count()],
             ],
+            'Assistant' => [
+                ['route' => 'admin.ai.index', 'pattern' => 'admin.ai.index', 'icon' => 'bi-stars', 'label' => 'AI Assistant'],
+                ['route' => 'admin.ai.test', 'pattern' => 'admin.ai.test', 'icon' => 'bi-play-circle', 'label' => 'AI Test Panel'],
+                ['route' => 'admin.ai.conversations', 'pattern' => 'admin.ai.conversation*', 'icon' => 'bi-chat-dots', 'label' => 'AI Conversations'],
+            ],
         ];
         if (auth()->user()?->isSuperAdmin()) {
             $adminNavGroups['System'] = [

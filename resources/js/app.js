@@ -23,6 +23,8 @@ window.$ = window.jQuery = $;
 import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
 
+import { initAiAssistant } from './ai-assistant';
+
 function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
@@ -303,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail].forEach((fn) => {
+    [initHeaderOffset, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {

@@ -102,18 +102,32 @@ test.describe('Public website', () => {
             page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click(),
         ]);
 
-        // UB001 Package B Quad is a real seeded USD-only price (no PKR/SAR
-        // value exists in the brochure — see HAJJ_BROCHURE_EXTRACTION.md) —
-        // proves the currency switcher itself works without depending on
-        // data this session is not authorized to invent.
+        // UB001 Package B Quad. This assertion used to read "USD, then N/A on
+        // SAR", because the brochure supplied to this project was USD-only.
+        // The client has since supplied the PKR and Riyal brochures and the
+        // backfill landed (issue #5), so all three currencies are now real
+        // seeded values — and asserting all three is a stronger test of the
+        // switcher than USD-and-a-blank ever was.
         const priceCell = page.locator('.currency-price[data-usd="16300.00"]').first();
         await expect(priceCell).toHaveText('US$16,300');
 
         await page.locator('#currency-switcher [data-currency="SAR"]').click();
-        await expect(priceCell).toHaveText('N/A');
+        await expect(priceCell).toHaveText('SAR 59,500');
+
+        await page.locator('#currency-switcher [data-currency="PKR"]').click();
+        await expect(priceCell).toHaveText('PKR 4,640,000');
 
         await page.locator('#currency-switcher [data-currency="USD"]').click();
         await expect(priceCell).toHaveText('US$16,300');
+
+        // No N/A assertion here any more, and deliberately so. A room with no
+        // price in any currency (UB001 Package A Quad — the brochure prints
+        // "NA") is not rendered as an empty row at all, and every room that IS
+        // rendered now has all three currencies. The N/A branch in the
+        // switcher still exists for a partially-priced room, but no such room
+        // is currently published, so asserting it here would mean asserting
+        // against markup the page does not produce.
+        await expect(page.locator('.currency-price[data-usd=""]')).toHaveCount(0);
 
         // Switching currency must not touch anything else on the page.
         await expect(page.getByRole('heading', { name: 'Day-by-Day Itinerary' })).toBeVisible();
@@ -192,7 +206,12 @@ test.describe('Public website', () => {
         // Disable native HTML5 validation so the (deliberately invalid) email
         // actually reaches the server — proving Laravel's own validation catches
         // it independently of the browser's client-side check.
-        await page.locator('form').evaluate((form) => { form.noValidate = true; });
+        // Scoped to the contact form specifically. A bare locator('form') was
+        // fine when /contact had exactly one form; the AI assistant's composer
+        // is a second, legitimate form on every page (a <form> is the right
+        // element for it — it is what gives Enter-to-submit its semantics), so
+        // this now has to say which form it means.
+        await page.locator('form[action$="/contact"]').evaluate((form) => { form.noValidate = true; });
         await page.getByRole('button', { name: 'Send Message' }).click();
 
         await expect(page).toHaveURL(/\/contact$/);

@@ -59,7 +59,7 @@ export default defineConfig({
         {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
-            testMatch: /(public|admin-auth|journeys-visitor|responsive)\.spec\.js/,
+            testMatch: /(public|admin-auth|journeys-visitor|responsive|ai-assistant)\.spec\.js/,
         },
         {
             name: 'admin-chromium',
@@ -71,7 +71,10 @@ export default defineConfig({
         {
             name: 'mobile-chrome',
             use: { ...devices['Pixel 7'] },
-            testMatch: /public\.spec\.js/,
+            // The assistant is a bottom sheet on phones — a different layout,
+            // not a narrower version of the desktop panel — so it is worth a
+            // real mobile project rather than a viewport resize alone.
+            testMatch: /(public|ai-assistant)\.spec\.js/,
         },
         // Cross-browser QA (release-gate Phase 13) — scoped to the public
         // site's own interactive surfaces (nav/mega-menu, hero slider,

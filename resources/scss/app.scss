@@ -15,4 +15,8 @@
 // shared classes (`.star-rating`, `.package-note`, the touch-target rules)
 // defined there, and a few of its rules deliberately refine them.
 @import 'hajj-detail';
+// Self-contained widget — no other partial styles `.ai-*`, so position in the
+// cascade is not load-bearing. Kept after the page systems so its fixed
+// overlay sits above them in source order as well as z-index.
+@import 'ai-assistant';
 @import 'admin';
