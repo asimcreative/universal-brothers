@@ -206,6 +206,50 @@ class AiAssistantAdminTest extends TestCase
         $this->assertFalse(AiSetting::current()->public_enabled);
     }
 
+    public function test_an_admin_can_raise_or_lower_the_daily_limit_per_visitor(): void
+    {
+        $admin = $this->admin();
+
+        foreach ([120, 10, 0] as $limit) {
+            $this->actingAs($admin)
+                ->put(route('admin.ai.update'), $this->validPayload(['daily_message_limit' => $limit]))
+                ->assertRedirect()
+                ->assertSessionHasNoErrors();
+
+            AiConfig::flush();
+
+            $this->assertSame($limit, AiConfig::dailyMessageLimit(), "The portal could not set the daily limit to {$limit}.");
+        }
+    }
+
+    public function test_the_settings_screen_explains_the_daily_limit_in_plain_terms(): void
+    {
+        AiSetting::current()->forceFill(['daily_message_limit' => 50])->save();
+        AiConfig::flush();
+
+        $this->actingAs($this->admin())
+            ->withServerVariables(['REMOTE_ADDR' => '203.0.113.7'])
+            ->get(route('admin.ai.index'))
+            ->assertOk()
+            ->assertSee('Daily limit per visitor')
+            ->assertSee('0 = no limit.', false)
+            ->assertSee('Each visitor gets', false)
+            ->assertSee('500', false)
+            ->assertDontSee('Visitor IP addresses are not reaching the site');
+    }
+
+    public function test_the_settings_screen_warns_when_visitor_addresses_do_not_reach_the_site(): void
+    {
+        AiSetting::current()->forceFill(['daily_message_limit' => 50])->save();
+        AiConfig::flush();
+
+        $this->actingAs($this->admin())
+            ->withServerVariables(['REMOTE_ADDR' => '127.0.0.1'])
+            ->get(route('admin.ai.index'))
+            ->assertOk()
+            ->assertSee('Visitor IP addresses are not reaching the site');
+    }
+
     public function test_an_admin_can_change_the_model(): void
     {
         $this->actingAs($this->admin())

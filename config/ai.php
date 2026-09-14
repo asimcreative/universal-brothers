@@ -58,6 +58,8 @@ return [
     'limits' => [
         'per_minute' => (int) env('AI_RATE_LIMIT_PER_MINUTE', 12),
         'max_message_length' => 1000,
-        'daily_messages' => (int) env('AI_DAILY_MESSAGE_LIMIT', 0),
+        // Initial value only — once the settings row exists the admin value
+        // wins. 50 rather than 0 so a fresh install is not open-ended spend.
+        'daily_messages' => (int) env('AI_DAILY_MESSAGE_LIMIT', 50),
     ],
 ];

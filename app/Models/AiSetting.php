@@ -61,7 +61,11 @@ class AiSetting extends Model
      */
     public static function current(): self
     {
-        return static::query()->firstOrCreate([], []);
+        // The environment seeds the daily cap for a brand-new install; after
+        // that the admin value is the only one that counts, including 0.
+        return static::query()->firstOrCreate([], [
+            'daily_message_limit' => max(0, (int) config('ai.limits.daily_messages')),
+        ]);
     }
 
     protected static function booted(): void

@@ -389,6 +389,14 @@ class AiAssistant {
             const reply = data.reply || 'Sorry — I could not answer that. Please contact our team.';
 
             if (!data.ok) {
+                // A limit is not a failure a retry can fix. Offering "Try again"
+                // after "you have reached today's message limit" invites the
+                // visitor to press a button that cannot work.
+                if (data.error === 'daily_limit' || data.error === 'conversation_too_long') {
+                    this.appendMessage('assistant', formatReply(reply), { error: true });
+                    return;
+                }
+
                 this.appendRetry(message, reply);
                 return;
             }

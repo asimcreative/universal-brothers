@@ -19,12 +19,16 @@ use Illuminate\View\View;
 
 class AiAssistantController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $settings = AiSetting::current();
 
         return view('admin.ai.index', [
             'settings' => $settings,
+            // The admin's own request goes through the same proxy as a
+            // visitor's, so this is a live check that visitor addresses reach
+            // the application — the thing per-address limits depend on.
+            'addressReachesApp' => filter_var((string) $request->ip(), FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false,
             'maskedKey' => $settings->maskedApiKey(),
             'keySource' => AiConfig::apiKeySource(),
             'defaults' => [

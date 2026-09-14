@@ -255,7 +255,26 @@
                 <div class="col-md-3">
                     <label class="form-label" for="daily_message_limit">Daily limit per visitor</label>
                     <input class="form-control" id="daily_message_limit" name="daily_message_limit" type="number" min="0" max="100000" value="{{ old('daily_message_limit', $settings->daily_message_limit) }}" required>
-                    <div class="form-text">0 means no daily cap.</div>
+                    <div class="form-text">
+                        Messages one visitor can send in 24 hours. <strong>0 = no limit.</strong>
+                        Raise it if genuine visitors hit it; lower it to protect your OpenAI credit.
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="alert {{ $addressReachesApp ? 'alert-secondary' : 'alert-warning' }} small mb-0">
+                        <i class="bi {{ $addressReachesApp ? 'bi-shield-check' : 'bi-exclamation-triangle' }} me-1"></i>
+                        @if($settings->daily_message_limit > 0)
+                            Each visitor gets <strong>{{ number_format($settings->daily_message_limit) }}</strong> messages a day.
+                            One network address is allowed <strong>{{ number_format($settings->daily_message_limit * \App\Support\Ai\AiConfig::SHARED_ADDRESS_MULTIPLIER) }}</strong>
+                            ({{ \App\Support\Ai\AiConfig::SHARED_ADDRESS_MULTIPLIER }}×), because mobile networks put many people behind one address — so a busy network does not block everyone on it, but a bot still cannot drain the account.
+                        @else
+                            There is currently <strong>no daily limit</strong>. Only the per-minute limit protects your OpenAI credit.
+                        @endif
+                        @unless($addressReachesApp)
+                            <div class="mt-1"><strong>Visitor IP addresses are not reaching the site</strong> (your own request arrived from an internal address), so the per-address limit is switched off and only the per-visitor limit applies. Ask your hosting provider to check that the proxy passes the visitor's IP.</div>
+                        @endunless
+                    </div>
                 </div>
 
                 <div class="col-md-4">

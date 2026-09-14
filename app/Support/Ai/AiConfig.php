@@ -149,10 +149,33 @@ class AiConfig
         return (int) (self::settings()->rate_limit_per_minute ?: config('ai.limits.per_minute'));
     }
 
+    /**
+     * Messages one visitor may send in 24 hours. 0 means no limit.
+     *
+     * The admin value is authoritative. This used to read
+     * `daily_message_limit ?: config(...)`, which meant a 0 typed into the
+     * portal — the documented way to switch the cap off — silently fell back
+     * to the environment's value, so the client could never actually choose
+     * "no limit". The environment now only seeds the value when the settings
+     * row is first created (see AiSetting::current()).
+     */
     public static function dailyMessageLimit(): int
     {
-        return (int) (self::settings()->daily_message_limit ?: config('ai.limits.daily_messages'));
+        return max(0, (int) self::settings()->daily_message_limit);
     }
+
+    /**
+     * How many times the per-visitor daily limit one network address may use.
+     *
+     * Pakistan's mobile networks put very large numbers of subscribers behind
+     * a shared public address (carrier-grade NAT). Capping an IP at the same
+     * number as one visitor would block unrelated pilgrims on the same network
+     * the moment a few of them had used the assistant. Capping it at a multiple
+     * still stops one bot that ignores cookies from draining the account — the
+     * case a per-browser limit alone cannot catch, because a client that sends
+     * no cookie gets a fresh session on every request.
+     */
+    public const SHARED_ADDRESS_MULTIPLIER = 10;
 
     public static function maxConversationMessages(): int
     {

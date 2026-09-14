@@ -573,12 +573,44 @@ class AiAssistantTest extends TestCase
 
     // ------------------------------------------------------------ rate limit
 
+    /**
+     * Act as one visitor: a stable session cookie, from a public address.
+     *
+     * The test client does not keep cookies between requests, so without this
+     * every request is a brand-new session. The previous version of the rate
+     * limit test passed anyway — because every request came from 127.0.0.1 and
+     * shared ONE per-address bucket, which is exactly the "the whole site is
+     * one visitor" failure the limiter now refuses to fall into.
+     */
+    private function asVisitor(string $id, string $address = '203.0.113.7'): static
+    {
+        // withCredentials(): postJson() sends no cookies without it — a test
+        // harness rule, not a production one; the widget fetches with
+        // `credentials: 'same-origin'`. The id must be 40 alphanumerics or
+        // Laravel discards it and issues a new one.
+        $sessionId = str_pad(preg_replace('/[^A-Za-z0-9]/', '', $id), 40, 'x');
+
+        return $this->withCredentials()
+            ->withCookie(config('session.cookie'), $sessionId)
+            ->withServerVariables(['REMOTE_ADDR' => $address]);
+    }
+
+    private function limits(int $daily, int $perMinute = 60): void
+    {
+        AiSetting::current()->forceFill([
+            'daily_message_limit' => $daily,
+            'rate_limit_per_minute' => $perMinute,
+        ])->save();
+
+        AiConfig::flush();
+    }
+
     public function test_the_rate_limit_is_enforced(): void
     {
         $this->fakeProvider();
+        $this->limits(daily: 0, perMinute: 3);
 
-        AiSetting::current()->forceFill(['rate_limit_per_minute' => 3])->save();
-        AiConfig::flush();
+        $this->asVisitor('visitorone');
 
         for ($i = 0; $i < 3; $i++) {
             $this->postJson(route('ai.chat'), ['message' => "Question {$i}"])->assertOk();
@@ -587,6 +619,107 @@ class AiAssistantTest extends TestCase
         $this->postJson(route('ai.chat'), ['message' => 'One too many'])
             ->assertStatus(429)
             ->assertJsonPath('error', 'rate_limited');
+    }
+
+    public function test_the_daily_limit_stops_a_visitor_at_the_number_set_in_the_admin(): void
+    {
+        $this->fakeProvider();
+        $this->limits(daily: 3);
+
+        $this->asVisitor('visitorone');
+
+        for ($i = 1; $i <= 3; $i++) {
+            $this->postJson(route('ai.chat'), ['message' => "Question {$i}"])->assertOk();
+        }
+
+        $this->postJson(route('ai.chat'), ['message' => 'Question 4'])
+            ->assertStatus(429)
+            ->assertJsonPath('error', 'daily_limit');
+    }
+
+    public function test_one_visitor_using_up_their_limit_does_not_block_others_on_the_same_network(): void
+    {
+        // Pakistan's mobile networks put huge numbers of subscribers behind
+        // one public address. A per-address cap equal to the per-visitor cap
+        // would lock unrelated pilgrims out together.
+        $this->fakeProvider();
+        $this->limits(daily: 2);
+
+        $this->asVisitor('visitorone');
+        $this->postJson(route('ai.chat'), ['message' => 'One'])->assertOk();
+        $this->postJson(route('ai.chat'), ['message' => 'Two'])->assertOk();
+        $this->postJson(route('ai.chat'), ['message' => 'Three'])->assertStatus(429);
+
+        // Same address, different person.
+        $this->asVisitor('visitortwo');
+        $this->postJson(route('ai.chat'), ['message' => 'Hello from the same network'])->assertOk();
+    }
+
+    public function test_a_client_that_ignores_cookies_is_stopped_by_the_address_ceiling(): void
+    {
+        // A bot that sends no cookie gets a new session on every request, so a
+        // per-visitor limit never catches it. The per-address ceiling does.
+        $this->fakeProvider();
+        $this->limits(daily: 1);
+
+        $ceiling = 1 * AiConfig::SHARED_ADDRESS_MULTIPLIER;
+
+        for ($i = 1; $i <= $ceiling; $i++) {
+            $this->asVisitor("bot{$i}")->postJson(route('ai.chat'), ['message' => "Request {$i}"])->assertOk();
+        }
+
+        $this->asVisitor('bot-next')
+            ->postJson(route('ai.chat'), ['message' => 'One past the ceiling'])
+            ->assertStatus(429)
+            ->assertJsonPath('error', 'daily_limit');
+    }
+
+    public function test_zero_in_the_admin_means_no_daily_limit_even_if_the_environment_says_otherwise(): void
+    {
+        // It used to read `daily_message_limit ?: config(...)`, so typing 0 —
+        // the documented way to switch the cap off — fell back to the
+        // environment's number and the client could never actually choose it.
+        $this->fakeProvider();
+        config()->set('ai.limits.daily_messages', 2);
+        $this->limits(daily: 0);
+
+        $this->asVisitor('visitorone');
+
+        for ($i = 1; $i <= 5; $i++) {
+            $this->postJson(route('ai.chat'), ['message' => "Question {$i}"])->assertOk();
+        }
+    }
+
+    public function test_an_internal_address_never_turns_the_limit_into_a_site_wide_one(): void
+    {
+        // If the proxy ever stops passing visitor IPs, every request arrives
+        // from 127.0.0.1. Keyed on that, fifty messages a day would be the
+        // allowance for everyone on the site put together.
+        $this->fakeProvider();
+        $this->limits(daily: 1);
+
+        $beyondTheCeiling = AiConfig::SHARED_ADDRESS_MULTIPLIER + 3;
+
+        for ($i = 1; $i <= $beyondTheCeiling; $i++) {
+            $this->asVisitor("person{$i}", '127.0.0.1')
+                ->postJson(route('ai.chat'), ['message' => "Hello {$i}"])
+                ->assertOk();
+        }
+
+        // And the per-visitor limit still holds on its own.
+        $this->asVisitor('person1', '127.0.0.1')
+            ->postJson(route('ai.chat'), ['message' => 'Second message'])
+            ->assertStatus(429)
+            ->assertJsonPath('error', 'daily_limit');
+    }
+
+    public function test_a_new_install_takes_its_first_daily_limit_from_the_environment(): void
+    {
+        AiSetting::query()->delete();
+        AiConfig::flush();
+        config()->set('ai.limits.daily_messages', 37);
+
+        $this->assertSame(37, AiSetting::current()->daily_message_limit);
     }
 
     public function test_a_conversation_cannot_grow_without_limit(): void

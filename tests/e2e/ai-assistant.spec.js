@@ -199,6 +199,29 @@ test.describe('AI assistant', () => {
         await expect(page.locator('.ai-message--assistant').last()).toContainText('PKR 3,485,000');
     });
 
+    test('reaching the daily limit shows the message without a useless retry button', async ({ page }) => {
+        await page.route('**/ai/chat', (route) =>
+            route.fulfill({
+                status: 429,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    ok: false,
+                    error: 'daily_limit',
+                    reply: "You have reached today's message limit. Please contact our team directly and they will be glad to help.",
+                }),
+            })
+        );
+
+        await openPanel(page);
+        await page.locator('[data-ai-input]').fill('One more question');
+        await page.locator('[data-ai-send]').click();
+
+        const error = page.locator('.ai-message--error').last();
+        await expect(error).toContainText("today's message limit");
+        // Retrying cannot work until tomorrow, so offering it would be a lie.
+        await expect(error.locator('.ai-retry')).toHaveCount(0);
+    });
+
     test('the conversation can be cleared back to the welcome message', async ({ page }) => {
         await fulfilChat(page);
         await page.route('**/ai/reset', (route) =>
