@@ -7,12 +7,15 @@ use App\Http\Controllers\Admin\AwardController as AdminAwardController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\HajjPackageController;
+use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\InquiryController as AdminInquiryController;
+use App\Http\Controllers\Admin\LibraryController;
 use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\MediaItemController as AdminMediaItemController;
 use App\Http\Controllers\Admin\OfficeController as AdminOfficeController;
 use App\Http\Controllers\Admin\PackageCategoryController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
+use App\Http\Controllers\Admin\PackageTemplateController;
 use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\SliderController as AdminSliderController;
@@ -33,6 +36,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TestimonialPageController;
 use App\Http\Controllers\UmrahServicesController;
+use App\Support\Library\LibraryRegistry;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -98,6 +102,46 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('hajj-packages', HajjPackageController::class)
             ->except(['show'])
             ->parameters(['hajj-packages' => 'package']);
+        Route::prefix('hajj-packages/{package}')->name('hajj-packages.')->group(function () {
+            Route::patch('quick/{action}', [HajjPackageController::class, 'quick'])
+                ->whereIn('action', ['publish', 'unpublish', 'feature', 'unfeature', 'archive', 'restore'])
+                ->name('quick');
+            Route::post('duplicate', [HajjPackageController::class, 'duplicate'])->name('duplicate');
+            Route::get('content', [HajjPackageController::class, 'content'])->name('content');
+            Route::post('save-as-template', [HajjPackageController::class, 'saveAsTemplate'])->name('save-template');
+            Route::post('apply-template', [HajjPackageController::class, 'applyTemplate'])->name('apply-template');
+            // A draft preview needs BOTH a logged-in admin (this group's
+            // middleware) and an unexpired signature — a leaked link alone
+            // shows nothing, and neither does a session on a guessed URL.
+            Route::get('preview', [HajjPackageController::class, 'preview'])->middleware('signed')->name('preview');
+        });
+
+        Route::resource('package-templates', PackageTemplateController::class)
+            ->except(['show'])
+            ->parameters(['package-templates' => 'template']);
+        Route::patch('package-templates/{template}/archive', [PackageTemplateController::class, 'archive'])->name('package-templates.archive');
+        Route::patch('package-templates/{template}/restore', [PackageTemplateController::class, 'restore'])->name('package-templates.restore');
+
+        // The reusable package library: hotels, meal plans, transport, included
+        // and not-included services, additional options, Mashaer arrangements,
+        // notes and journey templates — one controller, see LibraryRegistry.
+        Route::prefix('library/{type}')->name('library.')
+            ->whereIn('type', LibraryRegistry::keys())
+            ->group(function () {
+                Route::get('/', [LibraryController::class, 'index'])->name('index');
+                Route::get('create', [LibraryController::class, 'create'])->name('create');
+                Route::post('/', [LibraryController::class, 'store'])->name('store');
+                Route::get('{id}/edit', [LibraryController::class, 'edit'])->whereNumber('id')->name('edit');
+                Route::put('{id}', [LibraryController::class, 'update'])->whereNumber('id')->name('update');
+                Route::get('{id}/usage', [LibraryController::class, 'usage'])->whereNumber('id')->name('usage');
+                Route::post('{id}/push', [LibraryController::class, 'push'])->whereNumber('id')->name('push');
+                Route::post('{id}/duplicate', [LibraryController::class, 'duplicate'])->whereNumber('id')->name('duplicate');
+                Route::patch('{id}/archive', [LibraryController::class, 'archive'])->whereNumber('id')->name('archive');
+                Route::patch('{id}/restore', [LibraryController::class, 'restore'])->whereNumber('id')->name('restore');
+                Route::delete('{id}', [LibraryController::class, 'destroy'])->whereNumber('id')->name('destroy');
+            });
+
+        Route::get('help', [HelpController::class, 'index'])->name('help');
 
         Route::get('categories', [PackageCategoryController::class, 'index'])->name('categories.index');
         Route::get('categories/{category}/edit', [PackageCategoryController::class, 'edit'])->name('categories.edit');

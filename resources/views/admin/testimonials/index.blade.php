@@ -21,7 +21,7 @@
                             <td><span class="status-pill {{ $testimonial->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $testimonial->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.testimonials.edit', $testimonial) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.testimonials.destroy', $testimonial) }}" class="d-inline" onsubmit="return confirm('Delete this testimonial? This cannot be undone.')">
+                                <form method="POST" action="{{ route('admin.testimonials.destroy', $testimonial) }}" class="d-inline" data-confirm="This cannot be undone." data-confirm-title="Delete this testimonial?" data-confirm-button="Delete">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

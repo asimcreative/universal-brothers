@@ -3,48 +3,34 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Admin') | Universal Brothers</title>
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    {{-- Until admin.js has loaded and taken over with its styled dialog, a
+         form marked data-confirm still asks — with the browser's own confirm.
+         Without this, a delete pressed while the page was still loading went
+         straight through with no question at all. --}}
+    <script>
+        document.addEventListener('submit', function (event) {
+            var form = event.target;
+            if (window.ubAdminConfirmReady || !form || !form.hasAttribute || !form.hasAttribute('data-confirm')) return;
+            var question = (form.getAttribute('data-confirm-title') || 'Are you sure?') + '\n\n' + form.getAttribute('data-confirm');
+            if (!window.confirm(question)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }, true);
+    </script>
+    @vite(['resources/scss/app.scss', 'resources/js/app.js', 'resources/js/admin.js'])
 </head>
 <body class="admin-body">
     @php
-        $adminNavGroups = [
-            'Content' => [
-                ['route' => 'admin.pages.index', 'pattern' => 'admin.pages.*', 'icon' => 'bi-file-earmark-text', 'label' => 'Pages'],
-                ['route' => 'admin.news.index', 'pattern' => 'admin.news.*', 'icon' => 'bi-newspaper', 'label' => 'News'],
-                ['route' => 'admin.faqs.index', 'pattern' => 'admin.faqs.*', 'icon' => 'bi-question-circle', 'label' => 'FAQs'],
-                ['route' => 'admin.testimonials.index', 'pattern' => 'admin.testimonials.*', 'icon' => 'bi-chat-quote', 'label' => 'Testimonials'],
-                ['route' => 'admin.media.index', 'pattern' => 'admin.media.*', 'icon' => 'bi-collection-play', 'label' => 'Media Gallery'],
-                ['route' => 'admin.sliders.index', 'pattern' => 'admin.sliders.*', 'icon' => 'bi-images', 'label' => 'Homepage Sliders'],
-            ],
-            'Packages' => [
-                ['route' => 'admin.hajj-packages.index', 'pattern' => 'admin.hajj-packages.*', 'icon' => 'bi-moon-stars', 'label' => 'Hajj Packages'],
-                ['route' => 'admin.packages.index', 'pattern' => 'admin.packages.*', 'icon' => 'bi-box-seam', 'label' => 'Umrah & Tourism Packages'],
-                ['route' => 'admin.categories.index', 'pattern' => 'admin.categories.*', 'icon' => 'bi-tags', 'label' => 'Categories & Series'],
-            ],
-            'Company' => [
-                ['route' => 'admin.awards.index', 'pattern' => 'admin.awards.*', 'icon' => 'bi-trophy', 'label' => 'Awards'],
-                ['route' => 'admin.affiliations.index', 'pattern' => 'admin.affiliations.*', 'icon' => 'bi-diagram-3', 'label' => 'Affiliations'],
-                ['route' => 'admin.offices.index', 'pattern' => 'admin.offices.*', 'icon' => 'bi-geo-alt', 'label' => 'Offices'],
-                ['route' => 'admin.settings.index', 'pattern' => 'admin.settings.*', 'icon' => 'bi-gear', 'label' => 'Site Settings'],
-            ],
-            'Leads' => [
-                ['route' => 'admin.inquiries.index', 'pattern' => 'admin.inquiries.*', 'icon' => 'bi-envelope', 'label' => 'Inquiries', 'badge' => \App\Models\Inquiry::where('status', 'new')->count()],
-            ],
-            'Assistant' => [
-                ['route' => 'admin.ai.index', 'pattern' => 'admin.ai.index', 'icon' => 'bi-stars', 'label' => 'AI Assistant'],
-                ['route' => 'admin.ai.test', 'pattern' => 'admin.ai.test', 'icon' => 'bi-play-circle', 'label' => 'AI Test Panel'],
-                ['route' => 'admin.ai.conversations', 'pattern' => 'admin.ai.conversation*', 'icon' => 'bi-chat-dots', 'label' => 'AI Conversations'],
-            ],
-        ];
-        if (auth()->user()?->isSuperAdmin()) {
-            $adminNavGroups['System'] = [
-                ['route' => 'admin.users.index', 'pattern' => 'admin.users.*', 'icon' => 'bi-people', 'label' => 'Users & Roles'],
-            ];
-        }
         $currentUser = auth()->user();
         $userInitial = $currentUser ? strtoupper(substr($currentUser->name, 0, 1)) : '?';
+        $newInquiries = \App\Models\Inquiry::where('status', 'new')->count();
     @endphp
+
+    <a href="#admin-main-content" class="visually-hidden-focusable btn btn-light position-absolute m-2" style="z-index:2000">Skip to content</a>
 
     <div class="d-flex">
         {{-- Desktop sidebar --}}
@@ -56,27 +42,12 @@
                     <span>Administration</span>
                 </span>
             </a>
-            <div class="admin-nav-scroll">
-                <a href="{{ route('admin.dashboard') }}" class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2" aria-hidden="true"></i>Dashboard
-                </a>
-                @foreach($adminNavGroups as $group => $items)
-                    <div class="admin-nav-group-label">{{ $group }}</div>
-                    @foreach($items as $item)
-                        <a href="{{ route($item['route']) }}" class="admin-nav-link {{ request()->routeIs($item['pattern']) ? 'active' : '' }}">
-                            <i class="bi {{ $item['icon'] }}" aria-hidden="true"></i>{{ $item['label'] }}
-                            @if(!empty($item['badge']))
-                                <span class="badge bg-danger rounded-pill admin-nav-badge">{{ $item['badge'] }}</span>
-                            @endif
-                        </a>
-                    @endforeach
-                @endforeach
-            </div>
+            @include('admin.partials.nav', ['label' => 'Admin', 'newInquiries' => $newInquiries])
             <div class="admin-sidebar-footer">Universal Brothers CMS</div>
         </aside>
 
-        {{-- Mobile offcanvas sidebar --}}
-        <div class="offcanvas offcanvas-start admin-sidebar d-md-none" tabindex="-1" id="adminMobileNav">
+        {{-- Phone off-canvas menu --}}
+        <div class="offcanvas offcanvas-start admin-sidebar d-md-none" tabindex="-1" id="adminMobileNav" aria-label="Admin menu">
             <div class="d-flex justify-content-between align-items-center">
                 <a href="{{ route('admin.dashboard') }}" class="admin-brand mb-0">
                     <span class="admin-brand-mark">UB</span>
@@ -87,46 +58,40 @@
                 </a>
                 <button type="button" class="btn-close btn-close-white me-3" data-bs-dismiss="offcanvas" aria-label="Close menu"></button>
             </div>
-            <div class="admin-nav-scroll">
-                <a href="{{ route('admin.dashboard') }}" class="admin-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2" aria-hidden="true"></i>Dashboard
-                </a>
-                @foreach($adminNavGroups as $group => $items)
-                    <div class="admin-nav-group-label">{{ $group }}</div>
-                    @foreach($items as $item)
-                        <a href="{{ route($item['route']) }}" class="admin-nav-link {{ request()->routeIs($item['pattern']) ? 'active' : '' }}">
-                            <i class="bi {{ $item['icon'] }}" aria-hidden="true"></i>{{ $item['label'] }}
-                            @if(!empty($item['badge']))
-                                <span class="badge bg-danger rounded-pill admin-nav-badge">{{ $item['badge'] }}</span>
-                            @endif
-                        </a>
-                    @endforeach
-                @endforeach
-            </div>
+            @include('admin.partials.nav', ['label' => 'Admin menu', 'newInquiries' => $newInquiries])
         </div>
 
         <div class="admin-main">
             <header class="admin-topbar">
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 min-w-0">
                     <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminMobileNav" aria-controls="adminMobileNav" aria-label="Open menu">
                         <i class="bi bi-list fs-5" aria-hidden="true"></i>
                     </button>
-                    <div>
-                        @hasSection('breadcrumb')
-                            <nav class="admin-breadcrumb" aria-label="breadcrumb">@yield('breadcrumb')</nav>
-                        @else
-                            <nav class="admin-breadcrumb" aria-label="breadcrumb"><a href="{{ route('admin.dashboard') }}">Dashboard</a> / <span>@yield('title')</span></nav>
-                        @endif
-                        <h1 class="admin-page-title">@yield('title')</h1>
-                        @hasSection('subtitle')<p class="admin-page-subtitle">@yield('subtitle')</p>@endif
+                    <div class="min-w-0">
+                        <nav class="admin-breadcrumb" aria-label="breadcrumb">
+                            @hasSection('breadcrumb')
+                                @yield('breadcrumb')
+                            @else
+                                <a href="{{ route('admin.dashboard') }}">Dashboard</a> / <span>@yield('title')</span>
+                            @endif
+                        </nav>
+                        <h1 class="admin-page-title text-truncate">@yield('title')</h1>
+                        @hasSection('subtitle')<p class="admin-page-subtitle mb-0">@yield('subtitle')</p>@endif
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
                     @hasSection('actions') @yield('actions') @endif
 
+                    <a href="{{ route('home') }}" class="admin-topbar-icon d-none d-sm-inline-flex" target="_blank" rel="noopener" title="View the website" aria-label="View the website (opens in a new tab)">
+                        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                    </a>
+                    <a href="{{ route('admin.help') }}" class="admin-topbar-icon d-none d-sm-inline-flex" title="Help" aria-label="Help">
+                        <i class="bi bi-question-circle" aria-hidden="true"></i>
+                    </a>
+
                     <div class="dropdown">
-                        <button class="admin-user-menu dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="admin-user-menu dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu — {{ $currentUser?->name }}">
                             <span class="admin-user-avatar">{{ $userInitial }}</span>
                             <span class="admin-user-meta d-none d-lg-block">
                                 <strong>{{ $currentUser?->name }}</strong>
@@ -135,6 +100,8 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                             <li><h6 class="dropdown-header">{{ $currentUser?->email }}</h6></li>
+                            <li><a class="dropdown-item" href="{{ route('home') }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>View website</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.help') }}"><i class="bi bi-question-circle me-2" aria-hidden="true"></i>Help</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('admin.logout') }}">
@@ -147,26 +114,55 @@
                 </div>
             </header>
 
-            <div class="admin-content">
+            <main class="admin-content" id="admin-main-content" tabindex="-1">
                 @if(session('status'))
-                    <div class="alert alert-success alert-dismissible fade show">{{ session('status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="alert alert-success admin-alert alert-dismissible fade show" role="status">
+                        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                        <div class="admin-alert-body">{{ session('status') }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
                     </div>
                 @endif
-                @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show">
-                        <ul class="mb-0">
-                            @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+
+                {{-- Pages with their own step-aware error summary (the package
+                     builder) opt out of this generic one. --}}
+                @if($errors->any() && ! $__env->hasSection('own_error_summary'))
+                    <div class="alert alert-danger admin-alert alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                        <div class="admin-alert-body">
+                            <strong>Please check the following:</strong>
+                            <ul class="mb-0 mt-1">
+                                @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                            </ul>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss"></button>
                     </div>
                 @endif
 
                 @yield('content')
+            </main>
+        </div>
+    </div>
+
+    {{-- One confirmation dialog for every destructive or irreversible action
+         in the admin. Any form with `data-confirm="message"` opens it. --}}
+    <div class="modal fade admin-confirm-modal" id="adminConfirmModal" tabindex="-1" aria-labelledby="adminConfirmTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="admin-confirm-icon" data-confirm-icon><i class="bi bi-exclamation-triangle" aria-hidden="true"></i></span>
+                    <h2 class="modal-title fs-5" id="adminConfirmTitle" data-confirm-title>Are you sure?</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+                </div>
+                <div class="modal-body" data-confirm-message></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" data-confirm-accept>Confirm</button>
+                </div>
             </div>
         </div>
     </div>
 
+    @stack('modals')
     @stack('scripts')
 </body>
 </html>

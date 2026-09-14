@@ -113,9 +113,12 @@ class HajjPackageManagementTest extends TestCase
     {
         $response = $this->actingAs($this->admin)->post('/admin/hajj-packages', $this->fullPackagePayload());
 
-        $response->assertRedirect(route('admin.hajj-packages.index'));
-
+        // The builder returns to the package it just saved, so the admin sees
+        // what was saved and can carry on, rather than being dropped on the list.
         $package = Package::where('code', 'UB001-TEST')->firstOrFail();
+        $response->assertRedirect(route('admin.hajj-packages.edit', $package));
+        $response->assertSessionHas('status');
+
         $this->assertSame($this->hajjCategory->id, $package->package_category_id);
         $this->assertTrue($package->medinah_first);
         $this->assertFalse($package->has_aziziya, 'this package is Non-Aziziya-base with only an optional Aziziya upgrade — has_aziziya must stay false');
@@ -181,22 +184,38 @@ class HajjPackageManagementTest extends TestCase
 
         $response = $this->actingAs($this->admin)->put("/admin/hajj-packages/{$package->id}", $payload);
 
-        $response->assertRedirect(route('admin.hajj-packages.index'));
+        $response->assertRedirect(route('admin.hajj-packages.edit', $package));
         $package->refresh();
         $this->assertSame('Updated Name', $package->name);
         $this->assertSame(2, $package->variants()->count(), 'variants must be replaced, not duplicated, on update');
         $this->assertSame(3, $package->roomOptions()->count());
     }
 
-    public function test_admin_can_delete_a_hajj_package(): void
+    public function test_admin_can_delete_a_draft_hajj_package(): void
     {
-        $this->actingAs($this->admin)->post('/admin/hajj-packages', $this->fullPackagePayload());
+        $payload = $this->fullPackagePayload();
+        $payload['status'] = 'draft';
+        $this->actingAs($this->admin)->post('/admin/hajj-packages', $payload);
         $package = Package::where('code', 'UB001-TEST')->firstOrFail();
 
         $response = $this->actingAs($this->admin)->delete("/admin/hajj-packages/{$package->id}");
 
         $response->assertRedirect(route('admin.hajj-packages.index'));
         $this->assertSoftDeleted($package);
+    }
+
+    public function test_a_published_hajj_package_cannot_be_deleted(): void
+    {
+        $this->actingAs($this->admin)->post('/admin/hajj-packages', $this->fullPackagePayload());
+        $package = Package::where('code', 'UB001-TEST')->firstOrFail();
+
+        $response = $this->actingAs($this->admin)
+            ->from(route('admin.hajj-packages.index'))
+            ->delete("/admin/hajj-packages/{$package->id}");
+
+        $response->assertRedirect(route('admin.hajj-packages.index'));
+        $response->assertSessionHasErrors('package');
+        $this->assertNotSoftDeleted($package);
     }
 
     /**

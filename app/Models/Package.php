@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 
 class Package extends Model
 {
@@ -21,7 +21,15 @@ class Package extends Model
         'currency', 'starting_price', 'cover_image', 'gallery',
         'is_featured', 'is_seasonal', 'is_promotional', 'status',
         'published_at', 'sort_order', 'meta_title', 'meta_description',
+        'internal_notes', 'social_image',
     ];
+
+    /**
+     * Admin-only commentary. Hidden from serialisation so a package passed to
+     * JSON — an API response, a log line, the AI context — can never carry it.
+     * Nothing public reads the column; this guards against the accidental case.
+     */
+    protected $hidden = ['internal_notes'];
 
     protected function casts(): array
     {
@@ -35,6 +43,7 @@ class Package extends Model
             'gallery' => 'array',
             'starting_price' => 'decimal:2',
             'published_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -151,6 +160,26 @@ class Package extends Model
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published');
+    }
+
+    public function scopeNotArchived(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === 'published';
     }
 
     public function scopeFeatured(Builder $query): Builder

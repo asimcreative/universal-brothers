@@ -4,301 +4,365 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\HajjPackageRequest;
+use App\Models\AdminActivity;
 use App\Models\Package;
 use App\Models\PackageCategory;
-use App\Models\PackageSeries;
-use Closure;
+use App\Models\PackageTemplate;
+use App\Support\HajjPackagePage;
+use App\Support\Library\PackageBuilderData;
+use App\Support\Packages\HajjPackageWriter;
+use App\Support\Packages\PackageCompleteness;
+use App\Support\Packages\PackageDuplicator;
+use App\Support\Packages\PackageFormState;
+use App\Support\Packages\PackagePreview;
+use App\Support\Packages\PackageTemplates;
+use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 /**
- * Dedicated admin surface for Hajj packages — deliberately separate from
- * the generic Admin\PackageController (which Tourism/Umrah keep using
- * unchanged). Hajj packages need Package A/B variants, dynamic sharing
- * types, a fully separate Aziziya sub-schema, Mina/Arafat detail,
- * transportation, structured notes and upgrades — none of which the
- * generic packages/tiers/room-prices tables support without either
- * hardcoding a fixed room-type enum or conflating Aziziya pricing with the
- * main package price, both explicitly ruled out. See
- * docs/source-documents/HAJJ_BROCHURE_EXTRACTION.md for the source data
- * this form's fields are modeled on.
+ * The Hajj package builder and listing.
+ *
+ * Hajj packages have their own admin surface, separate from the generic
+ * Admin\PackageController that Umrah and Tourism use: options A/B/C, room
+ * prices in three currencies, Aziziya, Mina/Arafat/Muzdalifah, transport,
+ * notes and upgrades have no place in the generic schema. Saving goes through
+ * HajjPackageWriter; this controller decides status, files, redirects and the
+ * record of who did what.
  */
 class HajjPackageController extends Controller
 {
-    public function index(): View
+    public function __construct(
+        private HajjPackageWriter $writer,
+        private PackageDuplicator $duplicator,
+        private PackageTemplates $templates,
+    ) {}
+
+    public function index(Request $request): View
     {
-        $category = PackageCategory::where('slug', 'hajj')->firstOrFail();
+        $category = $this->hajjCategory();
+        $base = Package::where('package_category_id', $category->id);
 
-        $packages = Package::where('package_category_id', $category->id)
-            ->orderBy('sort_order')
-            ->get();
+        $status = $request->string('status')->toString();
+        $sort = $request->string('sort')->toString() ?: 'order';
 
-        return view('admin.hajj-packages.index', compact('packages'));
+        $packages = (clone $base)
+            ->with('series')
+            ->when($status === 'archived', fn ($q) => $q->archived(), fn ($q) => $q->notArchived())
+            ->when(in_array($status, ['published', 'draft'], true), fn ($q) => $q->where('status', $status))
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $term = '%'.$request->string('q')->trim().'%';
+                $q->where(fn ($inner) => $inner->where('name', 'like', $term)->orWhere('code', 'like', $term));
+            })
+            ->when($request->input('featured') === 'yes', fn ($q) => $q->where('is_featured', true))
+            ->when($request->input('featured') === 'no', fn ($q) => $q->where('is_featured', false))
+            ->when($request->filled('series'), fn ($q) => $q->where('package_series_id', $request->integer('series')))
+            ->when($request->input('arrival') === 'madinah', fn ($q) => $q->where('medinah_first', true))
+            ->when($request->input('arrival') === 'makkah', fn ($q) => $q->where('medinah_first', false))
+            ->when($request->filled('aziziya'), fn ($q) => $q->whereHas('aziziya', fn ($a) => $a->where('status', $request->string('aziziya'))))
+            ->when($request->filled('days'), fn ($q) => $q->where('duration_days', $request->integer('days')))
+            ->when($sort === 'updated', fn ($q) => $q->latest('updated_at'))
+            ->when($sort === 'title', fn ($q) => $q->orderBy('name'))
+            ->when($sort === 'order', fn ($q) => $q->orderBy('sort_order')->orderBy('name'))
+            ->paginate(20)
+            ->withQueryString();
+
+        $counts = [
+            'all' => (clone $base)->notArchived()->count(),
+            'published' => (clone $base)->notArchived()->where('status', 'published')->count(),
+            'draft' => (clone $base)->notArchived()->where('status', 'draft')->count(),
+            'archived' => (clone $base)->archived()->count(),
+        ];
+
+        return view('admin.hajj-packages.index', [
+            'packages' => $packages,
+            'counts' => $counts,
+            'series' => $category->series()->orderBy('sort_order')->get(),
+            'durations' => (clone $base)->whereNotNull('duration_days')->distinct()->orderBy('duration_days')->pluck('duration_days'),
+            'templates' => PackageTemplate::active()->ordered()->get(['id', 'name']),
+            'filtersActive' => $request->hasAny(['q', 'featured', 'series', 'arrival', 'aziziya', 'days']),
+        ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $category = PackageCategory::where('slug', 'hajj')->firstOrFail();
+        $category = $this->hajjCategory();
+        $template = $request->filled('template') ? PackageTemplate::active()->find($request->integer('template')) : null;
 
-        return view('admin.hajj-packages.form', [
-            'package' => new Package(['package_category_id' => $category->id]),
-            'series' => PackageSeries::where('package_category_id', $category->id)->orderBy('sort_order')->get(),
-        ]);
+        $state = $template ? PackageFormState::fromTemplate($template) : PackageFormState::blank();
+        $state['season_year'] ??= (int) now()->year + 1;
+
+        return $this->builder(new Package(['package_category_id' => $category->id]), $state, $template);
     }
 
     public function store(HajjPackageRequest $request): RedirectResponse
     {
-        $category = PackageCategory::where('slug', 'hajj')->firstOrFail();
+        $data = $request->validated();
 
-        $package = new Package($request->safe()->except(['cover_image', 'inclusions_text', 'exclusions_text']));
-        $package->package_category_id = $category->id;
+        $package = new Package;
+        $package->package_category_id = $this->hajjCategory()->id;
         $package->currency = 'USD';
-        $this->applyBooleans($package, $request);
-
-        if ($request->hasFile('cover_image')) {
-            $package->cover_image = $request->file('cover_image')->store('packages', 'public');
-        }
-
+        $package->sort_order = $data['sort_order'] ?? ((int) Package::where('package_category_id', $package->package_category_id)->max('sort_order') + 1);
+        $this->fillBasics($package, $data, $request);
         $package->save();
 
-        $this->syncNestedData($package, $request);
+        $this->writer->syncNested($package, $data);
+        $this->syncMedia($package, $request);
 
-        return redirect()->route('admin.hajj-packages.index')->with('status', 'Hajj package created.');
+        AdminActivity::record('created', $package, "Created Hajj package {$package->code} — {$package->name} as ".($package->isPublished() ? 'published' : 'a draft').'.');
+
+        return $this->afterSave($package, $request, created: true);
     }
 
-    public function edit(Package $package): View
+    public function edit(Request $request, Package $package): View|RedirectResponse
     {
-        $package->load([
-            'itineraryDays', 'inclusions', 'exclusions', 'variants', 'accommodations.variant',
-            'roomOptions.variant', 'aziziya.roomOptions.variant', 'aziziya.services', 'mashaerDetails',
-            'transportation', 'packageNotes', 'upgrades', 'media',
-        ]);
+        if (! $package->isHajj()) {
+            return redirect()->route('admin.packages.edit', $package);
+        }
 
-        return view('admin.hajj-packages.form', [
-            'package' => $package,
-            'series' => PackageSeries::where('package_category_id', $package->package_category_id)->orderBy('sort_order')->get(),
-        ]);
+        return $this->builder($package, PackageFormState::fromPackage($package));
     }
 
     public function update(HajjPackageRequest $request, Package $package): RedirectResponse
     {
-        $package->fill($request->safe()->except(['cover_image', 'inclusions_text', 'exclusions_text']));
-        $this->applyBooleans($package, $request);
+        $this->ensureHajj($package);
 
-        if ($request->hasFile('cover_image')) {
-            if ($package->cover_image) {
-                Storage::disk('public')->delete($package->cover_image);
-            }
-            $package->cover_image = $request->file('cover_image')->store('packages', 'public');
-        }
+        $data = $request->validated();
+        $wasPublished = $package->isPublished();
 
+        $this->fillBasics($package, $data, $request);
         $package->save();
 
-        $this->syncNestedData($package, $request);
+        $this->writer->syncNested($package, $data);
+        $this->syncMedia($package, $request);
 
-        return redirect()->route('admin.hajj-packages.index')->with('status', 'Hajj package updated.');
+        if ($wasPublished !== $package->isPublished()) {
+            AdminActivity::record($package->isPublished() ? 'published' : 'unpublished', $package, ($package->isPublished() ? 'Published' : 'Moved to draft').": {$package->code} — {$package->name}.");
+        }
+
+        return $this->afterSave($package, $request, created: false);
     }
 
     public function destroy(Package $package): RedirectResponse
     {
-        $package->delete();
+        $this->ensureHajj($package);
 
-        return redirect()->route('admin.hajj-packages.index')->with('status', 'Hajj package deleted.');
+        if ($package->isPublished()) {
+            return back()->withErrors(['package' => "{$package->name} is live on the website, so it cannot be deleted. Move it to draft or archive it first."]);
+        }
+
+        $package->delete();
+        AdminActivity::record('deleted', $package, "Deleted Hajj package {$package->code} — {$package->name}.");
+
+        return redirect()->route('admin.hajj-packages.index')->with('status', "Deleted {$package->name}.");
     }
 
-    private function applyBooleans(Package $package, Request $request): void
+    /**
+     * One-click actions from the listing and the builder's toolbar.
+     */
+    public function quick(Request $request, Package $package, string $action): RedirectResponse
     {
+        $this->ensureHajj($package);
+        $name = trim("{$package->code} — {$package->name}", ' —');
+
+        switch ($action) {
+            case 'publish':
+                $problems = PackageCompleteness::problems(PackageFormState::fromPackage($package));
+                if ($problems !== []) {
+                    return back()->withErrors(collect($problems)->mapWithKeys(fn ($p, $i) => ["publish.{$p['step']}.{$i}" => $p['message']])->all())
+                        ->with('publish_blocked', $package->id);
+                }
+                $package->forceFill([
+                    'status' => 'published',
+                    'published_at' => $package->published_at ?? now(),
+                    'archived_at' => null,
+                ])->save();
+                $message = "{$package->name} is now live on the website.";
+                break;
+
+            case 'unpublish':
+                $package->forceFill(['status' => 'draft'])->save();
+                $message = "{$package->name} is now a draft and hidden from the website.";
+                break;
+
+            case 'feature':
+                $package->forceFill(['is_featured' => true])->save();
+                $message = "{$package->name} is now featured.";
+                break;
+
+            case 'unfeature':
+                $package->forceFill(['is_featured' => false])->save();
+                $message = "{$package->name} is no longer featured.";
+                break;
+
+            case 'archive':
+                $package->forceFill(['archived_at' => now(), 'status' => 'draft', 'is_featured' => false])->save();
+                $message = "{$package->name} was archived and removed from the website. You can restore it from the Archived tab.";
+                break;
+
+            case 'restore':
+                $package->forceFill(['archived_at' => null])->save();
+                $message = "{$package->name} was restored as a draft.";
+                break;
+
+            default:
+                abort(404);
+        }
+
+        $done = ['publish' => 'published', 'unpublish' => 'unpublished', 'feature' => 'featured', 'unfeature' => 'unfeatured', 'archive' => 'archived', 'restore' => 'restored'][$action];
+        AdminActivity::record($done, $package, ucfirst($done).": {$name}.");
+
+        return back()->with('status', $message);
+    }
+
+    public function duplicate(Package $package): RedirectResponse
+    {
+        $this->ensureHajj($package);
+
+        $copy = $this->duplicator->duplicate($package);
+
+        AdminActivity::record('duplicated', $copy, "Copied {$package->code} — {$package->name} into a new draft ({$copy->code}).");
+
+        return redirect()
+            ->route('admin.hajj-packages.edit', $copy)
+            ->with('status', 'A copy was created as a draft. Change its title, code and dates, then publish it when ready. The original package was not changed.');
+    }
+
+    /**
+     * The package exactly as visitors would see it, reachable only by a
+     * signed, expiring link AND a logged-in admin — see the route definition.
+     */
+    public function preview(Package $package): Response
+    {
+        $this->ensureHajj($package);
+
+        $view = view('packages.show-hajj', array_merge(HajjPackagePage::data($package), [
+            'preview' => true,
+            'previewEditUrl' => route('admin.hajj-packages.edit', $package),
+        ]));
+
+        return response($view)->header('X-Robots-Tag', 'noindex, nofollow');
+    }
+
+    /**
+     * The content sections of a package as JSON, for "copy from another
+     * package" in the builder. Identity, photos and internal notes are left
+     * out — the same boundary a template has.
+     */
+    public function content(Package $package): JsonResponse
+    {
+        $this->ensureHajj($package);
+
+        return response()->json([
+            'name' => $package->name,
+            'code' => $package->code,
+            'content' => PackageFormState::forTemplate(PackageFormState::fromPackage($package)),
+        ]);
+    }
+
+    public function saveAsTemplate(Request $request, Package $package): RedirectResponse
+    {
+        $this->ensureHajj($package);
+
+        $validated = $request->validate([
+            'template_name' => ['required', 'string', 'max:255'],
+            'template_description' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $template = $this->templates->saveFromPackage($package, $validated['template_name'], $validated['template_description'] ?? null);
+        AdminActivity::record('template_saved', $template, "Saved {$package->code} — {$package->name} as the template \"{$template->name}\".");
+
+        return back()->with('status', "Saved as the template \"{$template->name}\". Use it from Package Templates or when adding a new package.");
+    }
+
+    public function applyTemplate(Request $request, Package $package): RedirectResponse
+    {
+        $this->ensureHajj($package);
+
+        $validated = $request->validate(['template_id' => ['required', 'integer', 'exists:package_templates,id']]);
+        $template = PackageTemplate::findOrFail($validated['template_id']);
+
+        try {
+            $this->templates->applyToDraft($package, $template);
+        } catch (DomainException $e) {
+            return back()->withErrors(['template_id' => $e->getMessage()]);
+        }
+
+        AdminActivity::record('template_applied', $package, "Applied the template \"{$template->name}\" to the draft {$package->code} — {$package->name}.");
+
+        return redirect()->route('admin.hajj-packages.edit', $package)
+            ->with('status', "The template \"{$template->name}\" was applied. Check each step, then save.");
+    }
+
+    private function builder(Package $package, array $state, ?PackageTemplate $fromTemplate = null): View
+    {
+        $state = PackageFormState::withOldInput($state, session()->getOldInput() ?? []);
+
+        return view('admin.hajj-packages.form', [
+            'package' => $package,
+            'state' => $state,
+            'mode' => 'package',
+            'fromTemplate' => $fromTemplate,
+            'steps' => PackageCompleteness::STEPS,
+            'stepStatus' => PackageCompleteness::stepStatus($state),
+            'library' => PackageBuilderData::for($package),
+            'previewUrl' => $package->exists ? $this->previewUrl($package) : null,
+            'initialStep' => array_key_exists((string) request('step'), PackageCompleteness::STEPS) ? request('step') : 'basics',
+        ]);
+    }
+
+    private function previewUrl(Package $package): string
+    {
+        return PackagePreview::url($package);
+    }
+
+    private function fillBasics(Package $package, array $data, Request $request): void
+    {
+        $package->fill(collect($data)->only([
+            'code', 'name', 'package_type', 'slug', 'summary', 'description', 'duration_days', 'duration_label',
+            'season_year', 'season_label', 'status', 'package_series_id', 'meta_title', 'meta_description', 'internal_notes',
+        ])->all());
+
+        if (array_key_exists('sort_order', $data) && $data['sort_order'] !== null) {
+            $package->sort_order = $data['sort_order'];
+        }
+
         foreach (['is_shifting', 'medinah_first', 'is_featured'] as $flag) {
             $package->{$flag} = $request->boolean($flag);
         }
 
-        if ($package->status === 'published' && ! $package->published_at) {
-            $package->published_at = now();
+        if ($package->isPublished()) {
+            $package->published_at ??= now();
+            $package->archived_at = null;
+        }
+
+        foreach (['cover_image' => 'packages', 'social_image' => 'packages/social'] as $field => $folder) {
+            if ($request->hasFile($field)) {
+                if ($package->{$field}) {
+                    Storage::disk('public')->delete($package->{$field});
+                }
+                $package->{$field} = $request->file($field)->store($folder, 'public');
+            } elseif ($request->boolean("remove_{$field}") && $package->{$field}) {
+                Storage::disk('public')->delete($package->{$field});
+                $package->{$field} = null;
+            }
         }
     }
 
     /**
-     * Wrapped in a single transaction: this method deletes and recreates
-     * ten related tables in sequence, three of which cascade-delete further
-     * child rows via `variant_id` foreign keys. Without a transaction, an
-     * exception partway through (e.g. a validation gap letting through a
-     * bad enum value, or two variants resolving to the same code) would
-     * leave a live, published package with its old pricing/accommodation
-     * data already cascade-deleted and no replacement ever created —
-     * silent, permanent data loss with a raw 500. See
-     * FINAL_CODE_REVIEW_HAJJ_REDESIGN.md C-1.
+     * A file input can never be pre-filled, so an empty file on an existing
+     * row means "keep the current photo", not "delete it". Each row carries
+     * its media id; only rows no longer submitted are deleted, with their
+     * files (FINAL_CODE_REVIEW_HAJJ_REDESIGN.md C-2).
      */
-    private function syncNestedData(Package $package, Request $request): void
+    private function syncMedia(Package $package, Request $request): void
     {
-        DB::transaction(function () use ($package, $request) {
-            $this->syncNestedDataWithinTransaction($package, $request);
-        });
-    }
+        $submittedIds = [];
 
-    private function syncNestedDataWithinTransaction(Package $package, Request $request): void
-    {
-        // Variants first — every other nested table resolves its own
-        // "which variant" input by matching the free-text `code` typed in
-        // this section (e.g. "A"/"B"), not by array index, so rows can be
-        // added/removed/reordered in any repeater without a fragile
-        // client-side index-linking scheme.
-        $package->variants()->delete();
-        $variantIdsByCode = [];
-        foreach ($request->input('variants', []) as $i => $row) {
-            if (blank($row['code'] ?? null)) {
-                continue;
-            }
-            $normalizedCode = strtoupper(trim($row['code']));
-            $variant = $package->variants()->create([
-                'code' => $row['code'],
-                'label' => $row['label'] ?? null,
-                'sort_order' => $i,
-            ]);
-            $variantIdsByCode[$normalizedCode] = $variant->id;
-        }
-        // Trimmed/uppercased on both sides so " A" and "a" both resolve to
-        // the same variant a row typed "A" — HajjPackageRequest's
-        // withValidator() already rejects a genuinely unresolvable or
-        // duplicate code before this runs, so a null result here means
-        // "this row intentionally applies to every variant", never "the
-        // reference silently failed to match" (see
-        // FINAL_CODE_REVIEW_HAJJ_REDESIGN.md H-2).
-        $resolveVariant = fn (?string $code) => blank($code) ? null : ($variantIdsByCode[strtoupper(trim($code))] ?? null);
-
-        // `has_aziziya` is the legacy flat flag other parts of the app still
-        // read (e.g. the admin package list badge) — kept in sync with the
-        // richer `package_aziziya.status` below, meaning "the base package
-        // includes Aziziya accommodation", not merely "an optional Aziziya
-        // upgrade is offered" (every Non-Aziziya package in this brochure
-        // offers one, which must not flip this flag true).
-        $package->has_aziziya = ($request->input('aziziya.status') === 'included');
-        $package->save();
-
-        $package->itineraryDays()->delete();
-        foreach ($request->input('itinerary', []) as $row) {
-            if (blank($row['city'] ?? null) && blank($row['accommodation_a'] ?? null)) {
-                continue;
-            }
-            $package->itineraryDays()->create([
-                'day_number' => $row['day_number'] ?? 1,
-                'date_gregorian' => $row['date_gregorian'] ?? null,
-                'date_hijri_label' => $row['date_hijri_label'] ?? null,
-                'city' => $row['city'] ?? null,
-                'accommodation_a' => $row['accommodation_a'] ?? null,
-                'accommodation_b' => $row['accommodation_b'] ?? null,
-                'notes' => $row['notes'] ?? null,
-            ]);
-        }
-
-        $package->accommodations()->delete();
-        foreach ($request->input('accommodations', []) as $i => $row) {
-            if (blank($row['hotel_name'] ?? null)) {
-                continue;
-            }
-            $package->accommodations()->create([
-                'variant_id' => $resolveVariant($row['variant_code'] ?? null),
-                'location' => $row['location'],
-                'hotel_name' => $row['hotel_name'],
-                'star_rating' => $row['star_rating'] ?? null,
-                'meal_plan' => $row['meal_plan'] ?? null,
-                'distance_note' => $row['distance_note'] ?? null,
-                'nights' => $row['nights'] ?? null,
-                'notes' => $row['notes'] ?? null,
-                'sort_order' => $i,
-            ]);
-        }
-
-        $package->roomOptions()->delete();
-        foreach ($request->input('room_options', []) as $i => $row) {
-            if (blank($row['sharing_type'] ?? null)) {
-                continue;
-            }
-            $package->roomOptions()->create([
-                'variant_id' => $resolveVariant($row['variant_code'] ?? null),
-                'sharing_type' => $row['sharing_type'],
-                'occupancy' => $row['occupancy'] ?? null,
-                'display_label' => $row['display_label'] ?? $row['sharing_type'],
-                'price_basis' => $row['price_basis'] ?? 'per_person',
-                'price_pkr' => $row['price_pkr'] ?? null,
-                'price_sar' => $row['price_sar'] ?? null,
-                'price_usd' => $row['price_usd'] ?? null,
-                'is_available' => ! empty($row['is_available']),
-                'notes' => $row['notes'] ?? null,
-                'sort_order' => $i,
-            ]);
-        }
-
-        $this->syncAziziya($package, $request, $resolveVariant);
-
-        $package->mashaerDetails()->delete();
-        foreach (['mina', 'arafat'] as $location) {
-            $row = $request->input("mashaer.{$location}", []);
-            if (collect($row)->filter()->isEmpty()) {
-                continue;
-            }
-            $package->mashaerDetails()->create(array_merge(['location' => $location], $row));
-        }
-
-        $package->transportation()->delete();
-        foreach ($request->input('transportation', []) as $i => $row) {
-            if (blank($row['transport_type'] ?? null)) {
-                continue;
-            }
-            $package->transportation()->create([
-                'from_location' => $row['from_location'] ?? null,
-                'to_location' => $row['to_location'] ?? null,
-                'transport_type' => $row['transport_type'],
-                'is_included' => ! empty($row['is_included']),
-                'price' => $row['price'] ?? null,
-                'currency' => ($row['price'] ?? null) !== null ? ($row['currency'] ?? 'USD') : null,
-                'price_basis' => $row['price_basis'] ?? null,
-                'notes' => $row['notes'] ?? null,
-                'sort_order' => $i,
-            ]);
-        }
-
-        $package->packageNotes()->delete();
-        foreach ($request->input('notes', []) as $i => $row) {
-            if (blank($row['content'] ?? null)) {
-                continue;
-            }
-            $package->packageNotes()->create([
-                'note_type' => $row['note_type'] ?? 'general',
-                'title' => $row['title'] ?? null,
-                'content' => $row['content'],
-                'is_important' => ! empty($row['is_important']),
-                'sort_order' => $i,
-            ]);
-        }
-
-        $package->upgrades()->delete();
-        foreach ($request->input('upgrades', []) as $i => $row) {
-            if (blank($row['name'] ?? null)) {
-                continue;
-            }
-            $package->upgrades()->create([
-                'name' => $row['name'],
-                'description' => $row['description'] ?? null,
-                'price' => $row['price'] ?? null,
-                'currency' => ($row['price'] ?? null) !== null ? ($row['currency'] ?? 'USD') : null,
-                'price_basis' => $row['price_basis'] ?? null,
-                'is_included' => ! empty($row['is_included']),
-                'notes' => $row['notes'] ?? null,
-                'sort_order' => $i,
-            ]);
-        }
-
-        // A file input can never be pre-filled by the browser, so an
-        // unresubmitted image is expected on every edit, not a signal to
-        // delete it. Each row carries a hidden `id` for its existing
-        // PackageMedia row (blank for a brand-new row); only rows whose id
-        // was NOT resubmitted are deleted, and a resubmitted row with no
-        // new file keeps its existing image_path rather than losing it.
-        // See FINAL_CODE_REVIEW_HAJJ_REDESIGN.md C-2.
-        $submittedMediaIds = [];
         foreach ($request->input('media', []) as $i => $row) {
             $file = $request->file("media.{$i}.file");
             $existingId = $row['id'] ?? null;
@@ -317,7 +381,7 @@ class HajjPackageController extends Controller
             ];
 
             if ($file) {
-                if ($existing && $existing->image_path) {
+                if ($existing?->image_path) {
                     Storage::disk('public')->delete($existing->image_path);
                 }
                 $attributes['image_path'] = $file->store('packages/media', 'public');
@@ -327,97 +391,62 @@ class HajjPackageController extends Controller
 
             if ($existing) {
                 $existing->update($attributes);
-                $submittedMediaIds[] = $existing->id;
+                $submittedIds[] = $existing->id;
             } else {
-                $submittedMediaIds[] = $package->media()->create($attributes)->id;
+                $submittedIds[] = $package->media()->create($attributes)->id;
             }
         }
-        $package->media()->whereNotIn('id', $submittedMediaIds)->get()->each(function ($media) {
+
+        $package->media()->whereNotIn('id', $submittedIds)->get()->each(function ($media) {
             if ($media->image_path) {
                 Storage::disk('public')->delete($media->image_path);
             }
             $media->delete();
         });
-
-        $package->inclusions()->delete();
-        $this->createFeatureLines($package, $request->input('inclusions_text') ?? '', 'inclusion');
-
-        $package->exclusions()->delete();
-        $this->createFeatureLines($package, $request->input('exclusions_text') ?? '', 'exclusion');
-
-        $lowestUsd = $package->roomOptions()->where('is_available', true)->whereNotNull('price_usd')->min('price_usd');
-        if ($lowestUsd !== null) {
-            $package->forceFill(['starting_price' => $lowestUsd])->save();
-        }
     }
 
-    private function syncAziziya(Package $package, Request $request, Closure $resolveVariant): void
+    private function afterSave(Package $package, Request $request, bool $created): RedirectResponse
     {
-        $package->aziziya()->delete();
-        $azData = $request->input('aziziya', []);
-        if (blank($azData['status'] ?? null)) {
-            return;
+        $intent = $request->input('_intent');
+
+        if ($intent === 'preview') {
+            return redirect()->to($this->previewUrl($package));
         }
 
-        $aziziya = $package->aziziya()->create([
-            'status' => $azData['status'],
-            'accommodation_name' => $azData['accommodation_name'] ?? null,
-            'location_note' => $azData['location_note'] ?? null,
-            'walk_distance' => $azData['walk_distance'] ?? null,
-            'duration_days' => $azData['duration_days'] ?? null,
-            'average_occupancy' => $azData['average_occupancy'] ?? null,
-            'description' => $azData['description'] ?? null,
-            'notes' => $azData['notes'] ?? null,
-        ]);
+        $message = match (true) {
+            $intent === 'publish' => "{$package->name} is published and live on the website.",
+            $intent === 'draft' => 'Draft saved. It is not visible on the website.',
+            $created => $package->isPublished() ? 'Package created and published.' : 'Package created as a draft.',
+            default => $package->isPublished() ? 'Changes saved. They are live on the website now.' : 'Changes saved.',
+        };
 
-        foreach ($request->input('aziziya_room_options', []) as $i => $row) {
-            if (blank($row['sharing_type'] ?? null)) {
-                continue;
-            }
-            $aziziya->roomOptions()->create([
-                'variant_id' => $resolveVariant($row['variant_code'] ?? null),
-                'sharing_type' => $row['sharing_type'],
-                'occupancy' => $row['occupancy'] ?? null,
-                'display_label' => $row['display_label'] ?? $row['sharing_type'],
-                'pricing_type' => $row['pricing_type'] ?? 'included',
-                'price_basis' => $row['price_basis'] ?? 'per_person',
-                'price_pkr' => $row['price_pkr'] ?? null,
-                'price_sar' => $row['price_sar'] ?? null,
-                'price_usd' => $row['price_usd'] ?? null,
-                'description' => $row['description'] ?? null,
-                'notes' => $row['notes'] ?? null,
-                'sort_order' => $i,
-            ]);
-        }
+        $step = $intent === 'continue' ? $this->nextStep($request->input('_step')) : $request->input('_step');
 
-        foreach ($request->input('aziziya_services', []) as $i => $row) {
-            if (blank($row['name'] ?? null)) {
-                continue;
-            }
-            $aziziya->services()->create([
-                'name' => $row['name'],
-                'description' => $row['description'] ?? null,
-                'is_included' => ! empty($row['is_included']),
-                'price' => $row['price'] ?? null,
-                'currency' => ($row['price'] ?? null) !== null ? ($row['currency'] ?? 'USD') : null,
-                'price_basis' => $row['price_basis'] ?? null,
-                'notes' => $row['notes'] ?? null,
-                'sort_order' => $i,
-            ]);
-        }
+        return redirect()
+            ->route('admin.hajj-packages.edit', array_filter(['package' => $package, 'step' => $step]))
+            ->with('status', $message);
     }
 
-    private function createFeatureLines(Package $package, string $text, string $type): void
+    private function nextStep(?string $current): string
     {
-        $lines = collect(preg_split('/\r\n|\r|\n/', $text))
-            ->map(fn ($line) => trim($line))
-            ->filter()
-            ->values();
+        $keys = array_keys(PackageCompleteness::STEPS);
+        $index = array_search($current, $keys, true);
 
-        $relation = $type === 'inclusion' ? $package->inclusions() : $package->exclusions();
+        return $index === false ? $keys[0] : ($keys[$index + 1] ?? $keys[$index]);
+    }
 
-        foreach ($lines as $i => $line) {
-            $relation->create(['type' => $type, 'description' => $line, 'sort_order' => $i]);
-        }
+    /**
+     * Route model binding knows nothing about categories, so every action that
+     * takes a package confirms it really is a Hajj package — the generic
+     * Umrah/Tourism controller has the mirror-image guard.
+     */
+    private function ensureHajj(Package $package): void
+    {
+        abort_unless($package->isHajj(), 404);
+    }
+
+    private function hajjCategory(): PackageCategory
+    {
+        return PackageCategory::where('slug', 'hajj')->firstOrFail();
     }
 }

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { clickAndConfirm } from './helpers/confirm.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -102,8 +103,7 @@ test.describe('Admin CMS', () => {
             await page.goto('/admin/packages');
             const row = page.getByRole('row', { name: new RegExp(uniqueName) });
             if (await row.count()) {
-                page.once('dialog', (dialog) => dialog.accept());
-                await row.getByRole('button', { name: 'Delete' }).click();
+                await clickAndConfirm(page, row.getByRole('button', { name: 'Delete' }));
                 await expect(page.getByText(uniqueName)).not.toBeVisible();
             }
         }
@@ -152,8 +152,7 @@ test.describe('Admin CMS', () => {
         await expect(page).toHaveURL(/\/admin\/news$/);
         await expect(page.getByText(title + ' Updated')).toBeVisible();
 
-        page.once('dialog', (dialog) => dialog.accept());
-        await page.getByRole('row', { name: new RegExp(title) }).getByRole('button', { name: 'Delete' }).click();
+        await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(title) }).getByRole('button', { name: 'Delete' }));
         await expect(page.getByText(title + ' Updated')).not.toBeVisible();
     });
 
@@ -171,8 +170,7 @@ test.describe('Admin CMS', () => {
         // Cleanup: FAQ test data has no natural expiry (unlike an inquiry,
         // which real admins never delete through the UI), so remove it
         // rather than let repeated suite runs accumulate duplicate rows.
-        page.once('dialog', (dialog) => dialog.accept());
-        await page.getByRole('row', { name: new RegExp(question.replace('?', '\\?')) }).getByRole('button', { name: 'Delete' }).click();
+        await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(question.replace('?', '\\?')) }).getByRole('button', { name: 'Delete' }));
         await expect(page.getByText(question)).not.toBeVisible();
     });
 
@@ -202,8 +200,7 @@ test.describe('Admin CMS', () => {
             await page.getByRole('button', { name: 'Update Status' }).click();
             await expect(page.locator('select[name="status"]')).toHaveValue('contacted');
         } finally {
-            page.once('dialog', (dialog) => dialog.accept());
-            await page.getByRole('button', { name: 'Delete Inquiry' }).click();
+            await clickAndConfirm(page, page.getByRole('button', { name: 'Delete Inquiry' }));
         }
     });
 
@@ -229,26 +226,37 @@ test.describe('Admin CMS', () => {
         // UB001 via the *generic* `/admin/packages` listing, which no longer
         // lists Hajj packages at all (see ADMIN_UI_DESIGN.md's critical
         // fix) — it now goes through the real Hajj admin route instead.
+        //
+        // Package builder redesign (issue #10): SEO lives in the "Photos &
+        // search engines" step, and the builder returns to the package after
+        // saving instead of the list.
         await page.goto('/admin/hajj-packages');
         await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
+        await page.getByRole('button', { name: /Photos & search engines/ }).click();
         const originalMetaTitle = await page.locator('input[name="meta_title"]').inputValue();
-        const originalMetaDescription = await page.locator('input[name="meta_description"]').inputValue();
+        const originalMetaDescription = await page.locator('textarea[name="meta_description"]').inputValue();
 
-        await page.locator('input[name="meta_title"]').fill('Playwright SEO Title Test | Universal Brothers');
-        await page.locator('input[name="meta_description"]').fill('Playwright SEO description test.');
-        await page.getByRole('button', { name: 'Update Hajj Package' }).click();
+        try {
+            await page.locator('input[name="meta_title"]').fill('Playwright SEO Title Test | Universal Brothers');
+            await page.locator('textarea[name="meta_description"]').fill('Playwright SEO description test.');
+            await page.getByRole('button', { name: 'Save changes' }).click();
+            await expect(page).toHaveURL(/\/admin\/hajj-packages\/\d+\/edit/);
+            await expect(page.getByRole('status').filter({ hasText: 'Changes saved' })).toBeVisible();
 
-        await page.goto('/hajj');
-        await page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click();
-        await expect(page).toHaveTitle('Playwright SEO Title Test | Universal Brothers');
-        await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', 'Playwright SEO description test.');
-
-        // Cleanup: restore the real seeded values.
-        await page.goto('/admin/hajj-packages');
-        await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
-        await page.locator('input[name="meta_title"]').fill(originalMetaTitle);
-        await page.locator('input[name="meta_description"]').fill(originalMetaDescription);
-        await page.getByRole('button', { name: 'Update Hajj Package' }).click();
+            await page.goto('/hajj');
+            await page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click();
+            await expect(page).toHaveTitle('Playwright SEO Title Test | Universal Brothers');
+            await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', 'Playwright SEO description test.');
+        } finally {
+            // Cleanup: restore the real seeded values.
+            await page.goto('/admin/hajj-packages');
+            await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
+            await page.getByRole('button', { name: /Photos & search engines/ }).click();
+            await page.locator('input[name="meta_title"]').fill(originalMetaTitle);
+            await page.locator('textarea[name="meta_description"]').fill(originalMetaDescription);
+            await page.getByRole('button', { name: 'Save changes' }).click();
+            await expect(page.getByRole('status').filter({ hasText: 'Changes saved' })).toBeVisible();
+        }
     });
 
     test('26. admin can create, edit, and delete a Media Gallery item (image upload)', async ({ page }) => {
@@ -270,44 +278,56 @@ test.describe('Admin CMS', () => {
         await expect(page).toHaveURL(/\/admin\/media$/);
         await expect(page.getByText(title + ' Updated')).toBeVisible();
 
-        page.once('dialog', (dialog) => dialog.accept());
-        await page.getByRole('row', { name: new RegExp(title) }).getByRole('button', { name: 'Delete' }).click();
+        await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(title) }).getByRole('button', { name: 'Delete' }));
         await expect(page.getByText(title + ' Updated')).not.toBeVisible();
     });
 
-    test('28. admin can edit a real Hajj package and add a new room-sharing option via the repeater UI', async ({ page }) => {
+    test('28. admin can edit a real Hajj package and add a new room type to one hotel option', async ({ page }) => {
         await page.goto('/admin/hajj-packages');
         await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
 
-        // Real seeded data actually populates the redesigned form's
-        // repeaters (variants, accommodations, room options) — not just an
-        // empty create form.
+        // Real seeded data populates the builder: the options step holds
+        // Option A and B, and the Madinah hotel shared by both options sits in
+        // the "for every option" box.
+        await page.getByRole('button', { name: /Hotel options/ }).click();
         await expect(page.locator('input[name="variants[0][code]"]')).toHaveValue('A');
-        await expect(page.locator('input[name="accommodations[0][hotel_name]"]')).toHaveValue('Dar Al Taqwa');
+        await page.getByRole('button', { name: /Hotels & accommodation/ }).click();
+        await expect(page.locator('[data-option-group="accommodations"][data-option-uid="shared"] [data-field="hotel_name"]').first()).toHaveValue('Dar Al Taqwa');
 
-        // Add a brand-new sharing option via the JS repeater, exactly as an
-        // admin would for a package the brochure adds a new room type to.
-        await page.locator('[data-repeater-add="room-options-container"]').click();
-        const newRow = page.locator('#room-options-container tr.repeater-row').last();
-        await newRow.locator('input[name*="[sharing_type]"]').fill('quint');
-        await newRow.locator('input[name*="[display_label]"]').fill('Quint Sharing');
-        await newRow.locator('input[name*="[occupancy]"]').fill('5');
-        await newRow.locator('input[name*="[price_usd]"]').fill('9999');
+        await page.getByRole('button', { name: /Room prices/ }).click();
+        const optionA = page.locator('[data-option-group="room_options"][data-option-code="A"]');
+        await expect(optionA.locator('[data-option-title]')).toContainText('Option A');
+        const before = await optionA.locator('[data-row="room_options"]').count();
 
-        await page.getByRole('button', { name: 'Update Hajj Package' }).click();
-        await expect(page).toHaveURL(/\/admin\/hajj-packages$/);
+        await optionA.getByRole('button', { name: 'Add room type' }).click();
+        const newRow = optionA.locator('[data-row="room_options"]').last();
+        await expect(optionA.locator('[data-row="room_options"]')).toHaveCount(before + 1);
+        await newRow.locator('[data-room-type]').selectOption('custom');
+        await newRow.locator('[data-field="display_label"]').fill('Quint Sharing');
+        await newRow.locator('[data-field="price_usd"]').fill('9999');
 
-        const response = await page.goto('/hajj/ub001-executive-platinum-intercon-fairmont-medinah-first');
-        expect(response.status()).toBe(200);
-        await expect(page.getByText('Quint Sharing')).toBeVisible();
-        await expect(page.locator('.currency-price[data-usd="9999.00"]')).toBeVisible();
+        try {
+            await page.getByRole('button', { name: 'Save changes' }).click();
+            await expect(page).toHaveURL(/\/admin\/hajj-packages\/\d+\/edit/);
+            await expect(page.getByRole('status').filter({ hasText: 'Changes saved' })).toBeVisible();
 
-        // Cleanup: restore the real seeded state so repeated suite runs
-        // don't accumulate a fake "Quint Sharing" row on real brochure data.
-        await page.goto('/admin/hajj-packages');
-        await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
-        await page.locator('#room-options-container tr.repeater-row').last().locator('.remove-row').click();
-        await page.getByRole('button', { name: 'Update Hajj Package' }).click();
+            const response = await page.goto('/hajj/ub001-executive-platinum-intercon-fairmont-medinah-first');
+            expect(response.status()).toBe(200);
+            await expect(page.getByText('Quint Sharing').first()).toBeVisible();
+            await expect(page.locator('.currency-price[data-usd="9999.00"]').first()).toBeVisible();
+        } finally {
+            // Cleanup: restore the real seeded state so repeated suite runs
+            // don't accumulate a fake "Quint Sharing" row on real brochure data.
+            await page.goto('/admin/hajj-packages');
+            await page.getByRole('row', { name: /UB001/ }).getByRole('link', { name: 'Edit' }).click();
+            await page.getByRole('button', { name: /Room prices/ }).click();
+            const quint = page.locator('[data-row="room_options"]').filter({ has: page.locator('[data-field="display_label"][value="Quint Sharing"]') });
+            if (await quint.count()) {
+                await quint.first().locator('[data-row-action="remove"]').click();
+                await page.getByRole('button', { name: 'Save changes' }).click();
+                await expect(page.getByRole('status').filter({ hasText: 'Changes saved' })).toBeVisible();
+            }
+        }
     });
 
     test('27. super admin can create, edit, and delete another admin user (Users & Roles module)', async ({ page }) => {
@@ -328,8 +348,7 @@ test.describe('Admin CMS', () => {
         await expect(page).toHaveURL(/\/admin\/users$/);
         await expect(page.getByRole('row', { name: new RegExp(email) })).toContainText('super admin');
 
-        page.once('dialog', (dialog) => dialog.accept());
-        await page.getByRole('row', { name: new RegExp(email) }).getByRole('button', { name: 'Delete' }).click();
+        await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(email) }).getByRole('button', { name: 'Delete' }));
         await expect(page.getByText(email)).not.toBeVisible();
     });
 
@@ -349,8 +368,7 @@ test.describe('Admin CMS', () => {
             await page.getByRole('button', { name: 'Save' }).click();
             await expect(page.getByRole('row', { name: new RegExp(name) })).toContainText('2026');
         } finally {
-            page.once('dialog', (dialog) => dialog.accept());
-            await page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }).click();
+            await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }));
             await expect(page.getByText(name)).not.toBeVisible();
         }
     });
@@ -370,8 +388,7 @@ test.describe('Admin CMS', () => {
             await page.getByRole('button', { name: 'Save' }).click();
             await expect(page.getByRole('row', { name: new RegExp(name) })).toContainText('2026');
         } finally {
-            page.once('dialog', (dialog) => dialog.accept());
-            await page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }).click();
+            await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }));
             await expect(page.getByText(name)).not.toBeVisible();
         }
     });

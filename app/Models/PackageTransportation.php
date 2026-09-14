@@ -14,7 +14,7 @@ class PackageTransportation extends Model
     protected $table = 'package_transportation';
 
     protected $fillable = [
-        'package_id', 'from_location', 'to_location', 'transport_type',
+        'package_id', 'transport_option_id', 'from_location', 'to_location', 'transport_type',
         'is_included', 'price', 'currency', 'price_basis', 'notes', 'sort_order',
     ];
 
@@ -55,5 +55,10 @@ class PackageTransportation extends Model
             'vip_gmc' => 'VIP GMC',
             default => Str::headline((string) $this->transport_type),
         };
+    }
+
+    public function transportOption(): BelongsTo
+    {
+        return $this->belongsTo(TransportOption::class);
     }
 }

@@ -19,7 +19,7 @@
                             <td><span class="status-pill {{ $article->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $article->is_active ? 'Published' : 'Draft' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.news.edit', $article) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.news.destroy', $article) }}" class="d-inline" onsubmit="return confirm('Delete this article? This cannot be undone.')">
+                                <form method="POST" action="{{ route('admin.news.destroy', $article) }}" class="d-inline" data-confirm="This cannot be undone." data-confirm-title="Delete this article?" data-confirm-button="Delete">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

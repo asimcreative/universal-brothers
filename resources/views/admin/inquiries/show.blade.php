@@ -54,7 +54,7 @@
             </div>
             <div class="card">
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.inquiries.destroy', $inquiry) }}" onsubmit="return confirm('Delete this inquiry? This cannot be undone.')">
+                    <form method="POST" action="{{ route('admin.inquiries.destroy', $inquiry) }}" data-confirm="This cannot be undone." data-confirm-title="Delete this inquiry?" data-confirm-button="Delete">
                         @csrf @method('DELETE')
                         <button class="btn btn-outline-danger w-100"><i class="bi bi-trash me-1" aria-hidden="true"></i>Delete Inquiry</button>
                     </form>

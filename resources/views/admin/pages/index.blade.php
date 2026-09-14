@@ -22,7 +22,7 @@
                                     <a href="{{ url('/'.$page->slug) }}" target="_blank" class="btn btn-sm btn-outline-secondary">View</a>
                                 @endif
                                 <a href="{{ route('admin.pages.edit', $page) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" class="d-inline" onsubmit="return confirm('Delete this page? This cannot be undone.')">
+                                <form method="POST" action="{{ route('admin.pages.destroy', $page) }}" class="d-inline" data-confirm="This cannot be undone." data-confirm-title="Delete this page?" data-confirm-button="Delete">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

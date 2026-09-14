@@ -19,6 +19,13 @@
 --}}
 
 @push('head')
+    @php $ubShareImage = $package->social_image ?: $package->cover_image; @endphp
+    @if($ubShareImage)
+        <meta property="og:image" content="{{ url(Storage::url($ubShareImage)) }}">
+    @endif
+    @if($preview ?? false)
+        <meta name="robots" content="noindex, nofollow">
+    @endif
     {{-- Structured data built only from fields the package actually holds. No
          rating, no review count and no availability are emitted, because the
          site has no data for them and inventing them would be a policy
@@ -42,6 +49,18 @@
         ]), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
     </script>
 @endpush
+
+@if($preview ?? false)
+    @push('before_header')
+        {{-- An administrator's signed preview. Never reachable by visitors:
+             the route needs both an admin session and a valid signature. --}}
+        <div class="admin-preview-banner" role="status">
+            <span><i class="bi bi-eye" aria-hidden="true"></i> <strong>Preview</strong> — this is how the package will look.
+                {{ $package->isPublished() ? 'It is live on the website.' : 'It is a draft and visitors cannot see it.' }}</span>
+            <a href="{{ $previewEditUrl }}">Back to editing</a>
+        </div>
+    @endpush
+@endif
 
 @section('content')
     <x-hajj.hero :hajj="$hajj" />

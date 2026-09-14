@@ -53,7 +53,12 @@ class HajjPackageSeeder extends Seeder
                     'name' => $data['name'],
                     'slug' => Str::slug($data['code'].'-'.$data['name']),
                     'summary' => 'Hajj 2027 / 1448 AH — '.$data['duration_label'].', '.($data['is_shifting'] ? 'shifting' : 'non-shifting').' itinerary'.($isAziziyaGroup ? ', with Aziziya accommodation' : ', optional Aziziya upgrade available').'.',
-                    'description' => $data['description'] ?? null,
+                    // The brochure-audit remark some packages carry was written
+                    // for the people maintaining this data, not for pilgrims. It
+                    // used to be stored here AND as a note, so it printed twice on
+                    // the public page and reached the AI assistant (issue #10).
+                    'description' => null,
+                    'internal_notes' => $data['description'] ?? null,
                     'duration_days' => $data['duration_days'],
                     'duration_label' => $data['duration_label'],
                     'is_shifting' => $data['is_shifting'],
@@ -741,12 +746,6 @@ class HajjPackageSeeder extends Seeder
                 'note_type' => 'accommodation', 'is_important' => true,
                 'content' => 'Makkah Tower rooms have stairs. "Sharing Room" means 4 to 5 persons in a room.',
                 'sort_order' => $i++,
-            ]);
-        }
-
-        if (($data['description'] ?? null)) {
-            $package->packageNotes()->create([
-                'note_type' => 'general', 'is_important' => true, 'content' => $data['description'], 'sort_order' => $i++,
             ]);
         }
     }

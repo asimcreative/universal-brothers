@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { clickAndConfirm } from './helpers/confirm.js';
 
 // Runs under 'admin-chromium' with pre-authenticated storageState.
 test.describe('Full business journeys — admin', () => {
@@ -31,8 +32,7 @@ test.describe('Full business journeys — admin', () => {
 
         // Cleanup
         await page.goto('/admin/packages');
-        page.once('dialog', (dialog) => dialog.accept());
-        await page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }).click();
+        await clickAndConfirm(page, page.getByRole('row', { name: new RegExp(name) }).getByRole('button', { name: 'Delete' }));
     });
 
     test('Journey E: Admin -> Edit About Us Page -> Publish -> Frontend Verify', async ({ page }) => {

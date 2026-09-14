@@ -39,7 +39,7 @@
                         @forelse($category->series as $series)
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 {{ $series->name }}
-                                <form method="POST" action="{{ route('admin.categories.series.destroy', [$category, $series]) }}" onsubmit="return confirm('Remove this series?')">
+                                <form method="POST" action="{{ route('admin.categories.series.destroy', [$category, $series]) }}" data-confirm="This cannot be undone." data-confirm-title="Remove this series?" data-confirm-button="Remove">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Remove</button>
                                 </form>

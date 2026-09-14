@@ -59,7 +59,7 @@
                             <td><span class="status-pill {{ $package->status === 'published' ? 'status-pill-success' : 'status-pill-secondary' }}">{{ ucfirst($package->status) }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.packages.edit', $package) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.packages.destroy', $package) }}" class="d-inline" onsubmit="return confirm('Delete this package? This cannot be undone.')">
+                                <form method="POST" action="{{ route('admin.packages.destroy', $package) }}" class="d-inline" data-confirm="This cannot be undone." data-confirm-title="Delete this package?" data-confirm-button="Delete">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

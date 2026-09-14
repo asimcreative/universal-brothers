@@ -55,6 +55,8 @@
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
+    @stack('before_header')
+
     @include('layouts.partials.header')
 
     <main id="main-content" tabindex="-1">

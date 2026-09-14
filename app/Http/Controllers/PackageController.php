@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Package;
-use App\Support\HajjPackagePresenter;
 use App\Models\PackageCategory;
 use App\Models\PackageRoomOption;
 use App\Models\PackageVariant;
+use App\Support\HajjPackagePage;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -71,34 +71,8 @@ class PackageController extends Controller
 
     private function showHajj(Package $package): View
     {
-        // `itineraryDays`, `inclusions` and `exclusions` are eager-loaded by the
-        // caller; everything else the detail page reads is loaded here so the
-        // presenter can group and derive without triggering lazy loads per row.
-        $package->load([
-            'variants', 'accommodations.variant', 'roomOptions.variant',
-            'aziziya.roomOptions.variant', 'aziziya.services', 'mashaerDetails',
-            'transportation', 'packageNotes', 'upgrades', 'media',
-        ]);
-
-        // All of the page's grouping and derivation lives in one view model so
-        // the template stays declarative and the same logic serves every Hajj
-        // package — see HajjPackagePresenter for why the twelve packages cannot
-        // share a hard-coded layout.
-        $hajj = new HajjPackagePresenter($package);
-
-        $related = Package::published()
-            ->where('package_category_id', $package->package_category_id)
-            ->where('id', '!=', $package->id)
-            ->orderBy('is_featured', 'desc')
-            ->orderBy('sort_order')
-            ->limit(3)
-            ->get();
-
-        foreach ($related as $relatedPackage) {
-            $relatedPackage->setRelation('category', $package->category);
-        }
-
-        return view('packages.show-hajj', compact('package', 'related', 'hajj'));
+        // Shared with the admin's draft preview, so the two can never differ.
+        return view('packages.show-hajj', HajjPackagePage::data($package));
     }
 
     /**

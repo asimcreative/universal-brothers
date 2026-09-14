@@ -30,6 +30,11 @@ class DatabaseSeeder extends Seeder
             // uploaded or edited alone.
             HajjPriceCurrencySeeder::class,
             CompanyImageSeeder::class,
+
+            // Last: builds the reusable package library from the packages
+            // seeded above and links them to it. On an existing database the
+            // same work already ran as a migration; it is idempotent.
+            PackageLibrarySeeder::class,
         ]);
     }
 }

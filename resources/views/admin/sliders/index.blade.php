@@ -20,7 +20,7 @@
                             <td><span class="status-pill {{ $slider->is_active ? 'status-pill-success' : 'status-pill-secondary' }}">{{ $slider->is_active ? 'Active' : 'Inactive' }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('admin.sliders.edit', $slider) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <form method="POST" action="{{ route('admin.sliders.destroy', $slider) }}" class="d-inline" onsubmit="return confirm('Delete this slider? This cannot be undone.')">
+                                <form method="POST" action="{{ route('admin.sliders.destroy', $slider) }}" class="d-inline" data-confirm="This cannot be undone." data-confirm-title="Delete this slider?" data-confirm-button="Delete">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>

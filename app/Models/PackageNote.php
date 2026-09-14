@@ -11,7 +11,7 @@ class PackageNote extends Model
     use HasFactory;
 
     protected $fillable = [
-        'package_id', 'note_type', 'title', 'content', 'is_important', 'sort_order',
+        'package_id', 'note_template_id', 'note_type', 'title', 'content', 'is_important', 'sort_order',
     ];
 
     protected function casts(): array
@@ -24,5 +24,10 @@ class PackageNote extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function noteTemplate(): BelongsTo
+    {
+        return $this->belongsTo(NoteTemplate::class);
     }
 }

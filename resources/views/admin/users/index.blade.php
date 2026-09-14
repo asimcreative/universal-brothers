@@ -26,7 +26,7 @@
                             <td class="text-end">
                                 <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                                 @if(! auth()->user()->is($user))
-                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('Remove this admin account? This cannot be undone.')">
+                                    <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="d-inline" data-confirm="This cannot be undone." data-confirm-title="Remove this admin account?" data-confirm-button="Remove">
                                         @csrf @method('DELETE')
                                         <button class="btn btn-sm btn-outline-danger">Delete</button>
                                     </form>

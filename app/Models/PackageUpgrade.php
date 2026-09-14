@@ -11,7 +11,7 @@ class PackageUpgrade extends Model
     use HasFactory;
 
     protected $fillable = [
-        'package_id', 'name', 'description', 'price', 'currency',
+        'package_id', 'upgrade_option_id', 'name', 'description', 'price', 'currency',
         'price_basis', 'is_included', 'notes', 'sort_order',
     ];
 
@@ -26,5 +26,10 @@ class PackageUpgrade extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function upgradeOption(): BelongsTo
+    {
+        return $this->belongsTo(UpgradeOption::class);
     }
 }
