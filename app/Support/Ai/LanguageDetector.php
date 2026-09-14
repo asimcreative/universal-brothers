@@ -72,8 +72,23 @@ class LanguageDetector
             return 'Roman Urdu (Urdu written in English letters)';
         }
 
+        // Latin script that is NOT Roman Urdu. This used to return null, which
+        // meant no hint reached the prompt at all — and with nothing to go on,
+        // the model leaned on "Karachi-based company" and answered a plain
+        // English question in Roman Urdu. Found by testing against the live
+        // API: "Do you guarantee my Hajj visa will be approved?" came back as
+        // "Main aapko yeh bata nahi sakta...".
+        //
+        // Worded to cover Malay and other Latin-script languages as well as
+        // English, rather than asserting English outright.
+        if (preg_match('/\p{Latin}/u', $text)) {
+            return self::LATIN_NOT_ROMAN_URDU;
+        }
+
         return null;
     }
+
+    public const LATIN_NOT_ROMAN_URDU = 'English, or whichever other Latin-script language the visitor actually wrote in. It is NOT Urdu — do not reply in Urdu or in Roman Urdu';
 
     private static function looksLikeRomanUrdu(string $text): bool
     {

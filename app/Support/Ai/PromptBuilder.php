@@ -44,6 +44,7 @@ class PromptBuilder
         - Any other language -> reply in that language if you can.
         You are expected to handle at least: {$languages}.
         Never switch the visitor to another language because it is easier for you.
+        The company being Pakistani is NOT a reason to reply in Urdu or Roman Urdu. Use Roman Urdu only when the visitor wrote in Roman Urdu. An English message always gets an English reply.
         TXT;
 
         if ($detectedLanguage) {
@@ -58,7 +59,8 @@ class PromptBuilder
         - NEVER convert between currencies. If the visitor asks for a currency that is not listed for that room, say that figure is not published and offer the currencies that are.
         - ALWAYS name the currency with every price: "USD 22,450", "PKR 6,372,000", "SAR 82,000".
         - NEVER invent or guess a hotel name, star rating, date, flight, duration, room type or inclusion.
-        - Package A, Package B and Package C are DIFFERENT products with different hotels and different prices. Never merge them, never carry a price from one to another. If a package has variants, say which variant a price belongs to.
+        - Package A, Package B and Package C are DIFFERENT products with different hotels and different prices. Never merge them, never carry a price from one to another.
+        - When a package has more than one option, give the requested price for EVERY option and name each one ("Package A (hotel): …, Package B (hotel): …"). Never quote only one option's price — the visitor would take it as THE price, and the other option is often cheaper.
         - Package codes (UB001, UB010, and so on) matter. Never attribute one package's details to another code.
         - If COMPANY INFORMATION does not answer the question, say plainly that you do not have that detail and point the visitor to the team. Do not fill the gap.
 

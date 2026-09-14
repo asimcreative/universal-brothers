@@ -227,6 +227,22 @@ class AiAssistantTest extends TestCase
         $this->assertStringContainsString('never mix them', $prompt);
     }
 
+    public function test_a_multi_option_price_block_demands_every_option_be_quoted(): void
+    {
+        // Found against the live API: asked in Roman Urdu for UB010's quad
+        // rate, the model quoted Package A alone without naming it, while
+        // Package B's quad is cheaper. The system-prompt rule was not enough on
+        // its own, so the instruction now sits on the price block itself.
+        $this->fakeProvider();
+
+        $this->postJson(route('ai.chat'), ['message' => 'UB010 quad price in PKR'])->assertOk();
+
+        $this->assertStringContainsString(
+            'Any price you give MUST be given for every option below, each named. Never quote just one.',
+            $this->systemPrompt()
+        );
+    }
+
     public function test_an_unpublished_package_is_never_retrieved(): void
     {
         $this->fakeProvider();
@@ -302,14 +318,31 @@ class AiAssistantTest extends TestCase
     {
         $this->assertSame('Arabic', LanguageDetector::detect('ما هي أسعار الحج؟'));
         $this->assertSame('Urdu (Urdu script)', LanguageDetector::detect('حج پیکج کی قیمت کیا ہے؟'));
-        $this->assertNull(LanguageDetector::detect('What are the Hajj package prices?'));
+        $this->assertSame(LanguageDetector::LATIN_NOT_ROMAN_URDU, LanguageDetector::detect('What are the Hajj package prices?'));
     }
 
     public function test_plain_english_is_not_mistaken_for_roman_urdu(): void
     {
         // "me" and "par" are Roman Urdu markers but also ordinary English; one
         // marker must never be enough.
-        $this->assertNull(LanguageDetector::detect('Tell me about the packages'));
+        $this->assertSame(LanguageDetector::LATIN_NOT_ROMAN_URDU, LanguageDetector::detect('Tell me about the packages'));
+    }
+
+    public function test_an_english_question_tells_the_model_not_to_reply_in_urdu(): void
+    {
+        // Found against the live API: with no hint at all for English, the
+        // model leaned on the company being Pakistani and answered "Do you
+        // guarantee my Hajj visa will be approved?" in Roman Urdu. English now
+        // always carries an explicit hint, and the prompt rules it out.
+        $this->fakeProvider();
+
+        $this->postJson(route('ai.chat'), ['message' => 'Do you guarantee my Hajj visa will be approved?'])->assertOk();
+
+        $prompt = $this->systemPrompt();
+
+        $this->assertStringContainsString('do not reply in Urdu or in Roman Urdu', $prompt);
+        $this->assertStringContainsString('An English message always gets an English reply', $prompt);
+        $this->assertStringNotContainsString('appears to be in: Roman Urdu', $prompt);
     }
 
     // ------------------------------------------------------------- prompting

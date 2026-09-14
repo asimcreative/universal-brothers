@@ -104,7 +104,17 @@ class PackageContext
         }
 
         if ($prices = self::prices($package, $currencies, $variantLabels)) {
-            $lines[] = "ROOM PRICES (per person)\n".$prices;
+            // The rule is also in the system prompt, but a live test showed it
+            // was not enough: asked in Roman Urdu for UB010's quad rate, the
+            // model quoted Package A alone (PKR 3,700,000) without naming it,
+            // while Package B's quad is cheaper at PKR 3,485,000. A visitor
+            // would take the one figure as THE price. An instruction sitting
+            // directly on the data it governs is far harder to skip.
+            $header = count($variantLabels) > 1
+                ? 'ROOM PRICES (per person) — this package has '.count($variantLabels).' options. Any price you give MUST be given for every option below, each named. Never quote just one.'
+                : 'ROOM PRICES (per person)';
+
+            $lines[] = $header."\n".$prices;
         }
 
         if ($aziziya = self::aziziya($package, $currencies, $variantLabels)) {
