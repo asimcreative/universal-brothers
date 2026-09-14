@@ -426,6 +426,34 @@ class AiAssistantTest extends TestCase
         }
     }
 
+    public function test_the_package_the_visitor_named_is_linked_even_if_the_reply_never_repeats_its_code(): void
+    {
+        // The exact live case. The assistant answered correctly in terms of
+        // "Package A" and "Package B" without ever writing "UB010", so the
+        // UB010 link was filtered out — while an unrelated airline-ticket FAQ
+        // survived purely because its title and the reply both say "price".
+        $this->fakeProvider(
+            'For Package A (Dar Al Taqwa), the price for a quad sharing room is PKR 3,700,000. '
+            .'For Package B (Dallah Taibah), the price for a quad sharing room is PKR 3,485,000.'
+        );
+
+        $sources = $this->postJson(route('ai.chat'), [
+            'message' => 'What is the price of UB010 in PKR for a quad room?',
+        ])->assertOk()->json('sources');
+
+        $titles = array_column($sources, 'title');
+
+        $this->assertNotEmpty(
+            array_filter($titles, fn ($t) => str_contains($t, 'UB010')),
+            'The package the visitor named is missing from the links: '.implode(' | ', $titles)
+        );
+
+        $this->assertEmpty(
+            array_filter($titles, fn ($t) => str_contains(mb_strtolower($t), 'airline ticket')),
+            'An unrelated FAQ was linked only because it shares the word "price": '.implode(' | ', $titles)
+        );
+    }
+
     public function test_source_links_are_suppressed_when_the_setting_is_off(): void
     {
         AiSetting::current()->forceFill(['show_source_links' => false])->save();

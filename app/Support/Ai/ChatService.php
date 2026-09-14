@@ -73,7 +73,7 @@ class ChatService
         // Only surface a link the assistant actually drew on. A reply that
         // says "I don't have that" should not be followed by three confident
         // looking package cards.
-        $sources = $this->relevantSources($sources, $result['content']);
+        $sources = $this->relevantSources($sources, $result['content'], $question);
 
         $this->record($conversation, 'assistant', $result['content'], [
             'sources' => $sources,
@@ -183,26 +183,52 @@ class ChatService
      * @param  array<int, array<string, string>>  $sources
      * @return array<int, array<string, string>>
      */
-    private function relevantSources(array $sources, string $reply): array
+    /**
+     * Words that appear in almost every title and almost every reply on this
+     * site, and so say nothing about whether a particular page is relevant.
+     */
+    private const GENERIC_WORDS = [
+        'price', 'prices', 'package', 'packages', 'hajj', 'umrah', 'tour', 'tours', 'tourism',
+        'makkah', 'mecca', 'medinah', 'madinah', 'medina', 'hotel', 'hotels', 'sharing', 'room',
+        'rooms', 'first', 'included', 'include', 'executive', 'platinum', 'series', 'short',
+        'universal', 'brothers', 'days', 'nights', 'double', 'triple', 'quad',
+    ];
+
+    private function relevantSources(array $sources, string $reply, string $question = ''): array
     {
         if (! $sources) {
             return [];
         }
 
         $haystack = mb_strtolower($reply);
+        $asked = mb_strtolower($question);
 
-        $kept = array_values(array_filter($sources, function (array $source) use ($haystack) {
+        $kept = array_values(array_filter($sources, function (array $source) use ($haystack, $asked) {
             if (str_contains($haystack, mb_strtolower($source['url']))) {
                 return true;
             }
 
-            if (preg_match('/\bUB\d{3}\b/', $source['title'], $matches)
-                && str_contains($haystack, mb_strtolower($matches[0]))) {
-                return true;
+            // A package code in the title that appears in the REPLY or in the
+            // QUESTION. The question matters as much as the reply: asked
+            // "What is the price of UB010 in PKR?", the live assistant answered
+            // correctly in terms of "Package A" and "Package B" without ever
+            // repeating "UB010" — and the one link the visitor most obviously
+            // needed, to the package they named, was filtered out.
+            if (preg_match('/\bUB\d{3}\b/', $source['title'], $matches)) {
+                $code = mb_strtolower($matches[0]);
+
+                if (str_contains($haystack, $code) || preg_match('/\bub[\s\-_]?0*'.preg_quote(ltrim(substr($code, 2), '0'), '/').'\b/', $asked)) {
+                    return true;
+                }
             }
 
+            // Distinctive words only. With generic words allowed, the same
+            // UB010 reply kept an unrelated airline-ticket FAQ purely because
+            // its title and the reply both contain "price".
             foreach (preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($source['title']), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
-                if (mb_strlen($word) >= 5 && str_contains($haystack, $word)) {
+                if (mb_strlen($word) >= 5
+                    && ! in_array($word, self::GENERIC_WORDS, true)
+                    && str_contains($haystack, $word)) {
                     return true;
                 }
             }
