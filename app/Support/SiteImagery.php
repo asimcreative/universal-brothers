@@ -35,6 +35,20 @@ class SiteImagery
     /** @var array<string, array>|null */
     private static ?array $registry = null;
 
+    /**
+     * Keys emitted into the current response, in the order they first appeared.
+     *
+     * 38 of the 45 photographs are CC BY or CC BY-SA, which oblige us to credit
+     * the photographer wherever the work is used. Collecting the keys as they
+     * are rendered is what lets the footer print credits for exactly the photos
+     * on THIS page — rather than every photo in the library, which would be
+     * noise, or none at all, which is what shipped until now and is a licence
+     * breach however small it looks.
+     *
+     * @var array<string, true>
+     */
+    private static array $used = [];
+
     public const BASE = 'images/photos';
 
     /** @return array<string, array> */
@@ -48,7 +62,6 @@ class SiteImagery
         return $key !== null && isset(self::all()[$key]);
     }
 
-    /** @return array|null */
     public static function get(?string $key): ?array
     {
         return self::all()[$key] ?? null;
@@ -68,7 +81,17 @@ class SiteImagery
     {
         $largest = self::largestRendition($key);
 
-        return $largest ? asset(self::BASE.'/'.$largest['file']) : null;
+        if (! $largest) {
+            return null;
+        }
+
+        // Recorded here rather than in the Blade components because this is the
+        // one place every emitted photograph passes through — an `<img>` with no
+        // `src` is not an image. A component added next month is credited
+        // without anyone remembering to wire it up.
+        self::$used[$key] = true;
+
+        return asset(self::BASE.'/'.$largest['file']);
     }
 
     /** @return array{file: string, w: int, h: int, bytes: int}|null */
@@ -214,7 +237,23 @@ class SiteImagery
             return self::pick($pool, $seed);
         }
 
-        return self::pick(['kaaba-tawaf', 'nabawi-aerial'], $seed);
+        // The catch-all for everything that is NOT Hajj or Umrah and whose
+        // destination we could not identify.
+        //
+        // This used to return `pick(['kaaba-tawaf', 'nabawi-aerial'])`, which
+        // put the Kaaba on a Kashmir sightseeing tour and Al-Masjid an-Nabawi
+        // on a Bhurban one. Both shipped. That is not a near-miss like showing
+        // the wrong mountain — it takes the two holiest sites in Islam and uses
+        // them as decoration for a holiday package, which this company of all
+        // companies cannot be seen doing.
+        //
+        // The names are now mapped (see destinationPool), but the fallback
+        // itself had to change: the next unmatched tour would have hit exactly
+        // the same trap. Religious imagery is reserved for religious travel,
+        // and an unidentified destination gets something that makes no claim
+        // about WHERE it is — an aircraft and an airport are honest for any
+        // tour, because every tour involves the journey.
+        return self::pick(['saudia-aircraft', 'jeddah-airport'], $seed);
     }
 
     /**
@@ -286,6 +325,17 @@ class SiteImagery
             'islamabad' => ['islamabad-faisal'],
             'karachi' => ['karachi'],
             'jeddah' => ['jeddah-airport'],
+            // Added after both of these fell through to the catch-all and were
+            // served religious imagery — a Kashmir tour card carrying the
+            // Kaaba, a Bhurban tour carrying Al-Masjid an-Nabawi.
+            'bhurban' => ['murree-bhurban'],
+            'murree' => ['murree-bhurban'],
+            'patriata' => ['murree-bhurban'],
+            'nathia' => ['murree-bhurban'],
+            'kashmir' => ['kashmir-neelum'],
+            'neelum' => ['kashmir-neelum'],
+            'neelam' => ['kashmir-neelum'],
+            'muzaffarabad' => ['kashmir-neelum'],
 
             // International tours. Same principle: the destination is stated in
             // the package's own name, so a tour added through the admin picks up
@@ -332,6 +382,119 @@ class SiteImagery
      * component never has to care, and the client replacing a photograph
      * through the admin needs no template change.
      */
+    /**
+     * Attribution for the photographs rendered so far in this response.
+     *
+     * Returns only those whose licence actually obliges it — the seven CC0
+     * images are public domain and crediting them would pad the block with
+     * noise that makes the real obligations harder to read.
+     *
+     * Each entry carries the full TASL set the Creative Commons licences ask
+     * for — Title, Author, Source, Licence — plus a note that the file was
+     * modified. Every image in the library was resized and re-encoded to WebP
+     * at three widths, which is a derivative; CC BY-SA in particular expects
+     * that to be indicated, and saying so costs nothing.
+     *
+     * @return array<int, array{key: string, title: string, artist: string, page: string, licence: string, licenceUrl: string}>
+     */
+    public static function credits(): array
+    {
+        $credits = [];
+
+        foreach (array_keys(self::$used) as $key) {
+            $source = self::get($key)['source'] ?? null;
+
+            if (! $source || empty($source['attributionRequired'])) {
+                continue;
+            }
+
+            $credits[] = [
+                'key' => $key,
+                // The register stores the Commons filename ("File:Foo bar.jpg").
+                // Stripping the prefix and the extension gives the work's title
+                // as a reader would recognise it.
+                'title' => self::workTitle($source['file'] ?? $key),
+                'artist' => trim((string) ($source['artist'] ?? '')) ?: 'Unknown',
+                'page' => (string) ($source['page'] ?? ''),
+                'licence' => (string) ($source['licence'] ?? ''),
+                'licenceUrl' => (string) ($source['licenceUrl'] ?? ''),
+            ];
+        }
+
+        usort($credits, fn (array $a, array $b) => strcasecmp($a['title'], $b['title']));
+
+        return $credits;
+    }
+
+    private static function workTitle(string $file): string
+    {
+        $title = preg_replace('/^File:/i', '', $file);
+        $title = preg_replace('/\.(jpe?g|png|webp|gif|tiff?)$/i', '', (string) $title);
+
+        return trim(str_replace('_', ' ', (string) $title));
+    }
+
+    /**
+     * Forget what has been rendered. Only needed in tests, where several
+     * responses share one process.
+     */
+    public static function forgetUsed(): void
+    {
+        self::$used = [];
+    }
+
+    /**
+     * Photographs that can stand in for one another.
+     *
+     * Same subject, same register — so swapping within a family changes the
+     * picture without changing what it says. A Makkah photo never substitutes
+     * for a Madinah one, and neither ever substitutes for a mountain valley.
+     *
+     * @var array<int, list<string>>
+     */
+    private const FAMILIES = [
+        ['kaaba-tawaf', 'kaaba-close', 'haram-dusk', 'haram-panorama', 'haram-courtyard', 'makkah-skyline'],
+        ['nabawi-aerial', 'nabawi-dome', 'quba-mosque'],
+        ['mina-tents', 'arafat', 'muzdalifah', 'jamarat'],
+        ['jeddah-airport', 'saudia-aircraft', 'haramain-train'],
+    ];
+
+    /**
+     * A photograph like `$key` that is not already on this page.
+     *
+     * The same picture appearing twice on one short page — once as the hero,
+     * once behind the empty state directly beneath it — reads as a mistake
+     * rather than a motif. It shipped that way on /umrah and /media because
+     * each of those templates names its hero photo and its empty-state photo
+     * separately, and the two happened to match.
+     *
+     * Fixing it here rather than in the templates means it also holds for the
+     * next page someone adds, and for the day somebody changes a hero and
+     * forgets what sits under it.
+     */
+    public static function unusedSibling(?string $key): ?string
+    {
+        if ($key === null || ! isset(self::$used[$key])) {
+            return $key;
+        }
+
+        foreach (self::FAMILIES as $family) {
+            if (! in_array($key, $family, true)) {
+                continue;
+            }
+
+            foreach ($family as $sibling) {
+                if ($sibling !== $key && ! isset(self::$used[$sibling]) && self::has($sibling)) {
+                    return $sibling;
+                }
+            }
+        }
+
+        // Every sibling is already on the page, or the key belongs to no
+        // family. Repeating it beats rendering nothing.
+        return $key;
+    }
+
     public static function resolve(?string $stored): ?string
     {
         if (blank($stored)) {

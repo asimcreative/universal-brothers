@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\ResetImageryTracking;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo('/admin/login');
 
         $middleware->append(SecurityHeaders::class);
+
+        // Prepended, not appended: the tracking set has to be empty BEFORE any
+        // view renders, and `append` would run it after the response is built.
+        $middleware->prepend(ResetImageryTracking::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

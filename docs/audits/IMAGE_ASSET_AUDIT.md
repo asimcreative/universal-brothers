@@ -152,3 +152,51 @@ No template edits, no redeploy. The library only fills slots that are still empt
 | WCAG AA contrast after adding photo-backed text | 596 pairs sampled, 0 below AA |
 | Page weight with a cold cache (1440px, fully scrolled) | home 1.93 MB · Hajj listing 1.36 MB · Hajj detail 1.30 MB · tourism 1.22 MB |
 | Library total weight | 45 photographs, 135 files, 11.9 MB (WebP at 1440/1000/560) |
+
+---
+
+## Update — 14 September 2026: attribution shipped, and two wrong photographs found
+
+### Attribution is now rendered (it never was)
+
+The earlier passes built the photograph library, recorded full provenance for every file, and styled a `.photo-credits` block — but **that block was never placed in a template**. 40 of the 47 photographs are CC BY or CC BY-SA, licences that grant use *only while the author is credited*. Using them without that is using them without a licence, so this was a compliance gap, not a polish item, and it stayed open across several passes.
+
+**What ships now:** the footer of every public page prints credits for exactly the photographs that page rendered — title, a link to the source page, the photographer, and the licence with its own link — plus a note that the files were resized and re-encoded, which the ShareAlike licences expect.
+
+Per-page rather than one site-wide credits page, which is what the original design intended and what the licences read most naturally: the attribution sits with the work.
+
+`SiteImagery` records each key as its URL is handed out, so the list is accurate by construction and a component added later is credited without anyone remembering to wire it up. The seven CC0 images are deliberately omitted — crediting public-domain work would bury the entries that are actual obligations.
+
+### Two photographs were plainly wrong, and the fallback that caused them
+
+| Package | Was showing | Now |
+|---|---|---|
+| Kashmir Tour | **the Kaaba** | Neelum Valley, Azad Kashmir |
+| Bhurban Tour | **Al-Masjid an-Nabawi** | the hills near Bhurban |
+
+Neither was hard-coded. `SiteImagery::forPackage()` ended with a catch-all returning `['kaaba-tawaf', 'nabawi-aerial']` for **any** package that was not Hajj or Umrah and whose destination could not be matched — so every future unmatched tour would have done the same thing.
+
+This is worse than showing the wrong mountain. It takes the two holiest sites in Islam and uses them as decoration for a sightseeing package, on the website of a company whose business is pilgrimage.
+
+**Fixed in three places:**
+
+1. Two correctly-licensed photographs sourced for the real destinations — *Clouds in Pakistan near Bhurban* (Aizad Sayid, CC BY-SA 4.0) and *Neelum Valley, Azad Jammu & Kashmir* (Umar Jamshaid, CC BY-SA 3.0).
+2. Bhurban, Murree, Patriata, Nathia Gali, Kashmir, Neelum and Muzaffarabad added to the destination map.
+3. **The catch-all no longer returns religious imagery at all.** An unidentified destination now gets an aircraft or an airport — honest for any tour, because every tour involves the journey, and claiming no particular place.
+
+A whole-catalogue audit of all 47 published packages now reports **0 problems**, and five tests pin the rule, including the two reported packages by name and the catch-all itself.
+
+### One photograph shown twice on the same page
+
+`/umrah` and `/media` each used one picture as both the hero and the backdrop of the empty state directly beneath it, because those templates name the two separately and the names happened to match. Two copies of the same image stacked on a short page reads as a bug.
+
+The empty state now asks for a photograph of the same subject that is not already on the page, so it holds for templates not written yet — and a substitute never crosses subjects: Makkah is never replaced by Madinah, and neither by a mountain valley.
+
+### A defect found by the test suite, not by the browser
+
+The "rendered so far" set is static, which is right within a request and wrong across them. Under PHP-FPM each request gets a fresh process and it would never have shown; the moment two requests share one — the test suite, `artisan serve`, Octane — a page would credit photographs belonging to the page before it. A middleware now clears it at the start of every request.
+
+### Still outstanding
+
+- **Testimonial cards show initials, not faces.** The company holds no photographs of the pilgrims quoted. This is correct and stays: inventing or substituting a face for a named real person would be fabrication.
+- The temporary demo photography still needs replacing with the client's own, as recorded in the sections above.

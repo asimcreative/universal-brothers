@@ -49,7 +49,7 @@ but weak: wrong subject (a side wall instead of Hagia Sophia), portrait-only
   admin upload path unreliable there — these assets must not depend on it.
 - Each photograph is rendered to **WebP at 1600px and 800px** and served with
   `srcset`/`sizes`, so a phone downloads the small rendition. Total library:
-  **45 photographs, 11.9 MB** across both widths.
+  **47 photographs, 12.6 MB** across both widths.
 - `App\Support\SiteImagery` chooses which photograph a given page, package,
   city, Mashaer location or transport leg gets, from the package's **own data**.
   Nothing keys off a slug or an id.
@@ -63,7 +63,7 @@ but weak: wrong subject (a side wall instead of Hagia Sophia), portrait-only
 
 | Key | Subject | Used in | Source file | Licence | Attribution required | Author |
 |---|---|---|---|---|---|---|
-| `arafat` | Jabal al-Rahmah on the plain of Arafat | `SiteImagery.php`<br>`form.blade.php` | [Jabal-e-Rehmat (Mount of Mercy Mount Arafat).jpg](https://commons.wikimedia.org/wiki/File:Jabal-e-Rehmat_(Mount_of_Mercy_Mount_Arafat).jpg) | CC BY-SA 4.0 | Yes | Fahad Faisal |
+| `arafat` | Jabal al-Rahmah on the plain of Arafat | `SiteImagery.php`<br>`form.blade.php`<br>`hajj-services.blade.php` | [Jabal-e-Rehmat (Mount of Mercy Mount Arafat).jpg](https://commons.wikimedia.org/wiki/File:Jabal-e-Rehmat_(Mount_of_Mercy_Mount_Arafat).jpg) | CC BY-SA 4.0 | Yes | Fahad Faisal |
 | `azerbaijan-baku` | The Baku waterfront, Azerbaijan | `SiteImagery.php` | [Baku, Azerbaiyán, 2016-09-26, DD 207-209 PAN.jpg](https://commons.wikimedia.org/wiki/File:Baku,_Azerbaiy%C3%A1n,_2016-09-26,_DD_207-209_PAN.jpg) | CC BY-SA 4.0 | Yes | Diego Delso |
 | `china-wall` | The Great Wall of China at Jinshanling | `SiteImagery.php` | [The Great Wall of China at Jinshanling-edit.jpg](https://commons.wikimedia.org/wiki/File:The_Great_Wall_of_China_at_Jinshanling-edit.jpg) | CC BY-SA 3.0 | Yes | Severin.stalder |
 | `dubai` | The Dubai Marina skyline | `SiteImagery.php` | [Dubai Marina Skyline.jpg](https://commons.wikimedia.org/wiki/File:Dubai_Marina_Skyline.jpg) | CC BY 2.0 | Yes | Norlando Pobre |
@@ -72,9 +72,9 @@ but weak: wrong subject (a side wall instead of Hagia Sophia), portrait-only
 | `europe-alps` | The Matterhorn in the Swiss Alps | `SiteImagery.php` | [Matterhorn from Domhütte - 2.jpg](https://commons.wikimedia.org/wiki/File:Matterhorn_from_Domh%C3%BCtte_-_2.jpg) | CC BY-SA 3.0 | Yes | Photo: chil, on Camptocamp.org
 Derivative work:Zacharie Grossen |
 | `fairy-meadows` | Fairy Meadows beneath Nanga Parbat | `SiteImagery.php` | [Fairy Meadows GB Pakistan.jpg](https://commons.wikimedia.org/wiki/File:Fairy_Meadows_GB_Pakistan.jpg) | CC BY-SA 4.0 | Yes | Usmanbukhari3362 |
-| `haram-courtyard` | The Great Mosque of Makkah and its courtyard | `SiteImagery.php`<br>`awards.blade.php`<br>`home.blade.php` | [Great Mosque of Mecca1.jpg](https://commons.wikimedia.org/wiki/File:Great_Mosque_of_Mecca1.jpg) | CC BY-SA 4.0 | Yes | Saudipics.com |
-| `haram-dusk` | Masjid al-Haram at dusk with pilgrims circling the Kaaba | `SiteImagery.php`<br>`home.blade.php`<br>`category.blade.php`<br>`page.blade.php`<br>`testimonials.blade.php` | [Masjid al-Haram 2022.jpg](https://commons.wikimedia.org/wiki/File:Masjid_al-Haram_2022.jpg) | CC0 | No | مريم محمد الغلبان |
-| `haram-panorama` | Panorama of Masjid al-Haram in Makkah | `page-cta.blade.php`<br>`category.blade.php`<br>`page.blade.php` | [Masjid al-Haram panorama.JPG](https://commons.wikimedia.org/wiki/File:Masjid_al-Haram_panorama.JPG) | CC BY 3.0 | Yes | Bluemangoa2z at Malayalam Wikipedia |
+| `haram-courtyard` | The Great Mosque of Makkah and its courtyard | `SiteImagery.php`<br>`awards.blade.php`<br>`itinerary.blade.php`<br>`home.blade.php` | [Great Mosque of Mecca1.jpg](https://commons.wikimedia.org/wiki/File:Great_Mosque_of_Mecca1.jpg) | CC BY-SA 4.0 | Yes | Saudipics.com |
+| `haram-dusk` | Masjid al-Haram at dusk with pilgrims circling the Kaaba | `SiteImagery.php`<br>`home.blade.php`<br>`category.blade.php`<br>`page.blade.php`<br>`testimonials.blade.php`<br>`umrah-services.blade.php` | [Masjid al-Haram 2022.jpg](https://commons.wikimedia.org/wiki/File:Masjid_al-Haram_2022.jpg) | CC0 | No | مريم محمد الغلبان |
+| `haram-panorama` | Panorama of Masjid al-Haram in Makkah | `SiteImagery.php`<br>`page-cta.blade.php`<br>`hajj-services.blade.php`<br>`home.blade.php`<br>`category.blade.php`<br>`page.blade.php` | [Masjid al-Haram panorama.JPG](https://commons.wikimedia.org/wiki/File:Masjid_al-Haram_panorama.JPG) | CC BY 3.0 | Yes | Bluemangoa2z at Malayalam Wikipedia |
 | `haramain-train` | The Haramain high-speed railway connecting Makkah, Jeddah and Madinah | `SiteImagery.php` | [Haramain High Speed Railway Station Interior 2022.jpg](https://commons.wikimedia.org/wiki/File:Haramain_High_Speed_Railway_Station_Interior_2022.jpg) | CC BY 2.0 | Yes | amanderson2 |
 | `hong-kong` | The Hong Kong skyline | `SiteImagery.php` | [Hong Kong Skyline Restitch - Dec 2007.jpg](https://commons.wikimedia.org/wiki/File:Hong_Kong_Skyline_Restitch_-_Dec_2007.jpg) | CC BY 3.0 | Yes | Diliff |
 | `hunza-attabad` | Attabad Lake in the Hunza valley in autumn | `SiteImagery.php`<br>`home.blade.php` | [Attabad Lake In autumn.png](https://commons.wikimedia.org/wiki/File:Attabad_Lake_In_autumn.png) | CC0 | No | Mr.KhalidJawed |
@@ -82,23 +82,25 @@ Derivative work:Zacharie Grossen |
 | `hunza-valley` | The Hunza valley in Gilgit-Baltistan | `SiteImagery.php`<br>`category.blade.php` | [Hunza Valley HDR.jpg](https://commons.wikimedia.org/wiki/File:Hunza_Valley_HDR.jpg) | CC BY-SA 3.0 | Yes | FaizanAhmad |
 | `indonesia-bali` | Pura Ulun Danu Bratan on Lake Bratan, Bali | `SiteImagery.php` | [Pura Bratan Bali.jpg](https://commons.wikimedia.org/wiki/File:Pura_Bratan_Bali.jpg) | CC BY-SA 3.0 | Yes | Konstantinos Trovas |
 | `islamabad-faisal` | Faisal Mosque in Islamabad | `SiteImagery.php` | [Islamabad - Faisal Mosque.jpg](https://commons.wikimedia.org/wiki/File:Islamabad_-_Faisal_Mosque.jpg) | CC BY-SA 4.0 | Yes | Ijlalahmed |
-| `jamarat` | The Jamarat Bridge in Mina | `SiteImagery.php` | [Jamaraat Bridge 2.jpg](https://commons.wikimedia.org/wiki/File:Jamaraat_Bridge_2.jpg) | CC BY-SA 4.0 | Yes | saudipics |
+| `jamarat` | The Jamarat Bridge in Mina | `SiteImagery.php`<br>`home.blade.php` | [Jamaraat Bridge 2.jpg](https://commons.wikimedia.org/wiki/File:Jamaraat_Bridge_2.jpg) | CC BY-SA 4.0 | Yes | saudipics |
 | `jeddah-airport` | King Abdulaziz International Airport in Jeddah | `SiteImagery.php`<br>`affiliations.blade.php` | [JED-Outside-Terminal1.jpg](https://commons.wikimedia.org/wiki/File:JED-Outside-Terminal1.jpg) | CC BY-SA 4.0 | Yes | Tweenet |
 | `jordan-petra` | Al-Khazneh, the Treasury at Petra, Jordan | `SiteImagery.php` | [Al khazneh.jpg](https://commons.wikimedia.org/wiki/File:Al_khazneh.jpg) | CC BY-SA 3.0 | Yes | Susanahajer |
-| `kaaba-close` | The Kaaba within the Great Mosque of Makkah | `SiteImagery.php`<br>`home.blade.php`<br>`umrah-services.blade.php` | [The Ka'ba, Great Mosque of Mecca, Saudi Arabia (4).jpg](https://commons.wikimedia.org/wiki/File:The_Ka%27ba,_Great_Mosque_of_Mecca,_Saudi_Arabia_(4).jpg) | CC BY 2.0 | Yes | Richard Mortel |
+| `kaaba-close` | The Kaaba within the Great Mosque of Makkah | `SiteImagery.php`<br>`hajj-services.blade.php`<br>`home.blade.php`<br>`umrah-services.blade.php` | [The Ka'ba, Great Mosque of Mecca, Saudi Arabia (4).jpg](https://commons.wikimedia.org/wiki/File:The_Ka%27ba,_Great_Mosque_of_Mecca,_Saudi_Arabia_(4).jpg) | CC BY 2.0 | Yes | Richard Mortel |
 | `kaaba-tawaf` | Pilgrims performing tawaf around the Kaaba during Hajj | `SiteImagery.php`<br>`photo.blade.php`<br>`hajj-services.blade.php`<br>`home.blade.php`<br>`category.blade.php` | [The Kaaba during Hajj.jpg](https://commons.wikimedia.org/wiki/File:The_Kaaba_during_Hajj.jpg) | CC BY-SA 4.0 | Yes | Adli Wahid |
 | `kaghan-naran` | Siri Paye meadows above Shogran in the Kaghan valley | `SiteImagery.php` | [Siri Paye, Shogran, Kaghan Valley.jpg](https://commons.wikimedia.org/wiki/File:Siri_Paye,_Shogran,_Kaghan_Valley.jpg) | CC BY-SA 4.0 | Yes | Adeel ur Rehman Mughal |
 | `karachi` | Frere Hall in Karachi, where Universal Brothers is based | `SiteImagery.php`<br>`contact.blade.php` | [Frere Hall Karachi. Pakistan.jpg](https://commons.wikimedia.org/wiki/File:Frere_Hall_Karachi._Pakistan.jpg) | CC BY-SA 4.0 | Yes | Asim Iftikhar Nagi |
 | `karakoram-highway` | Nanga Parbat seen from the Karakoram Highway | `SiteImagery.php` | [Nanga Parbat From KKH.jpg](https://commons.wikimedia.org/wiki/File:Nanga_Parbat_From_KKH.jpg) | CC BY-SA 4.0 | Yes | Akbar Khan Niazi |
+| `kashmir-neelum` | The Neelum valley in Azad Jammu and Kashmir | `SiteImagery.php` | [Neelum Valley, Azad Jammu & Kashmir, Pakistan.jpg](https://commons.wikimedia.org/wiki/File:Neelum_Valley,_Azad_Jammu_%26_Kashmir,_Pakistan.jpg) | CC BY-SA 3.0 | Yes | Umar Jamshaid 03457611024 |
 | `makkah-skyline` | The Makkah skyline and the towers overlooking Masjid al-Haram | `SiteImagery.php` | [3rd Ring Road makkah.jpg](https://commons.wikimedia.org/wiki/File:3rd_Ring_Road_makkah.jpg) | CC BY-SA 4.0 | Yes | King Eliot |
 | `malam-jabba` | Malam Jabba in the Swat valley | `SiteImagery.php` | [Malam Jaba, Swat, Pakistan.JPG](https://commons.wikimedia.org/wiki/File:Malam_Jaba,_Swat,_Pakistan.JPG) | CC BY-SA 4.0 | Yes | Mehlab Jameel |
 | `malaysia` | Kuala Lumpur at sunset, Malaysia | `SiteImagery.php` | [Sunset at Kuala Lumpur.jpg](https://commons.wikimedia.org/wiki/File:Sunset_at_Kuala_Lumpur.jpg) | CC BY-SA 4.0 | Yes | YongBoi |
 | `maldives` | An island and lagoon in the Maldives | `SiteImagery.php` | [Bathala (Maldives) 8.JPG](https://commons.wikimedia.org/wiki/File:Bathala_(Maldives)_8.JPG) | CC BY-SA 4.0 | Yes | Gzzz |
-| `mina-tents` | The air-conditioned tent city at Mina during Hajj | `SiteImagery.php`<br>`home.blade.php`<br>`media.blade.php` | [Haji pilgrimage mina tent city.jpg](https://commons.wikimedia.org/wiki/File:Haji_pilgrimage_mina_tent_city.jpg) | CC BY-SA 4.0 | Yes | Seeley International |
+| `mina-tents` | The air-conditioned tent city at Mina during Hajj | `SiteImagery.php`<br>`hajj-services.blade.php`<br>`home.blade.php`<br>`media.blade.php` | [Haji pilgrimage mina tent city.jpg](https://commons.wikimedia.org/wiki/File:Haji_pilgrimage_mina_tent_city.jpg) | CC BY-SA 4.0 | Yes | Seeley International |
+| `murree-bhurban` | Cloud-covered hills near Bhurban in the Murree region | `SiteImagery.php` | [Clouds in Pakistan near Bhurban by Aizad Sayid.jpg](https://commons.wikimedia.org/wiki/File:Clouds_in_Pakistan_near_Bhurban_by_Aizad_Sayid.jpg) | CC BY-SA 4.0 | Yes | Aizad Sayid |
 | `muzdalifah` | Pilgrims at Muzdalifah at dawn | `SiteImagery.php` | [Fajr in Muzdalifah.jpg](https://commons.wikimedia.org/wiki/File:Fajr_in_Muzdalifah.jpg) | CC BY-SA 4.0 | Yes | Arisdp |
-| `nabawi-aerial` | Al-Masjid an-Nabawi in Madinah seen from above, with the Green Dome | `SiteImagery.php`<br>`home.blade.php`<br>`page.blade.php` | [Al-Masjid An-Nabawi (Bird's Eye View).jpg](https://commons.wikimedia.org/wiki/File:Al-Masjid_An-Nabawi_(Bird%27s_Eye_View).jpg) | CC0 | No | Konevi |
-| `nabawi-dome` | The Green Dome of Al-Masjid an-Nabawi in Madinah | `SiteImagery.php`<br>`faqs.blade.php`<br>`home.blade.php` | [MasjidNabawi.jpg](https://commons.wikimedia.org/wiki/File:MasjidNabawi.jpg) | CC0 | No | Wurzelgnohm |
-| `quba-mosque` | Quba Mosque in Madinah | `SiteImagery.php` | [Quba Mosque - panoramio.jpg](https://commons.wikimedia.org/wiki/File:Quba_Mosque_-_panoramio.jpg) | CC BY 3.0 | Yes | Tevfik Teker |
+| `nabawi-aerial` | Al-Masjid an-Nabawi in Madinah seen from above, with the Green Dome | `SiteImagery.php`<br>`itinerary.blade.php`<br>`hajj-services.blade.php`<br>`home.blade.php`<br>`page.blade.php` | [Al-Masjid An-Nabawi (Bird's Eye View).jpg](https://commons.wikimedia.org/wiki/File:Al-Masjid_An-Nabawi_(Bird%27s_Eye_View).jpg) | CC0 | No | Konevi |
+| `nabawi-dome` | The Green Dome of Al-Masjid an-Nabawi in Madinah | `SiteImagery.php`<br>`faqs.blade.php`<br>`home.blade.php`<br>`umrah-services.blade.php` | [MasjidNabawi.jpg](https://commons.wikimedia.org/wiki/File:MasjidNabawi.jpg) | CC0 | No | Wurzelgnohm |
+| `quba-mosque` | Quba Mosque in Madinah | `SiteImagery.php`<br>`umrah-services.blade.php` | [Quba Mosque - panoramio.jpg](https://commons.wikimedia.org/wiki/File:Quba_Mosque_-_panoramio.jpg) | CC BY 3.0 | Yes | Tevfik Teker |
 | `saudia-aircraft` | A Saudia Boeing 787 airliner | `SiteImagery.php` | [HZ-AR29 Boeing 787-10 Saudia Arabian Airlines LHR 3.1.25.jpg](https://commons.wikimedia.org/wiki/File:HZ-AR29_Boeing_787-10_Saudia_Arabian_Airlines_LHR_3.1.25.jpg) | CC BY-SA 2.0 | Yes | Colin Cooke Photo |
 | `singapore` | The Singapore skyline at dusk | `SiteImagery.php` | [1 singapore city skyline dusk panorama 2011.jpg](https://commons.wikimedia.org/wiki/File:1_singapore_city_skyline_dusk_panorama_2011.jpg) | CC BY-SA 4.0 | Yes | chenisyuan |
 | `skardu-deosai` | Sheosar Lake on the Deosai plains | `SiteImagery.php` | [Sheoser lake deosai national park.jpg](https://commons.wikimedia.org/wiki/File:Sheoser_lake_deosai_national_park.jpg) | CC BY-SA 4.0 | Yes | Jehan Sher |
@@ -114,7 +116,7 @@ Derivative work:Zacharie Grossen |
 
 ## Attribution
 
-38 of the 45 photographs are under licences that require the
+40 of the 47 photographs are under licences that require the
 photographer to be credited (CC BY / CC BY-SA). The site carries a `.photo-credits`
 style for a per-page credit block; **this has not yet been placed in the
 templates** — it is listed as an open item in the audit document, because the
@@ -147,11 +149,13 @@ Derivative work:Zacharie Grossen, CC BY-SA 3.0. [Source](https://commons.wikimed
 - **kaghan-naran** — Adeel ur Rehman Mughal, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Siri_Paye,_Shogran,_Kaghan_Valley.jpg)
 - **karachi** — Asim Iftikhar Nagi, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Frere_Hall_Karachi._Pakistan.jpg)
 - **karakoram-highway** — Akbar Khan Niazi, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Nanga_Parbat_From_KKH.jpg)
+- **kashmir-neelum** — Umar Jamshaid 03457611024, CC BY-SA 3.0. [Source](https://commons.wikimedia.org/wiki/File:Neelum_Valley,_Azad_Jammu_%26_Kashmir,_Pakistan.jpg)
 - **makkah-skyline** — King Eliot, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:3rd_Ring_Road_makkah.jpg)
 - **malam-jabba** — Mehlab Jameel, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Malam_Jaba,_Swat,_Pakistan.JPG)
 - **malaysia** — YongBoi, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Sunset_at_Kuala_Lumpur.jpg)
 - **maldives** — Gzzz, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Bathala_(Maldives)_8.JPG)
 - **mina-tents** — Seeley International, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Haji_pilgrimage_mina_tent_city.jpg)
+- **murree-bhurban** — Aizad Sayid, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Clouds_in_Pakistan_near_Bhurban_by_Aizad_Sayid.jpg)
 - **muzdalifah** — Arisdp, CC BY-SA 4.0. [Source](https://commons.wikimedia.org/wiki/File:Fajr_in_Muzdalifah.jpg)
 - **quba-mosque** — Tevfik Teker, CC BY 3.0. [Source](https://commons.wikimedia.org/wiki/File:Quba_Mosque_-_panoramio.jpg)
 - **saudia-aircraft** — Colin Cooke Photo, CC BY-SA 2.0. [Source](https://commons.wikimedia.org/wiki/File:HZ-AR29_Boeing_787-10_Saudia_Arabian_Airlines_LHR_3.1.25.jpg)

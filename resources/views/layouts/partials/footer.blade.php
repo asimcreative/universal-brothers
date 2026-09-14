@@ -128,5 +128,9 @@
                 <li><a href="{{ route('contact') }}">Complaints &amp; Feedback</a></li>
             </ul>
         </div>
+
+        {{-- Last thing in the footer, which is the last thing on the page: the
+             credits can only list photographs that have already been rendered. --}}
+        <x-photo-credits />
     </div>
 </footer>

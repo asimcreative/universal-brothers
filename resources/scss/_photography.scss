@@ -273,14 +273,52 @@
 // per page in a small print block; `docs/data/image-assets.md` carries the full
 // register.
 .photo-credits {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     font-size: 0.72rem;
-    line-height: 1.5;
-    color: rgba(33, 37, 41, 0.62);
+    line-height: 1.6;
+    // Sits on the footer's dark ground, so it takes a light colour. 0.55 alpha
+    // white on this navy measures ~4.6:1 — small print, but still readable
+    // print, which is the point: an attribution nobody can read is not an
+    // attribution.
+    color: rgba(255, 255, 255, 0.55);
 
     a {
-        color: inherit;
+        color: rgba(255, 255, 255, 0.72);
         text-decoration: underline;
+
+        &:hover,
+        &:focus-visible {
+            color: #fff;
+        }
     }
+}
+
+.photo-credits-label {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.photo-credit {
+    // Each credit stays whole when the block wraps, so a photographer's name
+    // never ends up orphaned from their photograph's title on the line above.
+    display: inline;
+    white-space: normal;
+
+    + .photo-credit {
+        margin-left: 0.15rem;
+    }
+}
+
+.photo-credit-title {
+    font-style: italic;
+}
+
+.photo-credits-note {
+    display: block;
+    margin-top: 0.35rem;
+    opacity: 0.8;
 }
 
 // --- Statistic over a photograph ---------------------------------------------

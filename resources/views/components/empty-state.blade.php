@@ -21,13 +21,23 @@
     'photo' => null,
 ])
 
-@php($ubHasPhoto = \App\Support\SiteImagery::has($photo))
+@php
+    /*
+     * An empty state usually sits directly beneath the page hero, and several
+     * templates named the same photograph for both — so /umrah and /media each
+     * showed one picture twice, one above the other, which reads as a bug
+     * rather than a motif. Asking for a sibling that is not already on the page
+     * fixes it wherever this component is used, including pages not written yet.
+     */
+    $ubPhoto = \App\Support\SiteImagery::unusedSibling($photo);
+    $ubHasPhoto = \App\Support\SiteImagery::has($ubPhoto);
+@endphp
 
 <div {{ $attributes->class(['empty-state', 'text-center', 'empty-state--photo' => $ubHasPhoto]) }}>
     @if($ubHasPhoto)
         <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
-            <img src="{{ \App\Support\SiteImagery::url($photo) }}"
-                 srcset="{{ \App\Support\SiteImagery::srcset($photo) }}"
+            <img src="{{ \App\Support\SiteImagery::url($ubPhoto) }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset($ubPhoto) }}"
                  sizes="100vw" alt="" loading="lazy" decoding="async">
         </div>
     @endif
