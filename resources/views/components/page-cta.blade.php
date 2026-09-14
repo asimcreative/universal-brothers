@@ -15,6 +15,12 @@
     'title' => 'Your Sacred Journey Begins With a Conversation',
     'copy' => 'Whether you are preparing for Hajj, planning Umrah or simply need guidance before making a decision, our experienced team is ready to assist you.',
     'photo' => 'haram-panorama',
+    // The primary action used to be hardcoded to the Hajj catalogue, which
+    // meant a Kashmir or Maldives holiday page closed by sending the visitor
+    // to Hajj 2027. The picture being wrong was the visible half of that; the
+    // link being wrong was the half they would actually have clicked.
+    'actionLabel' => 'View Hajj 2027 Packages',
+    'actionUrl' => null,
 ])
 
 <section class="page-cta">
@@ -34,7 +40,7 @@
                 <h2 class="page-cta-title">{{ $title }}</h2>
                 <p class="page-cta-copy">{{ $copy }}</p>
                 <div class="page-cta-actions">
-                    <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">View Hajj 2027 Packages</a>
+                    <a href="{{ $actionUrl ?? route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">{{ $actionLabel }}</a>
                     <a href="{{ route('contact') }}" class="btn btn-outline-light btn-lg">Contact Our Team</a>
                 </div>
             </div>

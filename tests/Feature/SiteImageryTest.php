@@ -165,6 +165,49 @@ class SiteImageryTest extends TestCase
         }
     }
 
+    public function test_a_tourism_page_does_not_close_with_a_pilgrimage_call_to_action(): void
+    {
+        $package = Package::published()
+            ->whereHas('category', fn ($q) => $q->where('slug', 'tourism'))
+            ->firstOrFail();
+
+        $response = $this->get(route('packages.show', [
+            'category' => 'tourism',
+            'package' => $package->slug,
+        ]))->assertOk();
+
+        $html = $response->getContent();
+
+        // The closing band used to read "Your Sacred Journey Begins With a
+        // Conversation" over a photograph of Masjid al-Haram, with a button to
+        // the Hajj catalogue — on a sightseeing page. The picture was the
+        // visible half; the link was the half a visitor would have clicked.
+        $this->assertStringNotContainsString('Your Sacred Journey Begins', $html);
+        $this->assertStringContainsString('Where Would You Like to Go?', $html);
+        $this->assertStringContainsString('Browse All Tours', $html);
+
+        // The CTA band must not reach for the package's own photograph either —
+        // the hero already shows it a few hundred pixels higher.
+        $own = SiteImagery::forPackage($package->load('category:id,slug,name'));
+        preg_match_all('~images/photos/([a-z0-9-]+)-\d+\.webp~', $html, $matches);
+        $distinct = array_values(array_unique($matches[1] ?? []));
+
+        $this->assertContains($own, $distinct, 'The hero photograph is missing.');
+        $this->assertGreaterThan(1, count($distinct), 'The CTA is repeating the hero photograph.');
+    }
+
+    public function test_a_pilgrimage_page_keeps_its_pilgrimage_call_to_action(): void
+    {
+        $package = Package::published()
+            ->whereHas('category', fn ($q) => $q->where('slug', 'hajj'))
+            ->firstOrFail();
+
+        // The fix must not have swung the other way.
+        $this->get(route('packages.show', ['category' => 'hajj', 'package' => $package->slug]))
+            ->assertOk()
+            ->assertSee('Your Sacred Journey Begins', false);
+    }
+
     public function test_a_substitute_photograph_stays_in_the_same_family(): void
     {
         SiteImagery::forgetUsed();

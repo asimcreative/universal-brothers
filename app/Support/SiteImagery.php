@@ -169,6 +169,24 @@ class SiteImagery
         return $pool ? $pool[crc32($seed) % count($pool)] : null;
     }
 
+    /**
+     * A deterministic pick from a pool that is guaranteed not to be `$exclude`.
+     *
+     * For decorative bands that sit on a page which already has a photograph of
+     * its own — a closing call-to-action under a package hero. Showing the same
+     * picture twice reads as a bug, and reaching for the package's own
+     * photograph a second time is what would do it.
+     */
+    public static function pickExcluding(array $pool, string $seed, ?string $exclude): ?string
+    {
+        $pool = array_values(array_filter(
+            $pool,
+            fn ($k) => $k !== $exclude && self::has($k)
+        ));
+
+        return $pool ? $pool[crc32($seed) % count($pool)] : null;
+    }
+
     /** Photograph for a city an accommodation row sits in. */
     public static function forCity(?string $location, string $seed = ''): ?string
     {

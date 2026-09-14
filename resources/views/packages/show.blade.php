@@ -175,5 +175,48 @@
         </div>
     </div>
 
-    <x-page-cta />
+    @php
+        /*
+         * This template serves Tourism and Umrah detail pages alike, and the
+         * CTA's defaults are written for pilgrimage — "Your Sacred Journey
+         * Begins With a Conversation", over a photograph of Masjid al-Haram.
+         *
+         * On a Kashmir or Maldives holiday page that is the same mistake the
+         * package cards had: pilgrimage framing, and one of Islam's holiest
+         * sites, used to close a sightseeing page. The copy is wrong there too,
+         * not only the picture.
+         *
+         * Driven off the category rather than a slug, so a tour added through
+         * the admin tomorrow gets the right ending with no code change.
+         */
+        $ubIsTourism = ($package->category->slug ?? null) === 'tourism';
+    @endphp
+
+    @if($ubIsTourism)
+        @php
+            /*
+             * A scenic photograph that is deliberately NOT this package's own.
+             * The hero already shows the destination; repeating it a few
+             * hundred pixels lower reads as a mistake. The band is decorative
+             * and its copy asks where the visitor would like to go, so it makes
+             * no claim about where THIS tour goes.
+             */
+            $ubCtaPhoto = \App\Support\SiteImagery::pickExcluding(
+                ['hunza-valley', 'skardu-deosai', 'karakoram-highway', 'fairy-meadows', 'maldives', 'turkey-cappadocia'],
+                (string) ($package->slug ?? $package->id),
+                \App\Support\SiteImagery::forPackage($package),
+            );
+        @endphp
+
+        <x-page-cta
+            eyebrow="Plan Your Trip"
+            title="Where Would You Like to Go?"
+            copy="Tell us the dates you have in mind and how many are travelling, and our team will put together an itinerary and a price for you."
+            :photo="$ubCtaPhoto"
+            action-label="Browse All Tours"
+            :action-url="route('packages.category', 'tourism')"
+        />
+    @else
+        <x-page-cta />
+    @endif
 @endsection
