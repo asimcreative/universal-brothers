@@ -259,6 +259,39 @@ $ai-radius: 1rem;
     strong {
         font-weight: 600;
     }
+
+    // Links the assistant writes into its reply. gold-dark on the white
+    // assistant bubble measures ~6:1; the underline carries the affordance so
+    // it does not rest on colour alone. Long URLs break instead of stretching
+    // the bubble.
+    .ai-inline-link {
+        color: $ub-gold-dark;
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        overflow-wrap: anywhere;
+
+        &:hover,
+        &:focus-visible {
+            color: $ub-navy;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $ub-gold;
+            outline-offset: 1px;
+            border-radius: 2px;
+        }
+    }
+}
+
+// The same formatter runs on the visitor's own message, which sits on navy.
+.ai-message--user .ai-bubble .ai-inline-link {
+    color: #fff;
+
+    &:hover,
+    &:focus-visible {
+        color: $ub-gold-light;
+    }
 }
 
 .ai-retry {

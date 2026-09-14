@@ -236,6 +236,13 @@ class ChatService
             return false;
         }));
 
-        return $kept ?: [$sources[0]];
+        // No fallback. This used to return the first retrieved source when
+        // nothing matched, "so a helpful answer is not left with no way to read
+        // more". On the live site that attached "What happens if I need to
+        // cancel my Hajj booking?" to an answer about visa guarantees. A link
+        // the visitor has no reason to open is worse than no link — it implies
+        // the assistant thinks it is relevant. The reply can carry its own
+        // inline link when one genuinely helps.
+        return $kept;
     }
 }

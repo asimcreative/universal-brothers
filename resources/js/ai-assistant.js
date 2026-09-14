@@ -4,11 +4,12 @@
  * The security rule that shapes this file: the assistant's reply is NEVER
  * treated as HTML. It is escaped first, and only then does a tiny formatter
  * re-introduce line breaks, bold and list markers. Links are not parsed out of
- * the reply text at all — they come from the `sources` array the backend
- * returns, which only ever contains URLs this application generated with
- * route(). A model that is talked into emitting `<img onerror=...>` or a link
- * to somewhere else therefore cannot do anything: the markup is inert text and
- * the URL never becomes an anchor.
+ * the reply text unless they point at THIS site — see linkify(). The cards
+ * under a reply come from the `sources` array the backend returns, which only
+ * ever contains URLs this application generated with route(). A model that is
+ * talked into emitting `<img onerror=...>` or a link to somewhere else
+ * therefore cannot do anything: the markup is inert text, and an off-site or
+ * `javascript:` URL never becomes an anchor.
  */
 
 const ESCAPE_MAP = {
@@ -65,9 +66,54 @@ function formatReply(text) {
     return html.join('');
 }
 
+const UNESCAPE_MAP = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#39;': "'",
+};
+
+function unescapeHtml(value) {
+    return String(value ?? '').replace(/&(amp|lt|gt|quot|#39);/g, (entity) => UNESCAPE_MAP[entity]);
+}
+
+/**
+ * Markdown links `[text](url)` and bare `https://…` URLs in an already-escaped
+ * line.
+ *
+ * The first version rendered none of these, on purpose — and the live site
+ * showed why that was the wrong trade: the model writes "check the Hajj
+ * packages page [here](https://…/hajj)", and the visitor saw the raw brackets
+ * and a URL they could not click.
+ *
+ * The protection is kept, just moved to the one place it matters. A link is
+ * only ever produced when its URL is same-origin http(s) — this site's own
+ * pages. Anything else (another domain, `javascript:`, `data:`, a
+ * protocol-relative `//evil.example`) keeps its words and loses the link, so a
+ * model talked into emitting a hostile URL still cannot put a clickable one in
+ * front of a visitor. The label arrives already escaped and the href is
+ * re-escaped, so no attribute can be broken out of.
+ */
+const LINK_PATTERN = /\[([^\]\n]{1,160})\]\(([^)\s]{1,500})\)|(https?:\/\/[^\s<>()]+[^\s<>().,;:!?])/g;
+
+function linkify(text) {
+    return text.replace(LINK_PATTERN, (match, label, markdownUrl, bareUrl) => {
+        const url = unescapeHtml(markdownUrl ?? bareUrl);
+
+        if (!isSafeInternalUrl(url)) {
+            // Keep the words the visitor was meant to read; drop the link.
+            return markdownUrl !== undefined ? label : match;
+        }
+
+        const text = markdownUrl !== undefined ? label : match;
+
+        return `<a href="${escapeHtml(url)}" class="ai-inline-link">${text}</a>`;
+    });
+}
+
 function inlineFormat(text) {
-    // Only **bold**. Deliberately no link syntax: see the file docblock.
-    return text.replace(/\*\*([^*]{1,200})\*\*/g, '<strong>$1</strong>');
+    return linkify(text).replace(/\*\*([^*]{1,200})\*\*/g, '<strong>$1</strong>');
 }
 
 /**

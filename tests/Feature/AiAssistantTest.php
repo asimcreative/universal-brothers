@@ -454,6 +454,37 @@ class AiAssistantTest extends TestCase
         );
     }
 
+    public function test_no_link_is_attached_just_because_something_was_retrieved(): void
+    {
+        // The live case: an answer about visa guarantees arrived with a link to
+        // the booking-cancellation FAQ, because the old filter fell back to the
+        // first retrieved source when nothing in the reply matched.
+        $this->fakeProvider(
+            'I cannot guarantee visa approval. Visa matters are confirmed by the team, so it is best to reach out to them directly.'
+        );
+
+        $titles = array_column(
+            $this->postJson(route('ai.chat'), ['message' => 'Do you guarantee my Hajj visa will be approved?'])
+                ->assertOk()
+                ->json('sources'),
+            'title'
+        );
+
+        $this->assertEmpty(
+            array_filter($titles, fn ($t) => str_contains(mb_strtolower($t), 'cancel')),
+            'An unrelated link was attached to the reply: '.implode(' | ', $titles)
+        );
+    }
+
+    public function test_the_prompt_asks_for_descriptive_link_text(): void
+    {
+        $this->fakeProvider();
+
+        $this->postJson(route('ai.chat'), ['message' => 'Hello'])->assertOk();
+
+        $this->assertStringContainsString('Never use "here" or "click here" as the link text', $this->systemPrompt());
+    }
+
     public function test_source_links_are_suppressed_when_the_setting_is_off(): void
     {
         AiSetting::current()->forceFill(['show_source_links' => false])->save();

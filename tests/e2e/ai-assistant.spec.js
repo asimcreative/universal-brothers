@@ -326,6 +326,51 @@ test.describe('AI assistant', () => {
         await expect(page.locator('.ai-source-card')).toHaveCount(0);
     });
 
+    test('links in a reply to this site are clickable, and nothing else is', async ({ page }) => {
+        // The live site showed the model writing "[here](https://…/hajj)" and
+        // the widget printing it as raw brackets the visitor could not click.
+        // Links to this site now work; every other kind still must not.
+        await fulfilChat(page, {
+            ok: true,
+            reply: [
+                'See the [Hajj 2027 packages](/hajj) or open the [contact page](' + 'http://127.0.0.1:8129/contact).',
+                'Also https://evil.example.com/steal and [a trap](javascript:alert(1)) and [elsewhere](https://evil.example.com/x).',
+            ].join('\n'),
+            sources: [],
+            offer_lead: false,
+        });
+
+        await openPanel(page);
+        const origin = new URL(page.url()).origin;
+        await page.locator('[data-ai-input]').fill('Show me links');
+        await page.locator('[data-ai-send]').click();
+
+        const bubble = page.locator('.ai-message--assistant .ai-bubble').last();
+        await expect(bubble).toContainText('Hajj 2027 packages');
+
+        const links = bubble.locator('a');
+        await expect(links).toHaveCount(2);
+
+        await expect(links.nth(0)).toHaveText('Hajj 2027 packages');
+        await expect(links.nth(0)).toHaveAttribute('href', '/hajj');
+        await expect(links.nth(1)).toHaveText('contact page');
+
+        // The words stay; the hostile targets never become anchors.
+        await expect(bubble).toContainText('a trap');
+        await expect(bubble).toContainText('elsewhere');
+        await expect(bubble).not.toContainText('[a trap]');
+        await expect(bubble.locator('a[href^="javascript"]')).toHaveCount(0);
+        await expect(bubble.locator('a[href*="evil.example"]')).toHaveCount(0);
+
+        // And the internal link actually navigates.
+        await Promise.all([
+            page.waitForURL(/\/hajj$/),
+            links.nth(0).click(),
+        ]);
+
+        expect(new URL(page.url()).origin).toBe(origin);
+    });
+
     test('the API key is absent from the page and from what the browser sends', async ({ page }) => {
         const payloads = [];
 
