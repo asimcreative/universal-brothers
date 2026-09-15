@@ -67,6 +67,10 @@ return [
 
     'timezone' => 'UTC',
 
+    // Times shown to administrators in the page builder (scheduled publishing,
+    // version history). Stored times stay in UTC.
+    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Asia/Karachi'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

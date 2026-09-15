@@ -32,8 +32,8 @@
                     <input type="text" name="question" id="faq-question" class="form-control" value="{{ old('question', $faq->question) }}" required>
                 </div>
                 <div class="col-12">
-                    <label for="faq-answer" class="form-label">Answer</label>
-                    <textarea name="answer" id="faq-answer" class="form-control" rows="4" required>{{ old('answer', $faq->answer) }}</textarea>
+                    <x-admin.rich-text name="answer" id="faq-answer" label="Answer" profile="standard" :value="old('answer', $faq->answer)" :max="20000" :required="true"
+                        help="Keep answers short and clear. Use a list for steps, and links to point to the right page." />
                 </div>
             </div>
         </div>

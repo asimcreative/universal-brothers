@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\NewsArticle;
+use App\Support\Content\RichText;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -71,13 +72,16 @@ class NewsArticleController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string', 'max:500'],
-            'body' => ['nullable', 'string'],
+            'body' => ['nullable', 'string', 'max:200000'],
             'cover_image' => ['nullable', 'image', 'max:4096'],
             'is_active' => ['nullable', 'boolean'],
             'published_at' => ['nullable', 'date'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
         ]);
+
+        // Formatted text from the editor is cleaned before it is stored.
+        $data['body'] = RichText::clean($data['body'] ?? null, 'full');
 
         $data['is_active'] = $request->boolean('is_active');
         $data['slug'] = $article?->slug ?? Str::slug($data['title']).'-'.Str::random(6);

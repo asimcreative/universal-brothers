@@ -17,7 +17,7 @@
                     "name": {!! json_encode($faq->question) !!},
                     "acceptedAnswer": {
                         "@@type": "Answer",
-                        "text": {!! json_encode($faq->answer) !!}
+                        "text": {!! json_encode(\App\Support\Content\RichText::toPlainText($faq->answer)) !!}
                     }
                 }@if(!$loop->last),@endif
                 @endforeach
@@ -54,8 +54,8 @@
                                         </button>
                                     </h3>
                                     <div id="faq-{{ $id }}" class="accordion-collapse collapse {{ $i === 0 ? 'show' : '' }}" data-bs-parent="#faqAccordion{{ Str::studly($category) }}">
-                                        <div class="accordion-body text-secondary">
-                                            {{ $faq->answer }}
+                                        <div class="accordion-body text-secondary rich-text">
+                                            {!! \App\Support\Content\RichText::render($faq->answer, 'standard') !!}
                                         </div>
                                     </div>
                                 </div>

@@ -64,12 +64,10 @@
             <input type="number" id="az-occupancy" name="aziziya[average_occupancy]" value="{{ $aziziya['average_occupancy'] ?? '' }}" min="1" max="20" class="form-control">
         </div>
         <div class="col-md-6">
-            <label for="az-description" class="form-label">Description</label>
-            <textarea id="az-description" name="aziziya[description]" rows="2" class="form-control">{{ $aziziya['description'] ?? '' }}</textarea>
+            <x-admin.rich-text name="aziziya[description]" id="az-description" label="Description" profile="basic" :value="$aziziya['description'] ?? ''" :max="5000" :rows="2" />
         </div>
         <div class="col-md-6">
-            <label for="az-notes" class="form-label">Notes shown to customers</label>
-            <textarea id="az-notes" name="aziziya[notes]" rows="2" class="form-control">{{ $aziziya['notes'] ?? '' }}</textarea>
+            <x-admin.rich-text name="aziziya[notes]" id="az-notes" label="Notes shown to customers" profile="basic" :value="$aziziya['notes'] ?? ''" :max="5000" :rows="2" />
         </div>
 
         <div class="col-12">

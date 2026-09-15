@@ -204,7 +204,7 @@
                                         </button>
                                     </h3>
                                     <div id="hajj-faq-{{ $faq->id }}" class="accordion-collapse collapse {{ $i === 0 ? 'show' : '' }}" data-bs-parent="#hajjFaqAccordion">
-                                        <div class="accordion-body text-secondary">{{ $faq->answer }}</div>
+                                        <div class="accordion-body text-secondary rich-text">{!! \App\Support\Content\RichText::render($faq->answer, 'standard') !!}</div>
                                     </div>
                                 </div>
                             @endforeach

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
+use App\Support\Content\RichText;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class FaqController extends Controller
@@ -51,10 +53,15 @@ class FaqController extends Controller
         $data = $request->validate([
             'category' => ['required', 'in:general,hajj,umrah,tourism'],
             'question' => ['required', 'string', 'max:500'],
-            'answer' => ['required', 'string'],
+            'answer' => ['required', 'string', 'max:50000'],
             'sort_order' => ['nullable', 'integer'],
             'is_active' => ['nullable', 'boolean'],
         ]);
+        $data['answer'] = RichText::clean($data['answer'], 'standard') ?? '';
+
+        if ($data['answer'] === '') {
+            throw ValidationException::withMessages(['answer' => 'Write the answer to the question.']);
+        }
         $data['is_active'] = $request->boolean('is_active');
         $data['sort_order'] = $data['sort_order'] ?? 0;
 

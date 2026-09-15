@@ -52,12 +52,10 @@
                 </div>
             @endforeach
             <div class="col-md-6">
-                <label for="mashaer-{{ $location }}-other_services" class="form-label">Other services</label>
-                <textarea id="mashaer-{{ $location }}-other_services" name="mashaer[{{ $location }}][other_services]" data-mashaer-field="other_services" rows="2" class="form-control">{{ $row['other_services'] ?? '' }}</textarea>
+                <x-admin.rich-text :name="'mashaer['.$location.'][other_services]'" :id="'mashaer-'.$location.'-other_services'" label="Other services" profile="basic" :value="$row['other_services'] ?? ''" :max="5000" :rows="2" :input-attributes="['data-mashaer-field' => 'other_services']" />
             </div>
             <div class="col-md-6">
-                <label for="mashaer-{{ $location }}-notes" class="form-label">Notes shown to customers</label>
-                <textarea id="mashaer-{{ $location }}-notes" name="mashaer[{{ $location }}][notes]" data-mashaer-field="notes" rows="2" class="form-control">{{ $row['notes'] ?? '' }}</textarea>
+                <x-admin.rich-text :name="'mashaer['.$location.'][notes]'" :id="'mashaer-'.$location.'-notes'" label="Notes shown to customers" profile="basic" :value="$row['notes'] ?? ''" :max="5000" :rows="2" :input-attributes="['data-mashaer-field' => 'notes']" />
             </div>
         </div>
     </div>

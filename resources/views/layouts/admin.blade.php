@@ -23,7 +23,7 @@
     </script>
     @vite(['resources/scss/app.scss', 'resources/js/app.js', 'resources/js/admin.js'])
 </head>
-<body class="admin-body">
+<body class="admin-body" data-media-library-url="{{ route('admin.media-library.index') }}" data-media-library-update-url="{{ route('admin.media-library.update', ['item' => '__ID__']) }}">
     @php
         $currentUser = auth()->user();
         $userInitial = $currentUser ? strtoupper(substr($currentUser->name, 0, 1)) : '?';
@@ -186,6 +186,11 @@
         @endphp
         <script type="application/json" id="admin-tour-data">@json($tourData)</script>
     @endauth
+
+    {{-- Short confirmations from scripts (with Undo where it applies), and a
+         polite live region so screen readers hear what just changed. --}}
+    <div class="admin-toasts" id="admin-toasts" aria-live="polite"></div>
+    <div class="visually-hidden" id="admin-live-region" aria-live="polite" aria-atomic="true"></div>
 
     @stack('modals')
     @stack('scripts')

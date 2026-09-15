@@ -8,6 +8,7 @@ use App\Models\AdminActivity;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\PackageTemplate;
+use App\Support\Content\RichText;
 use App\Support\HajjPackagePage;
 use App\Support\Library\PackageBuilderData;
 use App\Support\Packages\HajjPackageWriter;
@@ -408,6 +409,7 @@ class HajjPackageController extends Controller
             'code', 'name', 'package_type', 'slug', 'summary', 'description', 'duration_days', 'duration_label',
             'season_year', 'season_label', 'status', 'package_series_id', 'meta_title', 'meta_description', 'internal_notes',
         ])->all());
+        $package->description = RichText::clean($data['description'] ?? null, 'standard');
 
         if (array_key_exists('sort_order', $data) && $data['sort_order'] !== null) {
             $package->sort_order = $data['sort_order'];

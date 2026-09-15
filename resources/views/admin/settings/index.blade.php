@@ -27,12 +27,14 @@
                         @foreach($items as $setting)
                             @php($isSecret = str_contains($setting->key, 'secret'))
                             <div class="col-md-6">
-                                <label for="setting-{{ $setting->key }}" class="form-label text-capitalize">{{ str_replace('_', ' ', $setting->key) }}</label>
+                                @php($help = \App\Support\Content\SettingLabels::help($setting->key))
+                                <label for="setting-{{ $setting->key }}" class="form-label">{{ \App\Support\Content\SettingLabels::label($setting->key) }}</label>
                                 @if($isSecret)
-                                    <input type="password" id="setting-{{ $setting->key }}" name="settings[{{ $setting->key }}]" class="form-control" autocomplete="off" placeholder="{{ $setting->value ? '••••••••  (leave blank to keep current value)' : 'Not set' }}">
+                                    <input type="password" id="setting-{{ $setting->key }}" name="settings[{{ $setting->key }}]" class="form-control" autocomplete="off" placeholder="{{ $setting->value ? '••••••••  (leave blank to keep current value)' : 'Not set' }}" @if($help) aria-describedby="setting-{{ $setting->key }}-help" @endif>
                                 @else
-                                    <input type="text" id="setting-{{ $setting->key }}" name="settings[{{ $setting->key }}]" class="form-control" value="{{ old('settings.'.$setting->key, $setting->value) }}">
+                                    <input type="text" id="setting-{{ $setting->key }}" name="settings[{{ $setting->key }}]" class="form-control" value="{{ old('settings.'.$setting->key, $setting->value) }}" @if($help) aria-describedby="setting-{{ $setting->key }}-help" @endif>
                                 @endif
+                                @if($help)<div class="form-help" id="setting-{{ $setting->key }}-help">{{ $help }}</div>@endif
                             </div>
                         @endforeach
                     </div>

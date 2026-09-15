@@ -39,28 +39,34 @@ test.describe('Full business journeys — admin', () => {
         await page.goto('/admin/pages');
         await page.getByRole('row', { name: /About Us/ }).getByRole('link', { name: 'Edit' }).click();
 
-        // About Us is a real, persistent singleton page (not delete-able like
-        // a test package), so its original real-seeded body must be captured
-        // and restored afterward — a previous version of this test
-        // overwrote it with a throwaway marker and never restored it,
-        // corrupting the real content for every other test/manual check
-        // that depends on it until the next `db:seed`.
-        const originalBody = await page.locator('textarea[name="body"]').inputValue();
+        // About Us is a real, persistent page, so its story text is captured
+        // and put back afterwards. The page is built from sections (issue
+        // #13): the story is the first section, edited in the text editor.
+        const story = page.locator('#builder-sections > [data-section]').first();
+        await story.locator('[data-section-toggle]').click();
+        const storyField = story.locator('textarea[name$="[data][content]"]');
+        const originalStory = await storyField.inputValue();
 
         const marker = 'Journey E marker ' + Date.now();
-        await page.locator('textarea[name="body"]').fill('<p>' + marker + '</p>');
-        await page.locator('input[name="is_active"]').check();
-        await page.getByRole('button', { name: 'Update Page' }).click();
-        await expect(page).toHaveURL(/\/admin\/pages$/);
+        const editor = story.locator('.rt-editable');
+        await editor.click();
+        await page.keyboard.press('Control+End');
+        await page.keyboard.press('Enter');
+        await page.keyboard.type(marker);
+        await clickAndConfirm(page, page.getByRole('button', { name: /^Publish/ }).first());
+        await expect(page.getByText('is published and visible on the website')).toBeVisible();
 
         const response = await page.goto('/about-us');
         expect(response.status()).toBe(200);
         await expect(page.getByText(marker)).toBeVisible();
 
-        // Cleanup: restore the real content.
+        // Cleanup: put the real story back and publish it.
         await page.goto('/admin/pages');
         await page.getByRole('row', { name: /About Us/ }).getByRole('link', { name: 'Edit' }).click();
-        await page.locator('textarea[name="body"]').fill(originalBody);
-        await page.getByRole('button', { name: 'Update Page' }).click();
+        const restoreStory = page.locator('#builder-sections > [data-section]').first();
+        await restoreStory.locator('[data-section-toggle]').click();
+        await restoreStory.locator('textarea[name$="[data][content]"]').evaluate((field, value) => { field.value = value; }, originalStory);
+        await clickAndConfirm(page, page.getByRole('button', { name: /^Publish/ }).first());
+        await expect(page.getByText('is published and visible on the website')).toBeVisible();
     });
 });

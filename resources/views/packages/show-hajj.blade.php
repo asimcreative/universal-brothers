@@ -73,7 +73,7 @@
                 <div class="col-lg-8">
                     @if($package->description)
                         <div class="hajj-intro">
-                            <p>{{ $package->description }}</p>
+                            <div class="rich-text">{!! \App\Support\Content\RichText::render($package->description, 'standard') !!}</div>
                         </div>
                     @endif
 

@@ -1,13 +1,8 @@
 @extends('layouts.app')
 
-@section('title', $page->meta_title ?: $page->title . ' | Universal Brothers')
-@section('meta_description', $page->meta_description ?: Str::limit(strip_tags($page->body ?? ''), 160))
-
-@push('head')
-    @if($page->canonical_url)
-        <link rel="canonical" href="{{ $page->canonical_url }}">
-    @endif
-@endpush
+@section('title', $seo['title'])
+@section('meta_description', $seo['description'])
+@include('partials.page-seo', ['seo' => $seo])
 
 @section('content')
     {{-- A page that has uploaded its own featured image uses that; otherwise the
@@ -30,8 +25,8 @@
                 <div class="row g-5">
                     <div class="col-lg-7 reveal-on-scroll">
                         <span class="section-eyebrow">The Beginning</span>
-                        <div class="page-body">
-                            {!! $page->body !!}
+                        <div class="page-body rich-text">
+                            {!! \App\Support\Content\RichText::render($page->body, 'full') !!}
                         </div>
                     </div>
 
@@ -171,8 +166,8 @@
                     @if($page->featured_image)
                         <img src="{{ Storage::url($page->featured_image) }}" alt="{{ $page->title }}" class="img-fluid rounded mb-4" loading="lazy">
                     @endif
-                    <div class="page-body">
-                        {!! $page->body !!}
+                    <div class="page-body rich-text">
+                        {!! \App\Support\Content\RichText::render($page->body, 'full') !!}
                     </div>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', $article->meta_title ?: $article->title . ' | Universal Brothers')
-@section('meta_description', $article->meta_description ?: Str::limit(strip_tags($article->body ?? ''), 160))
+@section('meta_description', $article->meta_description ?: Str::limit(\App\Support\Content\RichText::toPlainText($article->body), 160))
 
 @section('content')
     <div class="bg-primary text-white py-5">
@@ -24,7 +24,7 @@
                     <img src="{{ Storage::url($article->cover_image) }}" alt="{{ $article->title }}" class="img-fluid rounded mb-4" loading="lazy">
                 @endif
                 <div class="page-body">
-                    {!! $article->body !!}
+                    {!! \App\Support\Content\RichText::render($article->body, 'full') !!}
                 </div>
                 <a href="{{ route('media') }}" class="btn btn-outline-primary mt-4">Back to Travel News</a>
             </div>

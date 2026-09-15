@@ -52,8 +52,7 @@
                     <div class="form-text">Shown on the package card and at the top of the package page.</div>
                 </div>
                 <div class="col-12">
-                    <label for="pkg-description" class="form-label">Description</label>
-                    <textarea name="description" id="pkg-description" class="form-control" rows="3">{{ old('description', $package->description) }}</textarea>
+                    <x-admin.rich-text name="description" id="pkg-description" label="Description" profile="standard" :value="old('description', $package->description)" :max="20000" :rows="3" />
                 </div>
 
                 <div class="col-md-3">

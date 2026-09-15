@@ -46,7 +46,7 @@
             </div>
 
             @if($ubAziziya->description)
-                <p class="hajj-aziziya-copy">{{ $ubAziziya->description }}</p>
+                <div class="hajj-aziziya-copy rich-text">{!! \App\Support\Content\RichText::render($ubAziziya->description, 'basic') !!}</div>
             @endif
 
             @if($ubFacts)
@@ -110,7 +110,7 @@
             @endif
 
             @if($ubAziziya->notes)
-                <p class="hajj-aziziya-note">{{ $ubAziziya->notes }}</p>
+                <div class="hajj-aziziya-note rich-text">{!! \App\Support\Content\RichText::render($ubAziziya->notes, 'basic') !!}</div>
             @endif
         </div>
     </x-hajj.section>

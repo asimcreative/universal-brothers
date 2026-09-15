@@ -37,7 +37,7 @@
         <div class="row g-5">
             <div class="col-lg-8">
                 @if($package->description)
-                    <p>{{ $package->description }}</p>
+                    <div class="rich-text">{!! \App\Support\Content\RichText::render($package->description, 'standard') !!}</div>
                 @endif
 
                 {{-- A second look at the destination before the price table.

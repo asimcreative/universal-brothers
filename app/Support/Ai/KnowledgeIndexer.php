@@ -16,6 +16,7 @@ use App\Models\PackageCategory;
 use App\Models\PackageSeries;
 use App\Models\Page;
 use App\Models\Testimonial;
+use App\Support\Content\RichText;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -145,7 +146,7 @@ class KnowledgeIndexer
             }
 
             if ($package->description) {
-                $lines[] = Str::limit(strip_tags($package->description), 600);
+                $lines[] = Str::limit(RichText::toPlainText($package->description), 600);
             }
 
             if ($package->variants->isNotEmpty()) {
@@ -228,7 +229,7 @@ class KnowledgeIndexer
             'title' => "{$category->name} packages",
             'url' => route('packages.category', ['category' => $category->slug]),
             'category' => $category->slug,
-            'body' => trim("{$category->name} packages from Universal Brothers.\n".strip_tags((string) $category->description)),
+            'body' => trim("{$category->name} packages from Universal Brothers.\n".RichText::toPlainText($category->description)),
             'keywords' => "{$category->name} {$category->slug} packages listing",
             'weight' => 30,
         ])->all();
@@ -247,7 +248,7 @@ class KnowledgeIndexer
                     ? route('packages.category', ['category' => $series->category->slug]).'?series='.$series->slug
                     : null,
                 'category' => $series->category?->slug,
-                'body' => trim($series->name."\n".strip_tags((string) $series->description)),
+                'body' => trim($series->name."\n".RichText::toPlainText($series->description)),
                 'keywords' => "{$series->name} {$series->slug} series",
                 'weight' => 20,
             ])->all();
@@ -263,7 +264,7 @@ class KnowledgeIndexer
             'title' => $faq->question,
             'url' => route('faqs'),
             'category' => $faq->category,
-            'body' => "Q: {$faq->question}\nA: ".strip_tags((string) $faq->answer),
+            'body' => "Q: {$faq->question}\nA: ".RichText::toPlainText($faq->answer),
             'keywords' => (string) $faq->category,
             'weight' => 25,
         ])->all();
@@ -272,14 +273,14 @@ class KnowledgeIndexer
     /** @return array<int, array<string, mixed>> */
     private function pages(): array
     {
-        return Page::where('is_active', true)->get()->map(fn (Page $page) => [
+        return Page::live()->get()->map(fn (Page $page) => [
             'source_type' => 'page',
             'source_id' => $page->id,
             'reference' => $page->slug,
             'title' => $page->title,
             'url' => route('pages.show', ['slug' => $page->slug]),
             'category' => 'page',
-            'body' => Str::limit(trim($page->title."\n".strip_tags((string) $page->body)), 4000),
+            'body' => Str::limit(trim($page->title."\n".RichText::toPlainText($page->body)), 4000),
             'keywords' => $page->slug,
             'weight' => 15,
         ])->all();
@@ -301,7 +302,7 @@ class KnowledgeIndexer
                 'title' => $article->title,
                 'url' => route('news.show', ['slug' => $article->slug]),
                 'category' => 'news',
-                'body' => Str::limit(trim($article->title."\n".($article->excerpt ?: '')."\n".strip_tags((string) $article->body)), 2500),
+                'body' => Str::limit(trim($article->title."\n".($article->excerpt ?: '')."\n".RichText::toPlainText($article->body)), 2500),
                 'keywords' => 'news update announcement',
                 'weight' => 12,
             ])->all();
@@ -321,7 +322,7 @@ class KnowledgeIndexer
                 $award->name,
                 $award->awarding_organization ? "Awarded by: {$award->awarding_organization}" : null,
                 $award->year ? "Year: {$award->year}" : null,
-                strip_tags((string) $award->description),
+                RichText::toPlainText($award->description),
             ]))),
             'keywords' => 'award recognition achievement certificate',
             'weight' => 18,
@@ -341,7 +342,7 @@ class KnowledgeIndexer
             'body' => trim(implode("\n", array_filter([
                 $affiliation->organization_name,
                 $affiliation->year ? "Member since: {$affiliation->year}" : null,
-                strip_tags((string) $affiliation->description),
+                RichText::toPlainText($affiliation->description),
             ]))),
             'keywords' => 'affiliation membership accreditation licensed registered IATA',
             'weight' => 18,
@@ -358,7 +359,7 @@ class KnowledgeIndexer
             'title' => 'Testimonial from '.$testimonial->name,
             'url' => route('testimonials'),
             'category' => 'company',
-            'body' => trim(($testimonial->package_label ? "About: {$testimonial->package_label}\n" : '').'"'.strip_tags((string) $testimonial->quote).'" — '.$testimonial->name),
+            'body' => trim(($testimonial->package_label ? "About: {$testimonial->package_label}\n" : '').'"'.RichText::toPlainText($testimonial->quote).'" — '.$testimonial->name),
             'keywords' => 'testimonial review feedback experience pilgrim',
             'weight' => 10,
         ])->all();
@@ -401,7 +402,7 @@ class KnowledgeIndexer
                 $hotel->name,
                 $hotel->city ? "City: {$hotel->city}" : null,
                 $hotel->star_rating ? "Rating: {$hotel->star_rating} star" : null,
-                strip_tags((string) $hotel->description),
+                RichText::toPlainText($hotel->description),
             ]))),
             'keywords' => trim("hotel accommodation {$hotel->city}"),
             'weight' => 16,
@@ -411,7 +412,7 @@ class KnowledgeIndexer
     /** @return array<int, array<string, mixed>> */
     private function media(): array
     {
-        return MediaItem::where('is_active', true)->limit(40)->get()->map(fn (MediaItem $item) => [
+        return MediaItem::gallery()->where('is_active', true)->limit(40)->get()->map(fn (MediaItem $item) => [
             'source_type' => 'media',
             'source_id' => $item->id,
             'reference' => null,

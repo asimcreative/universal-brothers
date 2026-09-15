@@ -62,7 +62,7 @@
                             @if($office->phone_primary)<p class="mb-1"><i class="bi bi-telephone-fill me-2"></i>{{ $office->phone_primary }} @if($office->phone_secondary) / {{ $office->phone_secondary }} @endif</p>@endif
                             @if($office->whatsapp)<p class="mb-1"><i class="bi bi-whatsapp me-2"></i>{{ $office->whatsapp }}</p>@endif
                             @if($office->email)<p class="mb-0"><i class="bi bi-envelope-fill me-2"></i>{{ $office->email }}</p>@endif
-                            @if($office->google_maps_embed)
+                            @if($office->mapEmbedUrl())
                                 {{--
                                     Click-to-load, not an always-on iframe.
 
@@ -93,7 +93,7 @@
                                             <span class="map-embed-note">{{ $office->label ?: 'Office location' }}</span>
                                         </span>
                                     </a>
-                                    <template data-map-source>{!! $office->google_maps_embed !!}</template>
+                                    <template data-map-source><iframe src="{{ $office->mapEmbedUrl() }}" title="Map of {{ $office->label ?: 'our office' }}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></template>
                                 </div>
                             @endif
                         </div>

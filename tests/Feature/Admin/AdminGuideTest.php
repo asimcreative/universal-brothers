@@ -36,6 +36,7 @@ class AdminGuideTest extends TestCase
         $required = [
             'dashboard', 'website-content', 'hajj-packages', 'package-options', 'room-pricing', 'hotels', 'itinerary',
             'mashaer', 'transport', 'meals', 'inclusions', 'exclusions', 'upgrades', 'notes', 'templates', 'media',
+            'pages-builder', 'text-editor', 'images-alt-text', 'reusable-sections', 'page-search-sharing', 'fixing-problems',
             'faqs', 'awards', 'affiliations', 'testimonials', 'news', 'enquiries', 'settings', 'ai-assistant',
             'preview-publishing', 'safe-editing',
         ];
@@ -87,7 +88,7 @@ class AdminGuideTest extends TestCase
     {
         $response = $this->actingAs($this->admin)->get(route('admin.guide.index'))->assertOk();
 
-        $response->assertSee('0 of 26 sections read');
+        $response->assertSee('0 of 32 sections read');
         foreach (GuideContent::groups() as $title) {
             $response->assertSee($title, false);
         }
@@ -152,10 +153,10 @@ class AdminGuideTest extends TestCase
         $this->actingAs($this->admin)->post(route('admin.guide.complete', 'room-pricing'))->assertRedirect();
 
         $this->assertSame(1, AdminGuideCompletion::where('user_id', $this->admin->id)->where('section_key', 'room-pricing')->count());
-        $this->actingAs($this->admin)->get(route('admin.guide.index'))->assertSee('1 of 26 sections read');
+        $this->actingAs($this->admin)->get(route('admin.guide.index'))->assertSee('1 of 32 sections read');
         $this->actingAs($this->admin)->get(route('admin.guide.show', 'room-pricing'))->assertSee('You have read this section.');
 
-        $this->actingAs($other)->get(route('admin.guide.index'))->assertSee('0 of 26 sections read');
+        $this->actingAs($other)->get(route('admin.guide.index'))->assertSee('0 of 32 sections read');
 
         $this->actingAs($this->admin)->delete(route('admin.guide.uncomplete', 'room-pricing'))->assertRedirect();
         $this->assertSame(0, AdminGuideCompletion::count());

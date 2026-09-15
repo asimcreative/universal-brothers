@@ -2,6 +2,7 @@
 // provides window.bootstrap), and never by the public site.
 
 import { initPackageBuilder } from './admin/package-builder';
+import { initMediaFields } from './admin/media-picker';
 import { initTour } from './admin/tour';
 import { initTrainingPlayer } from './admin/training-player';
 
@@ -168,8 +169,63 @@ function initFieldErrors() {
     });
 }
 
+/**
+ * The rich text editor and the page builder are large, so they load only on
+ * pages that use them. Editors added later (a new package note, a new page
+ * section) are picked up by the editor's own watcher once it has loaded.
+ */
+function initLazyModules() {
+    const wantsEditor = () => document.querySelector('[data-rich-text]');
+
+    if (document.querySelector('[data-page-builder]')) {
+        import('./admin/page-builder').then((m) => m.initPageBuilder());
+    } else if (document.querySelector('[data-page-builder-fields]')) {
+        import('./admin/page-builder').then((m) => m.initSectionFields(document.querySelector('[data-page-builder-fields]')));
+    }
+
+    if (wantsEditor()) {
+        import('./admin/rich-text').then((m) => m.watchRichText());
+        return;
+    }
+
+    // A page with no editor yet may gain one (a package builder row added
+    // from a template), so keep an eye out until the first one appears.
+    const observer = new MutationObserver(() => {
+        if (!wantsEditor()) return;
+        observer.disconnect();
+        import('./admin/rich-text').then((m) => m.watchRichText());
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
+/** A "?" next to a field shows or hides its explanation (components/admin/help-tip). */
+function initHelpTips() {
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-help-tip]');
+        if (!button) return;
+        const text = document.getElementById(button.getAttribute('aria-controls'));
+        const open = button.getAttribute('aria-expanded') !== 'true';
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (text) text.hidden = !open;
+    });
+}
+
+/** A title field fills in an address field until someone types an address themselves. */
+function initSlugFields() {
+    const source = document.querySelector('[data-slug-source]');
+    const target = document.querySelector('[data-slug-target]');
+    if (!source || !target) return;
+    let edited = target.value.length > 0;
+    target.addEventListener('input', () => { edited = true; });
+    source.addEventListener('input', () => {
+        if (edited) return;
+        target.value = source.value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 100);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    [initConfirmDialog, initSubmitLoading, initCharCounters, initAutoSubmitFilters, initImagePreviews, initFieldErrors, initPackageBuilder, initTour, initTrainingPlayer].forEach((fn) => {
+    [initConfirmDialog, initSubmitLoading, initCharCounters, initAutoSubmitFilters, initImagePreviews, initFieldErrors, initPackageBuilder, initTour, initTrainingPlayer, initMediaFields, initHelpTips, initSlugFields, initLazyModules].forEach((fn) => {
         try {
             fn();
         } catch (error) {

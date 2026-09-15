@@ -18,7 +18,7 @@
             @foreach($ubNotes as $ubNote)
                 <div class="package-note @if($ubNote->is_important) package-note-important @endif">
                     @if($ubNote->title)<strong class="package-note-title">{{ $ubNote->title }}</strong>@endif
-                    {{ $ubNote->content }}
+                    <div class="package-note-text rich-text">{!! \App\Support\Content\RichText::render($ubNote->content, 'basic') !!}</div>
                 </div>
             @endforeach
         </div>

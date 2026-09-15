@@ -5,10 +5,12 @@ namespace App\Providers;
 use App\Listeners\VerifyRequiredPhpExtensions;
 use App\Models\Office;
 use App\Models\PackageCategory;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -71,5 +73,14 @@ class AppServiceProvider extends ServiceProvider
         // but not events. One explicit line is cheaper and does not depend on
         // a cache step nobody runs.
         Event::listen(DiagnosingHealth::class, VerifyRequiredPhpExtensions::class);
+
+        // Permissions beyond "is an active admin". Content editors can build
+        // and publish pages; these few actions reach further and stay with
+        // super admins: the AI provider account and its API key, sections
+        // that change several live pages at once, and the text editor's
+        // source view.
+        Gate::define('manage-ai-settings', fn (User $user) => $user->isSuperAdmin());
+        Gate::define('link-saved-sections', fn (User $user) => $user->isSuperAdmin());
+        Gate::define('edit-source', fn (User $user) => $user->isSuperAdmin());
     }
 }

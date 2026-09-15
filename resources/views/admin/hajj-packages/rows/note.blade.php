@@ -26,7 +26,7 @@
         <x-admin.row-actions label="note" />
     </div>
     <div class="b-row-wide">
-        <label class="visually-hidden" for="note-content-{{ $i }}">Note text</label>
-        <textarea id="note-content-{{ $i }}" name="notes[{{ $i }}][content]" data-field="content" rows="2" class="form-control @error("notes.$i.content") is-invalid @enderror" placeholder="The note customers will read">{{ $row['content'] ?? '' }}</textarea>
+        <x-admin.rich-text :name="'notes['.$i.'][content]'" :id="'note-content-'.$i" label="Note text" :hide-label="true" profile="basic" :value="$row['content'] ?? ''" :max="5000" :rows="2"
+            :error-key="'notes.'.$i.'.content'" placeholder="The note customers will read" :input-attributes="['data-field' => 'content']" />
     </div>
 </div>

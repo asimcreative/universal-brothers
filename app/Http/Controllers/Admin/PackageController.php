@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\PackageRequest;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\PackageSeries;
+use App\Support\Content\RichText;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,7 @@ class PackageController extends Controller
         }
 
         $package->fill($request->safe()->except(['cover_image', 'inclusions_text', 'exclusions_text', 'itinerary', 'tiers']));
+        $package->description = RichText::clean($request->validated('description'), 'standard');
         $this->applyBooleans($package, $request);
 
         if ($request->hasFile('cover_image')) {

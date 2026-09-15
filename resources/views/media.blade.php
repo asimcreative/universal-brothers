@@ -69,8 +69,8 @@
                     <div class="row g-3">
                         @foreach($gallery as $item)
                             <div class="col-md-4 col-6">
-                                <a href="{{ Storage::url($item->file_path) }}" class="gallery-item reveal-on-scroll d-block" data-lightbox-trigger data-lightbox-src="{{ Storage::url($item->file_path) }}" data-lightbox-caption="{{ $item->title ?? 'Universal Brothers gallery photo' }}">
-                                    <img src="{{ Storage::url($item->file_path) }}" alt="{{ $item->title ?? 'Universal Brothers gallery photo' }}" loading="lazy">
+                                <a href="{{ Storage::url($item->file_path) }}" class="gallery-item reveal-on-scroll d-block" data-lightbox-trigger data-lightbox-src="{{ Storage::url($item->file_path) }}" data-lightbox-caption="{{ $item->caption ?: ($item->title ?? 'Universal Brothers gallery photo') }}">
+                                    <img src="{{ Storage::url($item->file_path) }}" alt="{{ $item->alt_text ?: ($item->title ?? 'Universal Brothers gallery photo') }}" loading="lazy">
                                 </a>
                             </div>
                         @endforeach

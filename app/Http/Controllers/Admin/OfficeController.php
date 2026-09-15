@@ -55,7 +55,13 @@ class OfficeController extends Controller
             'phone_secondary' => ['nullable', 'string', 'max:50'],
             'whatsapp' => ['nullable', 'string', 'max:50'],
             'email' => ['nullable', 'email', 'max:255'],
-            'google_maps_embed' => ['nullable', 'string'],
+            // Only the address of a Google Maps embed is kept; the page builds
+            // the frame itself, so no pasted HTML is ever printed.
+            'google_maps_embed' => ['nullable', 'string', 'max:2000', function (string $attribute, mixed $value, \Closure $fail) {
+                if (filled($value) && Office::normalizeMapEmbed($value) === null) {
+                    $fail('This is not a Google Maps map. In Google Maps, open the place, choose Share, then "Embed a map", press "Copy HTML" and paste it here. Or leave it empty.');
+                }
+            }],
             'is_domestic' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer'],
             'is_active' => ['nullable', 'boolean'],
@@ -63,6 +69,7 @@ class OfficeController extends Controller
         $data['is_domestic'] = $request->boolean('is_domestic');
         $data['is_active'] = $request->boolean('is_active');
         $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['google_maps_embed'] = Office::normalizeMapEmbed($data['google_maps_embed'] ?? null);
 
         return $data;
     }

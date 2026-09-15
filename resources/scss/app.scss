@@ -15,6 +15,8 @@
 // shared classes (`.star-rating`, `.package-note`, the touch-target rules)
 // defined there, and a few of its rules deliberately refine them.
 @import 'hajj-detail';
+// Pages built with the admin's section builder, and formatted text from the editor.
+@import 'page-blocks';
 // Self-contained widget — no other partial styles `.ai-*`, so position in the
 // cascade is not load-bearing. Kept after the page systems so its fixed
 // overlay sits above them in source order as well as z-index.
@@ -22,3 +24,4 @@
 @import 'admin';
 @import 'admin-ui';
 @import 'admin-guide';
+@import 'admin-cms';

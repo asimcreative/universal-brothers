@@ -50,10 +50,10 @@
                     @endif
 
                     @if($ubRow->other_services)
-                        <p class="hajj-mashaer-note">{{ $ubRow->other_services }}</p>
+                        <div class="hajj-mashaer-note rich-text">{!! \App\Support\Content\RichText::render($ubRow->other_services, 'basic') !!}</div>
                     @endif
                     @if($ubRow->notes)
-                        <p class="hajj-mashaer-note">{{ $ubRow->notes }}</p>
+                        <div class="hajj-mashaer-note rich-text">{!! \App\Support\Content\RichText::render($ubRow->notes, 'basic') !!}</div>
                     @endif
                 </article>
             @endforeach

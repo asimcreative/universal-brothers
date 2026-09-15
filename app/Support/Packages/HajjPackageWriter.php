@@ -10,6 +10,7 @@ use App\Models\Package;
 use App\Models\ServiceItem;
 use App\Models\TransportOption;
 use App\Models\UpgradeOption;
+use App\Support\Content\RichText;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -180,8 +181,8 @@ class HajjPackageWriter
             'walk_distance' => $azData['walk_distance'] ?? null,
             'duration_days' => $azData['duration_days'] ?? null,
             'average_occupancy' => $azData['average_occupancy'] ?? null,
-            'description' => $azData['description'] ?? null,
-            'notes' => $azData['notes'] ?? null,
+            'description' => RichText::clean($azData['description'] ?? null, 'basic'),
+            'notes' => RichText::clean($azData['notes'] ?? null, 'basic'),
         ]);
 
         foreach (array_values($data['aziziya_room_options'] ?? []) as $i => $row) {
@@ -233,7 +234,9 @@ class HajjPackageWriter
         foreach (PackageFormState::MASHAER_LOCATIONS as $order => $location) {
             $row = $mashaer[$location] ?? [];
             $record = $records->get($row['mashaer_location_id'] ?? null);
-            $facts = collect(MashaerLocation::FACT_FIELDS)->mapWithKeys(fn ($f) => [$f => $row[$f] ?? null]);
+            $facts = collect(MashaerLocation::FACT_FIELDS)->mapWithKeys(fn ($f) => [$f => in_array($f, ['other_services', 'notes'], true)
+                ? RichText::clean($row[$f] ?? null, 'basic')
+                : ($row[$f] ?? null)]);
 
             if ($facts->filter(fn ($v) => filled($v))->isEmpty()) {
                 if (! $record) {
@@ -294,6 +297,8 @@ class HajjPackageWriter
 
         foreach (array_values($rows) as $i => $row) {
             $template = $templates->get($row['note_template_id'] ?? null);
+
+            $row['content'] = RichText::clean($row['content'] ?? null, 'basic');
 
             if (blank($row['content'] ?? null) && $template) {
                 $row = array_merge($row, [

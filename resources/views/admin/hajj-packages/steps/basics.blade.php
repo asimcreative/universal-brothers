@@ -69,9 +69,8 @@
             </div>
         </div>
         <div class="col-12">
-            <label for="pkg-description" class="form-label">Full description</label>
-            <textarea id="pkg-description" name="description" rows="4" class="form-control">{{ $state['description'] }}</textarea>
-            <div class="form-help">Shown at the start of the package page. Leave empty if the details below say enough.</div>
+            <x-admin.rich-text name="description" id="pkg-description" label="Full description" profile="standard" :value="$state['description']" :max="20000" :rows="4"
+                help="Shown at the start of the package page. Use the toolbar for headings, lists and links. Leave empty if the details below say enough." />
         </div>
     </div>
 </div>

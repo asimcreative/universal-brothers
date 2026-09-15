@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AffiliationController as AdminAffiliationControll
 use App\Http\Controllers\Admin\AiAssistantController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\AwardController as AdminAwardController;
+use App\Http\Controllers\Admin\ContentBlockController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\GuideController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Admin\HajjPackageController;
 use App\Http\Controllers\Admin\InquiryController as AdminInquiryController;
 use App\Http\Controllers\Admin\LibraryController;
 use App\Http\Controllers\Admin\MediaItemController as AdminMediaItemController;
+use App\Http\Controllers\Admin\MediaLibraryController;
 use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\OfficeController as AdminOfficeController;
 use App\Http\Controllers\Admin\OnboardingController;
@@ -193,7 +195,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->except(['show'])
             ->parameters(['news' => 'article']);
         Route::resource('offices', AdminOfficeController::class)->except(['show']);
+        // Page builder. The fixed paths are declared before the resource so
+        // "section-form" is never read as a {page}.
+        Route::get('pages/section-form', [AdminPageController::class, 'sectionForm'])->name('pages.section-form');
+        Route::prefix('pages/{page}')->name('pages.')->group(function () {
+            // A preview needs BOTH an admin session and an unexpired signature.
+            Route::get('preview', [AdminPageController::class, 'preview'])->middleware('signed')->name('preview');
+            Route::post('publish', [AdminPageController::class, 'publish'])->name('publish');
+            Route::patch('unpublish', [AdminPageController::class, 'unpublish'])->name('unpublish');
+            Route::patch('archive', [AdminPageController::class, 'archive'])->name('archive');
+            Route::patch('restore', [AdminPageController::class, 'restore'])->name('restore');
+            Route::delete('draft', [AdminPageController::class, 'discardDraft'])->name('discard-draft');
+            Route::post('duplicate', [AdminPageController::class, 'duplicate'])->name('duplicate');
+            Route::post('revisions/{revision}/restore', [AdminPageController::class, 'restoreRevision'])->name('revisions.restore');
+        });
         Route::resource('pages', AdminPageController::class)->except(['show']);
+
+        // Saved sections: page-builder sections kept for reuse on other pages.
+        Route::prefix('content-blocks/{block}')->name('content-blocks.')->group(function () {
+            Route::get('preview', [ContentBlockController::class, 'preview'])->name('preview');
+            Route::post('duplicate', [ContentBlockController::class, 'duplicate'])->name('duplicate');
+            Route::patch('archive', [ContentBlockController::class, 'archive'])->name('archive');
+            Route::patch('restore', [ContentBlockController::class, 'restore'])->name('restore');
+        });
+        Route::resource('content-blocks', ContentBlockController::class)
+            ->except(['show'])
+            ->parameters(['content-blocks' => 'block']);
+
+        // The media library behind every image picker (JSON).
+        Route::get('media-library', [MediaLibraryController::class, 'index'])->name('media-library.index');
+        Route::post('media-library', [MediaLibraryController::class, 'store'])->name('media-library.store');
+        Route::patch('media-library/{item}', [MediaLibraryController::class, 'update'])->name('media-library.update');
         // Explicit parameter name: learned from the News bug (see
         // FINAL_AUDIT_REPORT.md §5) — Laravel's singularization of "media"
         // is not guaranteed to match the controller's `$item` type-hint, so
@@ -210,10 +242,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('settings', [SiteSettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SiteSettingController::class, 'update'])->name('settings.update');
 
-        Route::get('ai', [AiAssistantController::class, 'index'])->name('ai.index');
-        Route::put('ai', [AiAssistantController::class, 'update'])->name('ai.update');
-        Route::delete('ai/key', [AiAssistantController::class, 'clearKey'])->name('ai.key.clear');
-        Route::post('ai/reindex', [AiAssistantController::class, 'reindex'])->name('ai.reindex');
+        // Settings, the API key and the knowledge index: super admins only.
+        Route::middleware('can:manage-ai-settings')->group(function () {
+            Route::get('ai', [AiAssistantController::class, 'index'])->name('ai.index');
+            Route::put('ai', [AiAssistantController::class, 'update'])->name('ai.update');
+            Route::delete('ai/key', [AiAssistantController::class, 'clearKey'])->name('ai.key.clear');
+            Route::post('ai/key/check', [AiAssistantController::class, 'checkKey'])->name('ai.key.check');
+            Route::post('ai/reindex', [AiAssistantController::class, 'reindex'])->name('ai.reindex');
+        });
         Route::match(['get', 'post'], 'ai/test', [AiAssistantController::class, 'test'])->name('ai.test');
         Route::get('ai/conversations', [AiAssistantController::class, 'conversations'])->name('ai.conversations');
         // Declared after the collection route so `ai/conversations` is never

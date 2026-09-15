@@ -3,6 +3,7 @@
 namespace App\Support\Library;
 
 use App\Models\Package;
+use App\Support\Content\RichText;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -156,6 +157,8 @@ class LibraryType
             $typeRules = match ($field['type']) {
                 'text' => ['string', 'max:'.($field['max'] ?? 255)],
                 'textarea' => ['string', 'max:'.($field['max'] ?? 5000)],
+                // Formatted text is measured with its markup, so allow room for it.
+                'richtext' => ['string', 'max:'.(($field['max'] ?? 5000) * 3)],
                 'number' => ['integer', 'min:'.($field['min'] ?? 0), 'max:'.($field['maxValue'] ?? 100000)],
                 'price' => ['numeric', 'min:0', 'max:99999999'],
                 'select' => [Rule::in(array_keys($field['options']))],
@@ -167,6 +170,16 @@ class LibraryType
             };
 
             $rules[$name] = array_merge($base, $typeRules);
+
+            // An editor box that holds only an empty paragraph is still empty.
+            if ($field['type'] === 'richtext' && ! empty($field['required'])) {
+                $label = $field['label'];
+                $rules[$name][] = function (string $attribute, mixed $value, \Closure $fail) use ($label) {
+                    if (RichText::isEmpty(is_string($value) ? $value : null)) {
+                        $fail("Write the {$label}.");
+                    }
+                };
+            }
 
             if ($field['type'] === 'days') {
                 $rules["{$name}.*.day_number"] = ['nullable', 'integer', 'min:1', 'max:60'];
@@ -205,6 +218,14 @@ class LibraryType
                     ->values()
                     ->map(fn ($row, $i) => array_merge($row, ['day_number' => filled($row['day_number'] ?? null) ? (int) $row['day_number'] : $i + 1]))
                     ->all();
+
+                continue;
+            }
+
+            if ($field['type'] === 'richtext') {
+                if (array_key_exists($name, $validated)) {
+                    $attributes[$name] = RichText::clean($validated[$name], $field['profile'] ?? 'basic');
+                }
 
                 continue;
             }

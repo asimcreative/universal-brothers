@@ -45,8 +45,13 @@
                     </div>
                 </div>
                 <div class="col-12">
-                    <label for="office-maps-embed" class="form-label">Google Maps Embed (iframe src or full embed code)</label>
-                    <textarea name="google_maps_embed" id="office-maps-embed" class="form-control" rows="2">{{ old('google_maps_embed', $office->google_maps_embed) }}</textarea>
+                    <label for="office-maps-embed" class="form-label">Map on the Contact page (optional)</label>
+                    <textarea name="google_maps_embed" id="office-maps-embed" class="form-control @error('google_maps_embed') is-invalid @enderror" rows="2" aria-describedby="office-maps-help">{{ old('google_maps_embed', $office->google_maps_embed) }}</textarea>
+                    @error('google_maps_embed')<div class="invalid-feedback" id="office-maps-error">{{ $message }}</div>@enderror
+                    <div class="form-help" id="office-maps-help">
+                        In Google Maps, open the office location, choose <strong>Share</strong> → <strong>Embed a map</strong> → <strong>Copy HTML</strong>, and paste it here. Only the map address is kept.
+                        <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-map-from-address>Or make a map from the address above</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -55,4 +60,15 @@
             <a href="{{ route('admin.offices.index') }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
     </form>
+    @push('scripts')
+    <script>
+        document.querySelector('[data-map-from-address]')?.addEventListener('click', function () {
+            var address = document.getElementById('office-address').value.trim();
+            var field = document.getElementById('office-maps-embed');
+            if (!address) { document.getElementById('office-address').focus(); return; }
+            field.value = 'https://www.google.com/maps?q=' + encodeURIComponent(address) + '&output=embed';
+            field.focus();
+        });
+    </script>
+    @endpush
 @endsection

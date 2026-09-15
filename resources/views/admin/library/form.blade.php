@@ -63,6 +63,11 @@
                                 </div>
                                 @break
 
+                            @case('richtext')
+                                <x-admin.rich-text :name="$name" :id="$id" :label="$field['label']" :value="$value" :profile="$field['profile'] ?? 'basic'"
+                                    :max="$field['max'] ?? null" :required="$required" :rows="3" />
+                                @break
+
                             @case('days')
                                 <label class="form-label">{{ $field['label'] }}</label>
                                 @include('admin.library.partials.days', ['days' => old($name, $record->{$name} ?? [])])

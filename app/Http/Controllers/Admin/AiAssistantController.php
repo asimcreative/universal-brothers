@@ -47,7 +47,7 @@ class AiAssistantController extends Controller
             'is_enabled' => ['nullable', 'boolean'],
             'public_enabled' => ['nullable', 'boolean'],
             'assistant_name' => ['required', 'string', 'max:80'],
-            'assistant_icon' => ['nullable', 'string', 'max:60'],
+            'assistant_icon' => ['nullable', 'string', 'max:60', 'regex:/^bi-[a-z0-9-]+$/'],
             'welcome_message' => ['nullable', 'string', 'max:2000'],
             'fallback_message' => ['nullable', 'string', 'max:2000'],
 
@@ -117,6 +117,32 @@ class AiAssistantController extends Controller
         AiConfig::flush();
 
         return back()->with('status', 'Stored API key removed. The environment variable is now the only source.');
+    }
+
+    /**
+     * Confirm the configured key works by asking the provider for a one-word
+     * reply. The key itself never leaves the server and is never shown; only
+     * the outcome is reported.
+     */
+    public function checkKey(AiClient $client): RedirectResponse
+    {
+        if (AiConfig::apiKeySource() === 'missing') {
+            return back()->with('status', 'There is no API key to check. Add one first.');
+        }
+
+        $response = $client->chat([['role' => 'user', 'content' => 'Reply with the single word OK.']]);
+
+        if ($response['ok']) {
+            return back()->with('status', 'The API key works: the provider answered in '.($response['latency_ms'] ?? '?').' ms.');
+        }
+
+        return back()->withErrors(['api_key' => match ($response['failure'] ?? null) {
+            AiClient::FAILURE_AUTH => 'The provider rejected the API key. It may have been deleted or replaced — paste the current key and save.',
+            AiClient::FAILURE_NO_CREDIT => 'The key is correct, but the provider account has no credit left. Add credit on the provider’s billing page.',
+            AiClient::FAILURE_TIMEOUT => 'The provider did not reply in time. Try again in a minute.',
+            AiClient::FAILURE_RATE_LIMIT => 'The provider is busy. Try again in a minute.',
+            default => 'The key could not be checked: '.(AiClient::scrub($response['detail'] ?? null) ?: 'the provider did not accept the request').'.',
+        }]);
     }
 
     public function reindex(KnowledgeIndexer $indexer): RedirectResponse

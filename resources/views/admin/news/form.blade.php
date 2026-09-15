@@ -22,8 +22,8 @@
                     <textarea name="excerpt" id="news-excerpt" class="form-control" rows="2">{{ old('excerpt', $article->excerpt) }}</textarea>
                 </div>
                 <div class="col-12">
-                    <label for="news-body" class="form-label">Body</label>
-                    <textarea name="body" id="news-body" class="form-control" rows="8">{{ old('body', $article->body) }}</textarea>
+                    <x-admin.rich-text name="body" id="news-body" label="Article text" profile="full" :value="old('body', $article->body)" :max="60000"
+                        help="Write the article as you would in a document: headings, lists, links, tables, photos and videos are all available from the toolbar." />
                 </div>
                 <div class="col-md-6">
                     <label for="news-cover-image" class="form-label">Cover Image</label>

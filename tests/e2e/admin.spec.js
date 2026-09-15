@@ -162,7 +162,12 @@ test.describe('Admin CMS', () => {
         await page.goto('/admin/faqs/create');
         await page.locator('select[name="category"]').selectOption('hajj');
         await page.locator('input[name="question"]').fill(question);
-        await page.locator('textarea[name="answer"]').fill('Playwright E2E test answer.');
+        // The answer is formatted text: typed into the visual editor, which
+        // keeps the form's hidden textarea in step.
+        const answer = page.locator('.rt-field', { has: page.locator('textarea[name="answer"]') }).locator('.rt-editable');
+        await answer.click();
+        await page.keyboard.type('Playwright E2E test answer.');
+        await expect(page.locator('textarea[name="answer"]')).toHaveValue('<p>Playwright E2E test answer.</p>');
         await page.getByRole('button', { name: 'Save' }).click();
         await expect(page).toHaveURL(/\/admin\/faqs$/);
         await expect(page.getByText(question)).toBeVisible();
@@ -205,14 +210,28 @@ test.describe('Admin CMS', () => {
     });
 
     test('24. admin can manage the About Us page', async ({ page }) => {
+        // Pages are built from sections (issue #13): editing opens the builder,
+        // and saving a draft never changes the live page.
         await page.goto('/admin/pages');
         await page.getByRole('row', { name: /About Us/ }).getByRole('link', { name: 'Edit' }).click();
+        await expect(page.locator('#builder-sections > [data-section]').first()).toBeVisible();
+        await page.getByRole('tab', { name: /Title & address/ }).click();
         await expect(page.locator('input[name="slug"]')).toHaveValue('about-us');
-        await page.getByRole('button', { name: 'Update Page' }).click();
-        await expect(page).toHaveURL(/\/admin\/pages$/);
+        await page.getByRole('button', { name: 'Save draft' }).click();
+        await expect(page.getByText('Draft saved.')).toBeVisible();
 
         const response = await page.goto('/about-us');
         expect(response.status()).toBe(200);
+
+        // Leave the page with no pending draft for the other tests.
+        await page.goBack();
+        await page.goto('/admin/pages');
+        await page.getByRole('row', { name: /About Us/ }).getByRole('link', { name: 'Edit' }).click();
+        const discard = page.getByRole('button', { name: 'Discard unpublished changes' });
+        if (await discard.count()) {
+            await page.getByRole('button', { name: 'More', exact: true }).click();
+            await clickAndConfirm(page, discard);
+        }
     });
 
     test('25. package SEO fields are saved and rendered in the public page head', async ({ page }) => {

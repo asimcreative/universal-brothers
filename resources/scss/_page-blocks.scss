@@ -1,0 +1,270 @@
+// Public styles for pages built with the admin's page builder, and for
+// formatted text written in the rich text editor (`.rich-text`). Everything
+// composes the existing public design system — section spacing, eyebrows,
+// icon pillars, stat tiles, page heroes and CTA bands — so a built page reads
+// like the rest of the site.
+
+.rich-text {
+    > :last-child { margin-bottom: 0; }
+
+    h2, h3, h4 {
+        margin-top: 1.75rem;
+        margin-bottom: 0.75rem;
+
+        &:first-child { margin-top: 0; }
+    }
+
+    ul, ol { padding-left: 1.4rem; }
+    li + li { margin-top: 0.3rem; }
+
+    a {
+        color: $ub-gold-dark;
+        text-decoration: underline;
+        text-underline-offset: 0.15em;
+
+        &:hover { color: $ub-navy; }
+    }
+
+    blockquote {
+        margin: 1.5rem 0;
+        padding: 0.5rem 0 0.5rem 1.25rem;
+        border-left: 4px solid $ub-gold;
+        font-family: $headings-font-family;
+        font-size: 1.15rem;
+        color: $ub-navy;
+    }
+
+    hr {
+        margin: 2rem 0;
+        border-color: rgba($ub-navy, 0.15);
+        opacity: 1;
+    }
+
+    table {
+        width: 100%;
+        margin: 1.5rem 0;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+
+        th, td {
+            padding: 0.65rem 0.8rem;
+            border: 1px solid rgba($ub-navy, 0.12);
+            vertical-align: top;
+        }
+
+        th {
+            background-color: $ub-cream;
+            color: $ub-navy;
+            font-weight: 600;
+        }
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        border-radius: $border-radius;
+        margin: 1rem 0;
+    }
+
+    div[data-video-embed] {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        margin: 1.5rem 0;
+        border-radius: $border-radius-lg;
+        overflow: hidden;
+        background-color: $ub-navy-dark;
+        box-shadow: $ub-shadow-sm;
+
+        iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    }
+
+    // Wide tables scroll on small screens instead of widening the page.
+    @include media-breakpoint-down(md) {
+        table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+    }
+}
+
+// ---- Section builder -----------------------------------------------------------
+
+.pb-heading {
+    max-width: 44rem;
+    margin-bottom: 3rem;
+
+    &--center {
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+    }
+
+    h2 { margin-bottom: 0.75rem; }
+}
+
+.pb-intro {
+    font-size: 1.05rem;
+    color: rgba(33, 37, 41, 0.72);
+    margin-bottom: 0;
+}
+
+.pb-section--dark {
+    h2, h3, .h4, .h6 { color: #fff; }
+    .pb-intro, .rich-text { color: rgba(255, 255, 255, 0.82); }
+    .section-eyebrow { color: $ub-gold-light; }
+
+    .rich-text a {
+        color: $ub-gold-light;
+
+        &:hover { color: #fff; }
+    }
+}
+
+.pb-hero--tall {
+    min-height: 72vh;
+    display: flex;
+    align-items: flex-end;
+
+    .page-hero-content { width: 100%; }
+}
+
+.pb-figure { position: relative; }
+
+.pb-figure-img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: $border-radius-lg;
+    box-shadow: $ub-shadow-md;
+    display: block;
+}
+
+.pb-figure-caption {
+    margin-top: 0.6rem;
+    font-size: 0.875rem;
+    color: rgba(33, 37, 41, 0.7);
+
+    .pb-section--dark & { color: rgba(255, 255, 255, 0.75); }
+}
+
+.pb-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.pb-card-link {
+    margin-top: auto;
+    padding-top: 0.85rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: $ub-gold-dark;
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+
+    &:hover { color: $ub-navy; text-decoration: underline; }
+}
+
+.pb-card--on-dark {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #fff;
+
+    .pb-card-link { color: $ub-gold-light; }
+}
+
+.pb-video {
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    box-shadow: $ub-shadow-md;
+    background-color: $ub-navy-dark;
+
+    iframe { border: 0; }
+}
+
+.pb-cta--gold,
+.pb-cta--cream {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.pb-cta-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem 2rem;
+    padding: 2.5rem;
+    border-radius: $border-radius-lg;
+    box-shadow: $ub-shadow-sm;
+
+    .pb-cta--gold & {
+        background: linear-gradient(135deg, $ub-gold-light, $ub-gold);
+        color: $ub-navy;
+    }
+
+    .pb-cta--cream & {
+        background-color: $ub-cream;
+        color: $ub-navy;
+    }
+
+    @include media-breakpoint-down(md) {
+        padding: 1.75rem;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+.pb-cta-title {
+    margin-bottom: 0.35rem;
+    color: $ub-navy;
+}
+
+.pb-cta-copy { color: rgba($ub-navy, 0.82); }
+
+.pb-cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    @include media-breakpoint-down(md) { justify-content: center; }
+}
+
+.pb-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    &--left { justify-content: flex-start; }
+    &--center { justify-content: center; }
+    &--right { justify-content: flex-end; }
+}
+
+.pb-spacer {
+    &--small { height: 1.5rem; }
+    &--medium { height: 3.5rem; }
+    &--large { height: 6rem; }
+
+    display: flex;
+    align-items: center;
+}
+
+.pb-spacer-line {
+    margin: 0;
+    border-color: rgba($ub-navy, 0.15);
+    opacity: 1;
+}
+
+.pb-slider .hero-slide {
+    min-height: 62vh;
+    display: flex;
+    align-items: center;
+}

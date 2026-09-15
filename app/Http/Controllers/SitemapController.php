@@ -6,7 +6,6 @@ use App\Models\NewsArticle;
 use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\Page;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
@@ -20,7 +19,7 @@ class SitemapController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $pages = Page::where('is_active', true)->orderBy('updated_at', 'desc')->get();
+        $pages = Page::live()->where('noindex', false)->orderBy('updated_at', 'desc')->get();
 
         $news = NewsArticle::where('is_active', true)->orderBy('updated_at', 'desc')->get();
 

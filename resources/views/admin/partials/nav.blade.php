@@ -48,6 +48,7 @@
         ],
         'Website Content' => [
             $link('admin.pages.index', 'admin.pages.*', 'bi-file-earmark-text', 'Pages'),
+            $link('admin.content-blocks.index', 'admin.content-blocks.*', 'bi-bookmark-star', 'Saved Sections'),
             $link('admin.news.index', 'admin.news.*', 'bi-newspaper', 'News'),
             $link('admin.faqs.index', 'admin.faqs.*', 'bi-question-circle', 'FAQs'),
             $link('admin.testimonials.index', 'admin.testimonials.*', 'bi-chat-quote', 'Testimonials'),
@@ -61,7 +62,7 @@
             $link('admin.settings.index', 'admin.settings.*', 'bi-gear', 'Site Settings', ['tour' => 'nav-settings']),
         ],
         'AI Assistant' => [
-            $link('admin.ai.index', 'admin.ai.index', 'bi-stars', 'AI Assistant'),
+            ...(auth()->user()?->can('manage-ai-settings') ? [$link('admin.ai.index', 'admin.ai.index', 'bi-stars', 'AI Assistant')] : []),
             $link('admin.ai.test', 'admin.ai.test', 'bi-play-circle', 'AI Test Panel'),
             $link('admin.ai.conversations', 'admin.ai.conversation*', 'bi-chat-dots', 'AI Conversations'),
         ],

@@ -20,10 +20,14 @@
     <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
     <title>@yield('title', 'Universal Brothers — Hajj, Umrah & Tourism')</title>
     <meta name="description" content="@yield('meta_description', "Universal Brothers (Pvt) Ltd — IATA-registered Hajj, Umrah and Tourism operator based in Karachi, Pakistan. 20+ years of trusted service.")">
-    <link rel="canonical" href="{{ url()->current() }}">
+    {{-- A page may name its own canonical address, sharing text and image, or
+         ask search engines not to list it (CMS pages set these from the admin). --}}
+    <link rel="canonical" href="@hasSection('canonical')@yield('canonical')@else{{ url()->current() }}@endif">
+    @hasSection('robots')<meta name="robots" content="@yield('robots')">@endif
     <meta name="theme-color" content="#101b45">
-    <meta property="og:title" content="@yield('title', 'Universal Brothers')">
-    <meta property="og:description" content="@yield('meta_description', 'Hajj, Umrah & Tourism packages from Universal Brothers.')">
+    <meta property="og:title" content="@hasSection('og_title')@yield('og_title')@else@yield('title', 'Universal Brothers')@endif">
+    <meta property="og:description" content="@hasSection('og_description')@yield('og_description')@else@yield('meta_description', 'Hajj, Umrah & Tourism packages from Universal Brothers.')@endif">
+    @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Universal Brothers (Pvt) Ltd">
     {{-- The brand's khatim monogram as an inline SVG favicon — the previous

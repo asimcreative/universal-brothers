@@ -3,6 +3,7 @@
 namespace App\Support\Ai;
 
 use App\Models\Package;
+use App\Support\Content\RichText;
 use Illuminate\Support\Str;
 
 /**
@@ -166,14 +167,14 @@ class PackageContext
                         ? ' — '.($upgrade->currency ?: 'USD').' '.self::money($upgrade->price).($upgrade->price_basis ? " {$upgrade->price_basis}" : '')
                         : ($upgrade->is_included ? ' — included' : '');
 
-                    return trim('- '.$upgrade->name.$price.($upgrade->description ? ': '.$upgrade->description : ''));
+                    return trim('- '.$upgrade->name.$price.($upgrade->description ? ': '.RichText::toPlainText($upgrade->description) : ''));
                 })
                 ->implode("\n");
         }
 
         if ($package->packageNotes->isNotEmpty()) {
             $lines[] = "NOTES\n- ".$package->packageNotes
-                ->map(fn ($n) => trim(($n->title ? "{$n->title}: " : '').$n->content))
+                ->map(fn ($n) => trim(($n->title ? "{$n->title}: " : '').RichText::toPlainText($n->content)))
                 ->filter()
                 ->implode("\n- ");
         }
@@ -286,7 +287,7 @@ class PackageContext
             $aziziya->location_note,
             $aziziya->walk_distance ? "Walking distance: {$aziziya->walk_distance}" : null,
             $aziziya->duration_days ? "Duration: {$aziziya->duration_days} days" : null,
-            $aziziya->description,
+            RichText::toPlainText($aziziya->description) ?: null,
         ]));
 
         if ($aziziya->relationLoaded('roomOptions') && $aziziya->roomOptions->isNotEmpty()) {
