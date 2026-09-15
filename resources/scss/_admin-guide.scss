@@ -688,6 +688,272 @@
 
 }
 
+// ---- Video Training -------------------------------------------------------
+.admin-body {
+    .watch-guide-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1a5fb4;
+        text-decoration: none;
+
+        .bi { font-size: 1.1rem; }
+        &:hover span:first-of-type { text-decoration: underline; }
+    }
+
+    .watch-guide-duration { font-size: 0.72rem; font-weight: 600; color: $admin-muted; background-color: $admin-soft; border-radius: 999px; padding: 0 0.45rem; }
+
+    .training-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+        gap: 1rem;
+    }
+
+    .training-card {
+        display: flex;
+        flex-direction: column;
+        background-color: #fff;
+        border: 1px solid $admin-border;
+        border-radius: $border-radius-lg;
+        overflow: hidden;
+        min-width: 0;
+
+        &.is-done { border-color: #9fd3b0; }
+    }
+
+    .training-card-thumb {
+        position: relative;
+        display: block;
+        aspect-ratio: 16 / 9;
+        background-color: $ub-navy;
+
+        img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    }
+
+    .training-card-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 2rem;
+    }
+
+    .training-card-duration {
+        position: absolute;
+        right: 0.5rem;
+        bottom: 0.5rem;
+        background-color: rgba(0, 0, 0, 0.75);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+        padding: 0.05rem 0.4rem;
+    }
+
+    .training-card-body {
+        padding: 0.8rem 0.9rem 0.4rem;
+        flex-grow: 1;
+
+        h3 { font-size: 0.98rem; margin: 0.15rem 0 0.3rem; a { color: $ub-navy; text-decoration: none; } a:hover { text-decoration: underline; } }
+        p { font-size: 0.82rem; color: $admin-muted; margin-bottom: 0.5rem; }
+    }
+
+    .training-card-number { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: $ub-gold-dark; }
+
+    .training-card-meta {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem 0.8rem;
+        font-size: 0.75rem;
+        color: #4b5563;
+
+        li { display: inline-flex; gap: 0.3rem; align-items: center; }
+    }
+
+    .training-card-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.6rem 0.9rem;
+        border-top: 1px solid #f1f2f5;
+    }
+
+    .training-status {
+        display: inline-flex;
+        gap: 0.35rem;
+        align-items: center;
+        font-size: 0.8rem;
+        color: $admin-muted;
+
+        &.is-done { color: #1e7e34; font-weight: 600; }
+        &.is-started { color: #8a4b00; }
+    }
+
+    .training-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 1.5rem;
+        align-items: start;
+
+        @media (max-width: 1199.98px) { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .training-main { min-width: 0; }
+
+    .training-player-card {
+        background-color: #fff;
+        border-radius: $border-radius-lg;
+        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .training-player video {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+        background-color: #000;
+        border-radius: $border-radius;
+    }
+
+    .training-player video::cue { font-size: 1.1rem; background-color: rgba(0, 0, 0, 0.8); }
+
+    .training-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+        margin-top: 0.6rem;
+
+        .btn { display: inline-flex; align-items: center; }
+    }
+
+    .training-time { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: $admin-muted; }
+
+    .training-resume { font-size: 0.82rem; margin-top: 0.5rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .training-player-error, .training-next { margin: 0.6rem 0 0; }
+
+    .training-missing {
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+        background-color: $admin-soft;
+        border-radius: $border-radius;
+        padding: 1.5rem;
+
+        > .bi { font-size: 2rem; color: $admin-muted; }
+    }
+
+    .training-status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1rem;
+        align-items: center;
+        margin-top: 0.7rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid #f1f2f5;
+    }
+
+    .training-moments {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.2rem;
+    }
+
+    .training-moment {
+        display: flex;
+        gap: 0.7rem;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        border-radius: $border-radius-sm;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.88rem;
+        color: #374151;
+
+        &:hover { background-color: $admin-soft; }
+    }
+
+    .training-moment-time { font-variant-numeric: tabular-nums; color: #1a5fb4; font-weight: 600; min-width: 2.8rem; }
+
+    .training-aside {
+        position: sticky;
+        top: 5.25rem;
+        display: grid;
+        gap: 1rem;
+
+        @media (max-width: 1199.98px) { position: static; }
+    }
+
+    .training-chapter-nav {
+        max-height: calc(100vh - 16rem);
+        overflow-y: auto;
+
+        @media (max-width: 1199.98px) { max-height: none; }
+
+        ol { list-style: none; padding: 0; margin: 0; }
+
+        li a {
+            display: flex;
+            gap: 0.5rem;
+            align-items: baseline;
+            padding: 0.3rem 0.4rem;
+            border-radius: $border-radius-sm;
+            font-size: 0.82rem;
+            color: #374151;
+            text-decoration: none;
+
+            &:hover { background-color: $admin-soft; }
+            &.active { background-color: rgba($ub-navy, 0.07); color: $ub-navy; font-weight: 600; }
+        }
+
+        .training-nav-number { min-width: 1.4rem; color: $admin-muted; font-variant-numeric: tabular-nums; }
+        .training-nav-title { flex-grow: 1; }
+    }
+
+    .training-checklist-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.7rem;
+        border-bottom: 1px solid $admin-border;
+
+        strong { flex-basis: 100%; font-size: 1.05rem; color: $ub-navy; }
+    }
+
+    .training-checklist-groups {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+        gap: 1rem 2rem;
+    }
+
+    .training-checklist-group legend { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: $ub-gold-dark; margin-bottom: 0.3rem; }
+    .training-checklist-group .form-check { margin-bottom: 0.25rem; }
+}
+
+// The printed checklist: just the sheet.
+@media print {
+    .admin-body {
+        .admin-sidebar, .admin-topbar, .page-help, .offcanvas, .alert { display: none !important; }
+        .admin-content { padding: 0 !important; }
+        .training-checklist { box-shadow: none !important; border: none !important; }
+        .training-checklist-groups { grid-template-columns: repeat(2, 1fr); }
+        .form-check-input { border: 1.5px solid #000; }
+    }
+}
 // ---- Guided tour layers (appended to <body>) --------------------------------
 .tour-highlight {
     position: fixed;

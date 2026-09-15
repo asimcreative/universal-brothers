@@ -59,6 +59,11 @@ class User extends Authenticatable
         return $this->hasMany(AdminGuideCompletion::class);
     }
 
+    public function trainingProgress(): HasMany
+    {
+        return $this->hasMany(AdminTrainingProgress::class);
+    }
+
     /**
      * The welcome panel shows until the admin dismisses it or finishes the
      * tour; after that only an explicit restart brings the tour back.

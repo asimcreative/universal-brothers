@@ -1,0 +1,182 @@
+{
+    "welcome": {
+        "number": 1,
+        "title": "Welcome to the Universal Brothers Admin Panel",
+        "description": "Sign in to the admin panel and see what this training covers.",
+        "category": "Getting Started"
+    },
+    "dashboard": {
+        "number": 2,
+        "title": "Understanding the Dashboard",
+        "description": "What the numbers, cards and shortcuts on the dashboard mean.",
+        "category": "Getting Started"
+    },
+    "navigation": {
+        "number": 3,
+        "title": "Finding Hajj Package Management",
+        "description": "The menu, the Hajj package list, its search and filters, and where settings and help live.",
+        "category": "Getting Started"
+    },
+    "new-package": {
+        "number": 4,
+        "title": "Creating a New Hajj Package",
+        "description": "Open the package builder and understand its 14 steps, checklist and help panels.",
+        "category": "Hajj Package Creation"
+    },
+    "basic-information": {
+        "number": 5,
+        "title": "Adding Basic Package Information",
+        "description": "Title, package code, tier, series, short description, days and Hajj year.",
+        "category": "Hajj Package Creation"
+    },
+    "package-settings": {
+        "number": 6,
+        "title": "Configuring Hajj Package Settings",
+        "description": "Arrival city, shifting or non-shifting, and Aziziya.",
+        "category": "Hajj Package Creation"
+    },
+    "package-options": {
+        "number": 7,
+        "title": "Creating Package A and Package B",
+        "description": "Hotel options: when to use them and how to name Option A and Option B.",
+        "category": "Hajj Package Creation"
+    },
+    "hotels": {
+        "number": 8,
+        "title": "Adding Hotels and Accommodation",
+        "description": "Pick saved hotels for each option and for every option, set nights, and fill the Aziziya card.",
+        "category": "Hajj Package Creation"
+    },
+    "room-types": {
+        "number": 9,
+        "title": "Adding Room Types and Prices",
+        "description": "Add Quad, Triple and Double room types inside each option's box.",
+        "category": "Hajj Package Creation"
+    },
+    "prices": {
+        "number": 10,
+        "title": "Entering PKR, SAR and USD Prices",
+        "description": "Type each price exactly as the brochure prints it, and check the price summary.",
+        "category": "Hajj Package Creation"
+    },
+    "itinerary": {
+        "number": 11,
+        "title": "Building the Complete Itinerary",
+        "description": "Copy the approved 14-day journey plan, check English and Islamic dates, and add transport on a travel day.",
+        "category": "Hajj Package Creation"
+    },
+    "mashaer": {
+        "number": 12,
+        "title": "Adding Mina, Arafat and Muzdalifah Details",
+        "description": "Fill the Mina and Arafat cards from saved arrangements and understand the shared-information warning.",
+        "category": "Hajj Package Creation"
+    },
+    "transport-meals": {
+        "number": 13,
+        "title": "Configuring Transport and Meals",
+        "description": "Add saved transport lines, including paid extras, and set meal plans for the hotels.",
+        "category": "Hajj Package Creation"
+    },
+    "inclusions": {
+        "number": 14,
+        "title": "Managing Included Services",
+        "description": "Fill \"Included in this package\" by copying the approved list, and see how duplicates are prevented.",
+        "category": "Hajj Package Creation"
+    },
+    "exclusions": {
+        "number": 15,
+        "title": "Managing Excluded Services",
+        "description": "Add the saved \"Not included\" lines customers pay for separately.",
+        "category": "Hajj Package Creation"
+    },
+    "upgrades": {
+        "number": 16,
+        "title": "Adding Optional Upgrades",
+        "description": "Add the Kaaba-view supplement and tent upgrades customers can choose at extra cost.",
+        "category": "Hajj Package Creation"
+    },
+    "notes": {
+        "number": 17,
+        "title": "Adding Reusable Notes and Policies",
+        "description": "Saved notes, a package-specific note, and private internal admin notes.",
+        "category": "Hajj Package Creation"
+    },
+    "images": {
+        "number": 18,
+        "title": "Uploading Package Images",
+        "description": "Upload the main photo and a gallery photo with a description.",
+        "category": "Hajj Package Creation"
+    },
+    "seo": {
+        "number": 19,
+        "title": "Adding SEO Information",
+        "description": "The title and description Google shows, and the web address.",
+        "category": "Hajj Package Creation"
+    },
+    "review": {
+        "number": 20,
+        "title": "Reviewing the Complete Package",
+        "description": "Use Step 13 to read the whole package, the checklist and any warnings before customers see it.",
+        "category": "Review and Publishing"
+    },
+    "save-draft": {
+        "number": 21,
+        "title": "Saving the Package as a Draft",
+        "description": "Save without publishing, and find the draft again with Continue.",
+        "category": "Review and Publishing"
+    },
+    "preview": {
+        "number": 22,
+        "title": "Previewing the Package",
+        "description": "See the draft exactly as a visitor would, before it is live.",
+        "category": "Review and Publishing"
+    },
+    "validation": {
+        "number": 23,
+        "title": "Fixing Validation Warnings",
+        "description": "What happens when something required is missing, and how the messages take you to the fix.",
+        "category": "Review and Publishing"
+    },
+    "publish": {
+        "number": 24,
+        "title": "Publishing the Package",
+        "description": "Put the package on the website from Step 14.",
+        "category": "Review and Publishing"
+    },
+    "public-page": {
+        "number": 25,
+        "title": "Viewing the Public Package Page",
+        "description": "Open the live page and check what customers see — and what they never see.",
+        "category": "Review and Publishing"
+    },
+    "edit-package": {
+        "number": 26,
+        "title": "Editing an Existing Package",
+        "description": "Find a live package, make a change and save it safely.",
+        "category": "Advanced Management"
+    },
+    "duplicate": {
+        "number": 27,
+        "title": "Duplicating a Package Safely",
+        "description": "Make a draft copy of a package without touching the original.",
+        "category": "Advanced Management"
+    },
+    "final-checklist": {
+        "number": 28,
+        "title": "Final Checklist and Best Practices",
+        "description": "The printable package checklist and the habits that keep the website correct.",
+        "category": "Advanced Management"
+    },
+    "reusable-information": {
+        "number": 29,
+        "title": "Using Reusable Information",
+        "description": "Hotels, transport, notes and more saved once — and how to change them safely.",
+        "category": "Advanced Management"
+    },
+    "templates": {
+        "number": 30,
+        "title": "Using Package Templates",
+        "description": "Start a new package from a template, and save a package as a template.",
+        "category": "Advanced Management"
+    }
+}

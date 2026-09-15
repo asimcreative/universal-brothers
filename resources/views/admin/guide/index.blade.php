@@ -35,7 +35,15 @@
                     <i class="bi bi-signpost-split me-1" aria-hidden="true"></i>{{ $tourStatus === 'completed' ? 'Take the tour again' : 'Take the guided tour' }}
                 </button>
             </form>
-            <a href="{{ route('admin.guide.show', 'hajj-packages') }}" class="btn btn-primary w-100">
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.training.index') }}" class="btn btn-primary flex-fill">
+                    <i class="bi bi-play-btn me-1" aria-hidden="true"></i>Video Training
+                </a>
+                <a href="{{ route('admin.training.checklist') }}" class="btn btn-outline-primary flex-fill">
+                    <i class="bi bi-list-check me-1" aria-hidden="true"></i>Package checklist
+                </a>
+            </div>
+            <a href="{{ route('admin.guide.show', 'hajj-packages') }}" class="btn btn-outline-primary w-100">
                 <i class="bi bi-moon-stars me-1" aria-hidden="true"></i>How to create a Hajj package
             </a>
         </div>

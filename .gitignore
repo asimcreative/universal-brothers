@@ -39,3 +39,7 @@ Thumbs.db
 # management reporting. Business record, not source code, and not something to
 # publish in a public repository.
 /.project-worklog
+
+# Training video recording (tools/training-video) — local only
+/.env.recording
+/tools/training-video/work/

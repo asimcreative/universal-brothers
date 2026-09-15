@@ -3,6 +3,7 @@
 
 import { initPackageBuilder } from './admin/package-builder';
 import { initTour } from './admin/tour';
+import { initTrainingPlayer } from './admin/training-player';
 
 /**
  * One confirmation dialog for the whole admin.
@@ -168,7 +169,7 @@ function initFieldErrors() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    [initConfirmDialog, initSubmitLoading, initCharCounters, initAutoSubmitFilters, initImagePreviews, initFieldErrors, initPackageBuilder, initTour].forEach((fn) => {
+    [initConfirmDialog, initSubmitLoading, initCharCounters, initAutoSubmitFilters, initImagePreviews, initFieldErrors, initPackageBuilder, initTour, initTrainingPlayer].forEach((fn) => {
         try {
             fn();
         } catch (error) {

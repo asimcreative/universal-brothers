@@ -75,6 +75,7 @@
 
     $groups['Help'] = [
         $link('admin.guide.index', 'admin.guide.*', 'bi-life-preserver', 'Admin Guide'),
+        $link('admin.training.index', 'admin.training.*', 'bi-play-btn', 'Video Training'),
     ];
 @endphp
 

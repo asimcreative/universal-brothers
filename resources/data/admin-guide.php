@@ -43,6 +43,7 @@ return [
 
         'dashboard' => [
             'title' => 'The admin dashboard',
+            'video' => 'dashboard',
             'group' => 'start',
             'icon' => 'bi-speedometer2',
             'summary' => 'Your starting point: how many packages are live, what needs attention, and shortcuts to everyday tasks.',
@@ -66,6 +67,7 @@ return [
 
         'website-content' => [
             'title' => 'Managing website content',
+            'video' => 'navigation',
             'group' => 'start',
             'icon' => 'bi-window',
             'summary' => 'Where each part of the public website is edited, and how the menu is organised.',
@@ -90,6 +92,7 @@ return [
 
         'hajj-packages' => [
             'title' => 'Hajj packages — creating one step by step',
+            'video' => 'new-package',
             'group' => 'packages',
             'icon' => 'bi-moon-stars',
             'summary' => 'The package builder walks you through fourteen steps, from the title to publishing. You can stop and continue later at any time.',
@@ -122,6 +125,7 @@ return [
 
         'package-options' => [
             'title' => 'Package options (A, B, C)',
+            'video' => 'package-options',
             'group' => 'packages',
             'icon' => 'bi-signpost-split',
             'summary' => 'An option is a different hotel choice for the same package, with its own prices.',
@@ -146,6 +150,7 @@ return [
 
         'room-pricing' => [
             'title' => 'Room types and prices',
+            'video' => 'room-types',
             'group' => 'packages',
             'icon' => 'bi-cash-coin',
             'summary' => 'Prices per person for each room type, in US dollars, Saudi riyals and Pakistani rupees.',
@@ -170,6 +175,7 @@ return [
 
         'hotels' => [
             'title' => 'Hotels and accommodation',
+            'video' => 'hotels',
             'group' => 'reusable',
             'icon' => 'bi-building',
             'summary' => 'Hotels are saved once and picked in any package. A package can still adjust the name for itself.',
@@ -194,6 +200,7 @@ return [
 
         'itinerary' => [
             'title' => 'Journey plan (itinerary)',
+            'video' => 'itinerary',
             'group' => 'packages',
             'icon' => 'bi-calendar-week',
             'summary' => 'The day-by-day plan: the date, the Islamic date, where pilgrims are, where they stay and how they travel.',
@@ -218,6 +225,7 @@ return [
 
         'mashaer' => [
             'title' => 'Mina, Arafat and Muzdalifah',
+            'video' => 'mashaer',
             'group' => 'reusable',
             'icon' => 'bi-geo-alt',
             'summary' => 'The arrangements for the days of Hajj: the camp, tent, meals and transport.',
@@ -241,6 +249,7 @@ return [
 
         'transport' => [
             'title' => 'Transport',
+            'video' => 'transport-meals',
             'group' => 'reusable',
             'icon' => 'bi-bus-front',
             'summary' => 'Airport transfers, travel between cities and Mashaer transport — included or at extra cost.',
@@ -260,6 +269,7 @@ return [
 
         'meals' => [
             'title' => 'Meal plans',
+            'video' => 'transport-meals',
             'group' => 'reusable',
             'icon' => 'bi-cup-hot',
             'summary' => 'Standard meal arrangements such as half board or full board, set for each hotel.',
@@ -279,6 +289,7 @@ return [
 
         'inclusions' => [
             'title' => 'Included services',
+            'video' => 'inclusions',
             'group' => 'reusable',
             'icon' => 'bi-check2-circle',
             'summary' => 'The list of what the package price covers.',
@@ -298,6 +309,7 @@ return [
 
         'exclusions' => [
             'title' => 'Not included',
+            'video' => 'exclusions',
             'group' => 'reusable',
             'icon' => 'bi-x-circle',
             'summary' => 'What customers pay for separately.',
@@ -316,6 +328,7 @@ return [
 
         'upgrades' => [
             'title' => 'Additional options (upgrades)',
+            'video' => 'upgrades',
             'group' => 'reusable',
             'icon' => 'bi-plus-square',
             'summary' => 'Extra services customers may choose at extra cost.',
@@ -336,6 +349,7 @@ return [
 
         'notes' => [
             'title' => 'Notes and policies',
+            'video' => 'notes',
             'group' => 'reusable',
             'icon' => 'bi-journal-text',
             'summary' => 'What customers must read before booking — and a private box for your team.',
@@ -358,6 +372,7 @@ return [
 
         'templates' => [
             'title' => 'Package templates and copying',
+            'video' => 'templates',
             'group' => 'packages',
             'icon' => 'bi-files',
             'summary' => 'Start a new package from a template, duplicate a package, or copy one part from another package.',
@@ -382,6 +397,7 @@ return [
 
         'media' => [
             'title' => 'Photos and images',
+            'video' => 'images',
             'group' => 'packages',
             'icon' => 'bi-images',
             'summary' => 'The main package photo, the sharing image, gallery photos, and photos for hotels and camps.',
@@ -564,6 +580,7 @@ return [
 
         'preview-publishing' => [
             'title' => 'Preview and publishing',
+            'video' => 'review',
             'group' => 'publishing',
             'icon' => 'bi-globe2',
             'summary' => 'The difference between saving a draft, previewing and publishing — and how to take a package off the website.',
@@ -588,6 +605,7 @@ return [
 
         'safe-editing' => [
             'title' => 'Safe editing rules',
+            'video' => 'reusable-information',
             'group' => 'publishing',
             'icon' => 'bi-shield-check',
             'summary' => 'Simple rules that keep the website correct and nothing lost.',

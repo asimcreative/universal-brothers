@@ -5,6 +5,7 @@
 @php $help = \App\Support\Guide\GuideContent::builderHelp($step); @endphp
 
 @if($help)
+    @include('admin.partials.watch-guide', ['video' => $help['video'] ?? null, 'class' => 'mb-2', 'newTab' => true])
     <details class="need-help" data-need-help="{{ $step }}">
         <summary><i class="bi bi-life-preserver" aria-hidden="true"></i>Need help with this step?</summary>
         <dl class="need-help-body">

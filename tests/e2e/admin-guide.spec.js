@@ -96,7 +96,9 @@ test.describe('Welcome and guided tour', () => {
         await expect(tour).toContainText('Step 4 of 9');
 
         // Escape skips; the page is usable again and remembers the place.
+        const paused = page.waitForResponse((r) => r.url().includes('/admin/onboarding/tour') && r.request().postData()?.includes('"paused"'));
         await page.keyboard.press('Escape');
+        await paused;
         await expect(tour).toHaveCount(0);
         const resume = page.getByRole('button', { name: 'Resume tour (step 4 of 9)' });
         await expect(resume).toBeVisible();

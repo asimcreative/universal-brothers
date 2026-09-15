@@ -9,6 +9,7 @@
 @section('title', $isNew ? 'Add '.$library->singular : $record->libraryTitle())
 @section('subtitle', $library->intro)
 @section('guide', $guideKey)
+@section('guide_video', 'reusable-information')
 
 @section('breadcrumb')
     <a href="{{ route('admin.dashboard') }}">Dashboard</a> /

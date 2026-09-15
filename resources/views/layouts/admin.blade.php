@@ -145,7 +145,7 @@
                 @endif
 
                 @hasSection('guide')
-                    @include('admin.partials.page-help', ['key' => trim($__env->yieldContent('guide'))])
+                    @include('admin.partials.page-help', ['key' => trim($__env->yieldContent('guide')), 'video' => trim($__env->yieldContent('guide_video'))])
                 @endif
 
                 @yield('content')

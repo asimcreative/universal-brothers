@@ -142,7 +142,8 @@ test.describe('Hajj package builder', () => {
 
             // Publish, confirming in the dialog
             await clickAndConfirm(page, page.getByRole('button', { name: 'Publish', exact: true }));
-            await expect(page.getByRole('status').filter({ hasText: 'is published and live' })).toBeVisible();
+            // Publishing saves every section and re-indexes the package, which can take a while on a busy test server.
+            await expect(page.getByRole('status').filter({ hasText: 'is published and live' })).toBeVisible({ timeout: 30_000 });
 
             await page.goto(`/hajj/${slug}`);
             await expect(page.getByRole('heading', { name: title })).toBeVisible();

@@ -150,7 +150,7 @@
                             </td>
                             <td class="text-nowrap small text-muted" title="{{ $package->updated_at }}">{{ $package->updated_at?->diffForHumans() }}</td>
                             <td class="text-end text-nowrap">
-                                @if(! $package->isPublished() && ! $package->isArchived() && $percent < 100)
+                                @if(! $package->isPublished() && ! $package->isArchived())
                                     <a href="{{ route('admin.hajj-packages.edit', ['package' => $package, 'step' => $package->builder_step ?: $progress[$package->id]->nextStep()]) }}" class="btn btn-sm btn-primary" aria-label="Continue {{ $package->name }}">Continue</a>
                                 @else
                                     <a href="{{ route('admin.hajj-packages.edit', $package) }}" class="btn btn-sm btn-outline-primary">Edit</a>

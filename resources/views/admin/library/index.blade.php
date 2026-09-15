@@ -3,6 +3,7 @@
 @section('title', $library->label)
 @section('subtitle', $library->intro)
 @section('guide', ['hotels' => 'hotels', 'meal-plans' => 'meals', 'transport' => 'transport', 'inclusions' => 'inclusions', 'exclusions' => 'exclusions', 'upgrades' => 'upgrades', 'mashaer' => 'mashaer', 'notes' => 'notes', 'journey-templates' => 'itinerary'][$library->key] ?? 'safe-editing')
+@section('guide_video', 'reusable-information')
 
 @section('breadcrumb')
     <a href="{{ route('admin.dashboard') }}">Dashboard</a> / <span>Reusable content</span> / <span>{{ $library->label }}</span>

@@ -108,6 +108,13 @@
                 @endif
             </div>
 
+            @if(filled($section['video'] ?? null))
+                <div class="guide-aside-card">
+                    <p class="small text-muted mb-2">Prefer to watch? The video shows these steps in the real admin panel.</p>
+                    @include('admin.partials.watch-guide', ['video' => $section['video']])
+                </div>
+            @endif
+
             <nav class="guide-aside-card" aria-label="{{ $groupTitle }}">
                 <h2>{{ $groupTitle }}</h2>
                 <ul>

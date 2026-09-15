@@ -1,0 +1,123 @@
+{
+    "_about": "The package built in the admin video training. Every customer-facing value is copied from the approved brochure package UB015 (resources/data and the Hajj seeders). It is only ever created in the separate training-recording database, never in production or the testing database. See docs/training/ADMIN_VIDEO_GUIDE_STRUCTURE.md.",
+    "source_package": "UB015",
+    "training_marker": "Admin Training Example",
+
+    "basics": {
+        "name": "Executive Platinum Flex 14 — Medinah First",
+        "code": "TRN015",
+        "package_type": "Executive Platinum",
+        "series": "Platinum — With Aziziya (Flex Series)",
+        "summary": "Hajj 2027 / 1448 AH — Flex 14 Days, shifting itinerary, with Aziziya accommodation.",
+        "duration_days": 14,
+        "duration_label": "Flex 14 Days",
+        "season_year": 2027,
+        "season_label": "Hajj 2027 / 1448 AH"
+    },
+
+    "setup": {
+        "arrival": "Arrive in Madinah",
+        "makkah_stay": "Shifting",
+        "aziziya": "Included"
+    },
+
+    "options": [
+        { "code": "A", "label": "Dar Al Taqwa" },
+        { "code": "B", "label": "Dallah Taibah" }
+    ],
+
+    "hotels": [
+        { "box": "A", "city": "medinah", "hotel": "Dar Al Taqwa", "nights": 3 },
+        { "box": "B", "city": "medinah", "hotel": "Dallah Taibah (Premier Floor)", "nights": 3 },
+        { "box": "shared", "city": "makkah", "hotel": "Pullman Zamzam Makkah", "nights": 4 },
+        { "box": "shared", "city": "aziziya", "hotel": "AZIZIYA Accommodation - A Class", "nights": 2, "meal_plan": "Full board buffet (breakfast, lunch, dinner)" }
+    ],
+
+    "aziziya": {
+        "accommodation_name": "AZIZIYA Accommodation - A Class",
+        "location_note": "Directly opposite the Jamarat escalator, near Mina camps.",
+        "walk_distance": "30 to 50-minute walk to the Mina camp and back.",
+        "duration_days": 5,
+        "average_occupancy": 4
+    },
+
+    "rooms": {
+        "A": [
+            { "type": "Quad Sharing", "usd": "11650", "sar": "42500", "pkr": "3330000" },
+            { "type": "Triple Sharing", "usd": "12750", "sar": "46500", "pkr": "3640000" },
+            { "type": "Double Sharing", "usd": "14520", "sar": "53000", "pkr": "4140000" }
+        ],
+        "B": [
+            { "type": "Quad Sharing", "usd": "11100", "sar": "40500", "pkr": "3175000" },
+            { "type": "Triple Sharing", "usd": "12200", "sar": "44500", "pkr": "3485000" },
+            { "type": "Double Sharing", "usd": "13560", "sar": "49500", "pkr": "3870000" }
+        ]
+    },
+
+    "journey": {
+        "copy_from": "UB015",
+        "days": 14,
+        "first_day": "07/05/2027 · 01 Zil Hajj · To Medinah",
+        "transport_day": 4,
+        "transport": "Bullet train or private luxury bus to Makkah"
+    },
+
+    "mashaer": {
+        "mina": "Mina — Maktab A, Zone 1",
+        "arafat": "Arafat — Air Conditioned Marquee",
+        "muzdalifah": null
+    },
+
+    "transport_saved": [
+        "Jeddah/Medinah Hajj Terminal → Hotel",
+        "Mina → Arafat / Muzdalifah / Mina",
+        "Makkah → Medinah",
+        "Jeddah Airport → Makkah Hotel",
+        "Medinah Airport → Medinah Hotel",
+        "Mina/Arafat/Muzdalifah → and back"
+    ],
+
+    "meal_plan_all": "Half board (breakfast & dinner)",
+
+    "inclusions": { "copy_from": "UB015", "count": 16 },
+
+    "exclusions_saved": ["Airline ticket", "Qurbani actual cost"],
+
+    "upgrades_saved": [
+        { "name": "Kaba View Supplement", "price": "USD 1,050 per person" },
+        { "name": "Deluxe Family Tent Upgrade", "price": "Price on request" },
+        { "name": "5-Person Sharing Tent", "price": "Price on request" },
+        { "name": "8-Person Sharing Tent", "price": "Price on request" }
+    ],
+
+    "notes_saved": [
+        "Book Early, Prices and Packages Subject to Change.",
+        "Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.",
+        "Makkah (similar)",
+        "Rates & hotels subject to change",
+        "Ticket & Qurbani not included."
+    ],
+
+    "package_note": {
+        "kind": "Hotels & rooms",
+        "content": "Aziziya Accommodation services are not comparable to hotel services."
+    },
+
+    "internal_note": "Admin Training Example — made only in the training database for the video guide. Not a real package.",
+
+    "images": {
+        "main_photo": "public/images/photos/haram-dusk-1440.webp",
+        "gallery_photo": "public/images/photos/nabawi-dome-1440.webp",
+        "gallery_description": "The Green Dome of Masjid an-Nabawi in Madinah",
+        "licence": "Both photographs are CC0 (no attribution required) — see resources/data/site-imagery.php"
+    },
+
+    "seo": {
+        "meta_title": "Executive Platinum Flex 14 — Medinah First — Hajj 2027 | Universal Brothers",
+        "meta_description": "Hajj 2027 package: Flex 14 Days itinerary with real hotel accommodation, Mina Zone 1 Category A tents, and Arafat AC marquee. Prices subject to change."
+    },
+
+    "edit_example": { "change": "Feature this package", "from": "off", "to": "on", "why": "An office decision that changes nothing a customer reads, so no brochure value is altered" },
+
+    "duplicate_example": { "copy_code": "TRN015-COPY", "copy_title_suffix": "(Copy)", "kept_as": "draft" }
+}

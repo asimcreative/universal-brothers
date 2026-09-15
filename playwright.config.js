@@ -64,7 +64,7 @@ export default defineConfig({
         {
             name: 'admin-chromium',
             use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/admin.json' },
-            testMatch: /(admin|journeys-admin|package-builder|admin-guide)\.spec\.js/,
+            testMatch: /(admin|journeys-admin|package-builder|admin-guide|video-training)\.spec\.js/,
             testIgnore: /admin-auth\.spec\.js/,
             dependencies: ['setup'],
         },

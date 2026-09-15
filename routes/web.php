@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\PageController as AdminPageController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\SliderController as AdminSliderController;
 use App\Http\Controllers\Admin\TestimonialController as AdminTestimonialController;
+use App\Http\Controllers\Admin\TrainingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AffiliationController;
 use App\Http\Controllers\AiChatController;
@@ -148,6 +149,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // The admin guide: help centre, first-visit welcome and the guided tour.
         Route::get('help', fn () => redirect()->route('admin.guide.index'))->name('help');
         Route::get('guide', [GuideController::class, 'index'])->name('guide.index');
+        // Video Training — registered before guide/{section} so "videos" is never read as a section.
+        Route::prefix('guide/videos')->name('training.')->group(function () {
+            Route::get('/', [TrainingController::class, 'index'])->name('index');
+            Route::get('checklist', [TrainingController::class, 'checklist'])->name('checklist');
+            Route::get('checklist/download', [TrainingController::class, 'downloadChecklist'])->name('checklist.download');
+            Route::get('continue', [TrainingController::class, 'continue'])->name('continue');
+            Route::get('restart', [TrainingController::class, 'restart'])->name('restart');
+            Route::post('reset', [TrainingController::class, 'reset'])->name('reset');
+            Route::get('{chapter}', [TrainingController::class, 'show'])->name('show');
+            Route::post('{chapter}/progress', [TrainingController::class, 'saveProgress'])->name('progress');
+            Route::post('{chapter}/complete', [TrainingController::class, 'complete'])->name('complete');
+            Route::delete('{chapter}/complete', [TrainingController::class, 'uncomplete'])->name('uncomplete');
+            Route::get('{chapter}/video', [TrainingController::class, 'video'])->name('video');
+            Route::get('{chapter}/captions', [TrainingController::class, 'captions'])->name('captions');
+            Route::get('{chapter}/poster', [TrainingController::class, 'poster'])->name('poster');
+        });
         Route::get('guide/{section}', [GuideController::class, 'show'])->name('guide.show');
         Route::post('guide/{section}/complete', [GuideController::class, 'complete'])->name('guide.complete');
         Route::delete('guide/{section}/complete', [GuideController::class, 'uncomplete'])->name('guide.uncomplete');

@@ -1,8 +1,9 @@
 {{--
     "Need help with this page?" — a closed panel at the top of an admin page,
-    drawn from the guide section the page names with @section('guide', 'key').
+    drawn from the guide section the page names with @section('guide', 'key'),
+    with a Watch Guide link to the section's video (or @section('guide_video', 'key')).
 --}}
-@php $help = \App\Support\Guide\GuideContent::section($key); @endphp
+@php $help = \App\Support\Guide\GuideContent::section($key); $videoKey = filled($video ?? null) ? $video : ($help['video'] ?? null); @endphp
 
 @if($help)
     <details class="page-help">
@@ -22,7 +23,10 @@
             @if(filled($help['example'] ?? null))
                 <p class="page-help-example mb-2"><strong>Example:</strong> {{ $help['example'] }}</p>
             @endif
-            <a href="{{ route('admin.guide.show', $key) }}">Read the full guide: {{ $help['title'] }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+                <a href="{{ route('admin.guide.show', $key) }}">Read the full guide: {{ $help['title'] }} <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                @include('admin.partials.watch-guide', ['video' => $videoKey])
+            </div>
         </div>
     </details>
 @endif
