@@ -2,6 +2,7 @@
 
 @section('title', 'Hajj Packages')
 @section('subtitle', 'Create, update and publish Hajj packages. Drafts are never shown on the website.')
+@section('guide', 'hajj-packages')
 
 @section('actions')
     @if($templates->isNotEmpty())
@@ -130,7 +131,13 @@
                                 @else
                                     <span class="status-pill status-pill-warning">Draft</span>
                                 @endif
+                                @php $percent = $progress[$package->id]->percent(); @endphp
+                                <div class="completion-inline" title="Checklist: {{ $percent }}% complete">
+                                    <div class="completion-meter" role="progressbar" aria-label="{{ $package->name }} is {{ $percent }}% complete" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $percent }}"><span style="width: {{ $percent }}%"></span></div>
+                                    <small>{{ $percent }}% complete</small>
+                                </div>
                             </td>
+
                             <td class="text-center">
                                 @unless($package->isArchived())
                                     <form method="POST" action="{{ route('admin.hajj-packages.quick', [$package, $package->is_featured ? 'unfeature' : 'feature']) }}" class="d-inline">
@@ -143,7 +150,11 @@
                             </td>
                             <td class="text-nowrap small text-muted" title="{{ $package->updated_at }}">{{ $package->updated_at?->diffForHumans() }}</td>
                             <td class="text-end text-nowrap">
-                                <a href="{{ route('admin.hajj-packages.edit', $package) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                @if(! $package->isPublished() && ! $package->isArchived() && $percent < 100)
+                                    <a href="{{ route('admin.hajj-packages.edit', ['package' => $package, 'step' => $package->builder_step ?: $progress[$package->id]->nextStep()]) }}" class="btn btn-sm btn-primary" aria-label="Continue {{ $package->name }}">Continue</a>
+                                @else
+                                    <a href="{{ route('admin.hajj-packages.edit', $package) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                @endif
                                 <div class="dropdown d-inline-block">
                                     <button class="btn btn-sm btn-outline-secondary admin-icon-btn" type="button" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" aria-label="More actions for {{ $package->name }}">
                                         <i class="bi bi-three-dots" aria-hidden="true"></i>

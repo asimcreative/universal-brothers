@@ -171,14 +171,60 @@ export function initPackageBuilder() {
         if (row.dataset.row === 'room_options') syncRoomTypeSelect(row);
         if (row.dataset.row === 'accommodations') rebuildHotelPicker(row, values.hotel_id);
         row.querySelectorAll('[data-extra-toggle]').forEach(toggleExtra);
-        row.querySelectorAll('[data-lib-badge]').forEach((badge) => badge.remove());
-        const linkField = row.querySelector('[data-field$="_id"][type="hidden"]');
-        if (linkField && linkField.value) {
-            const slot = row.querySelector('.row-actions-wrap') || linkField.parentElement.querySelector('textarea')?.parentElement;
-            slot?.insertAdjacentHTML(slot.classList.contains('row-actions-wrap') ? 'afterbegin' : 'beforeend',
-                '<span class="lib-badge mb-1" data-lib-badge><i class="bi bi-bookmark-check" aria-hidden="true"></i>Saved content</span>');
-        }
+        refreshLibBadge(row);
         silent--;
+    }
+
+    // ---------------------------------------------------------------------
+    // Saved (shared) content vs. this package's own copy
+    // ---------------------------------------------------------------------
+    // A row picked from Reusable Content keeps a link to it. The badge says
+    // whether the row still matches the saved record or has been changed for
+    // this package only — the saved record itself is never changed from here.
+    const LINKED_ROWS = {
+        accommodations: { link: 'hotel_id', source: 'hotels', compare: { hotel_name: 'name', star_rating: 'star_rating' } },
+        inclusions: { link: 'service_item_id', source: 'inclusions', compare: { description: 'description' } },
+        exclusions: { link: 'service_item_id', source: 'exclusions', compare: { description: 'description' } },
+        notes: { link: 'note_template_id', source: 'notes', compare: { content: 'content' } },
+        transportation: { link: 'transport_option_id', source: 'transport', compare: { from_location: 'from_location', to_location: 'to_location', price: 'price' } },
+        upgrades: { link: 'upgrade_option_id', source: 'upgrades', compare: { name: 'name', price: 'price' } },
+    };
+
+    const sameValue = (a, b) => {
+        const norm = (v) => {
+            const s = String(v ?? '').trim();
+            return s !== '' && !Number.isNaN(Number(s)) ? String(Number(s)) : s;
+        };
+        return norm(a) === norm(b);
+    };
+
+    const usedIn = (count) => (count ? ` · used in ${count} ${count === 1 ? 'package' : 'packages'}` : '');
+
+    function refreshLibBadge(row) {
+        const config = LINKED_ROWS[row.dataset.row];
+        if (!config) return;
+        const id = row.querySelector(`[data-field="${config.link}"]`)?.value;
+        const item = id ? (library[config.source] || []).find((x) => String(x.id) === String(id)) : null;
+        let badge = row.querySelector('[data-lib-badge]');
+
+        if (!item) { badge?.remove(); return; }
+
+        const changed = Object.entries(config.compare).some(([field, key]) => {
+            const input = row.querySelector(`[data-field="${field}"]`);
+            return input ? !sameValue(input.value, item[key]) : false;
+        });
+
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.dataset.libBadge = '';
+            const wrap = row.querySelector('.row-actions-wrap');
+            const firstField = row.querySelector(`[data-field="${Object.keys(config.compare)[0]}"]`);
+            if (wrap) wrap.prepend(badge); else firstField?.parentElement.append(badge);
+        }
+        badge.className = `lib-badge mb-1${changed ? ' is-changed' : ''}`;
+        badge.innerHTML = changed
+            ? '<i class="bi bi-pencil-square" aria-hidden="true"></i>Changed for this package only'
+            : `<i class="bi bi-bookmark-check" aria-hidden="true"></i>Saved content${escapeHtml(usedIn(item.used))}`;
     }
 
     function enhanceRow(row) {
@@ -291,6 +337,23 @@ export function initPackageBuilder() {
         });
         if (stepInput) stepInput.value = key;
 
+        const index = stepKeys.indexOf(key);
+        if (stepsToggle) {
+            const label = form.querySelector(`[data-step-button="${key}"] .step-label`)?.textContent || '';
+            stepsToggle.querySelector('[data-steps-toggle-number]').textContent = index + 1;
+            stepsToggle.querySelector('[data-steps-toggle-index]').textContent = index + 1;
+            stepsToggle.querySelector('[data-steps-toggle-label]').textContent = label;
+            stepsAside.classList.remove('is-open');
+            stepsToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        // Looking at the Review step is what "Final review completed" means;
+        // it is fresh the moment it opens.
+        if (key === 'review' && reviewedInput) {
+            reviewedInput.value = '1';
+            assessNow();
+        }
+
         const url = new URL(window.location.href);
         url.searchParams.set('step', key);
         window.history.replaceState(null, '', url);
@@ -314,11 +377,22 @@ export function initPackageBuilder() {
         }
     });
 
-    document.querySelectorAll('[data-step-link]').forEach((link) => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
-            showStep(link.dataset.stepLink);
-        });
+    // Delegated: the Review step and the checklist are redrawn as the admin
+    // works, so their "Edit" links do not exist yet when the page loads.
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('[data-step-link]');
+        if (!link) return;
+        event.preventDefault();
+        showStep(link.dataset.stepLink);
+    });
+
+    // Phones: the step list folds into one "Step 4 of 14 · Room prices" line.
+    const stepsToggle = form.querySelector('[data-steps-toggle]');
+    const stepsAside = form.querySelector('.builder-steps');
+    stepsToggle?.addEventListener('click', () => {
+        const open = !stepsAside.classList.contains('is-open');
+        stepsAside.classList.toggle('is-open', open);
+        stepsToggle.setAttribute('aria-expanded', String(open));
     });
 
     // ---------------------------------------------------------------------
@@ -665,6 +739,85 @@ export function initPackageBuilder() {
         }
     });
 
+    // Find a saved hotel: search, see its details, add it to an option.
+    const findHotelModal = document.getElementById('findHotelModal');
+    let findHotelChosen = null;
+
+    function renderFindHotel() {
+        const list = findHotelModal.querySelector('[data-find-hotel-list]');
+        const term = findHotelModal.querySelector('[data-find-hotel-search]').value.trim().toLowerCase();
+        const city = findHotelModal.querySelector('[data-find-hotel-city]').value;
+        const hotels = (library.hotels || []).filter((h) => !h.archived
+            && (!city || h.location === city)
+            && (!term || `${h.name} ${h.city || ''} ${h.address || ''}`.toLowerCase().includes(term)));
+
+        if (!hotels.length) {
+            list.innerHTML = '<p class="p-3 mb-0 text-muted">No saved hotel matches. Use "New hotel" to add it.</p>';
+            return;
+        }
+        list.innerHTML = hotels.map((h) => `<button type="button" role="option" class="find-hotel-item ${findHotelChosen?.id === h.id ? 'is-chosen' : ''}" aria-selected="${findHotelChosen?.id === h.id}" data-find-hotel-id="${h.id}">
+            <strong>${escapeHtml(h.name)}</strong>
+            <small>${escapeHtml(h.location_label || h.location)}${h.star_rating ? ` · ${h.star_rating} stars` : ''} · ${h.used ? `used in ${h.used} ${h.used === 1 ? 'package' : 'packages'}` : 'not used yet'}</small>
+        </button>`).join('');
+    }
+
+    function renderFindHotelDetails() {
+        const box = findHotelModal.querySelector('[data-find-hotel-details]');
+        const accept = findHotelModal.querySelector('[data-find-hotel-accept]');
+        accept.disabled = !findHotelChosen;
+        if (!findHotelChosen) {
+            box.innerHTML = '<p class="text-muted mb-0">Choose a hotel to see its details.</p>';
+            return;
+        }
+        const h = findHotelChosen;
+        const fact = (label, value) => (value ? `<div><dt>${label}</dt><dd>${value}</dd></div>` : '');
+        box.innerHTML = `<h3 class="h6">${escapeHtml(h.name)}</h3>
+            <dl class="review-facts">
+                ${fact('City / place', escapeHtml(h.location_label || h.location))}
+                ${fact('Stars', h.star_rating ? `${h.star_rating} ★` : '')}
+                ${fact('Address', escapeHtml(h.address || ''))}
+                ${fact('Used in', `${h.used} ${h.used === 1 ? 'package' : 'packages'}`)}
+                ${fact('About', escapeHtml(h.description || ''))}
+                ${fact('Links', [h.map_url ? `<a href="${escapeHtml(h.map_url)}" target="_blank" rel="noopener">Map</a>` : '', h.website_url ? `<a href="${escapeHtml(h.website_url)}" target="_blank" rel="noopener">Website</a>` : ''].filter(Boolean).join(' · '))}
+            </dl>
+            <p class="form-help mb-0">This is the saved hotel, shared by every package that uses it. What you change in the package afterwards stays in that package.</p>`;
+    }
+
+    findHotelModal?.addEventListener('show.bs.modal', () => {
+        findHotelChosen = null;
+        const select = findHotelModal.querySelector('[data-find-hotel-for]');
+        const options = optionRows().map(optionCode).filter(Boolean);
+        select.innerHTML = '<option value="">Every option</option>' + options.map((c) => `<option value="${escapeHtml(c)}">Option ${escapeHtml(c)}</option>`).join('');
+        findHotelModal.querySelector('[data-find-hotel-search]').value = '';
+        renderFindHotel();
+        renderFindHotelDetails();
+    });
+    findHotelModal?.addEventListener('shown.bs.modal', () => findHotelModal.querySelector('[data-find-hotel-search]').focus());
+    findHotelModal?.querySelector('[data-find-hotel-search]').addEventListener('input', renderFindHotel);
+    findHotelModal?.querySelector('[data-find-hotel-city]').addEventListener('change', renderFindHotel);
+    findHotelModal?.querySelector('[data-find-hotel-list]').addEventListener('click', (event) => {
+        const item = event.target.closest('[data-find-hotel-id]');
+        if (!item) return;
+        findHotelChosen = (library.hotels || []).find((h) => String(h.id) === item.dataset.findHotelId) || null;
+        renderFindHotel();
+        renderFindHotelDetails();
+    });
+    findHotelModal?.querySelector('[data-find-hotel-accept]').addEventListener('click', () => {
+        if (!findHotelChosen) return;
+        const code = findHotelModal.querySelector('[data-find-hotel-for]').value;
+        const group = code
+            ? form.querySelector(`[data-option-group="accommodations"][data-option-code="${CSS.escape(code)}"]`)
+            : form.querySelector('[data-option-group="accommodations"][data-option-uid="shared"]');
+        const row = addRow('accommodations', {
+            container: group?.querySelector('[data-rows="accommodations"]'),
+            values: { location: findHotelChosen.location, hotel_id: findHotelChosen.id, hotel_name: findHotelChosen.name, star_rating: findHotelChosen.star_rating || '' },
+        });
+        window.bootstrap.Modal.getOrCreateInstance(findHotelModal).hide();
+        row?.querySelector('[data-field="nights"]')?.focus();
+        markDirty();
+        updateDerived();
+    });
+
     // ---------------------------------------------------------------------
     // Mina / Arafat / Muzdalifah
     // ---------------------------------------------------------------------
@@ -752,7 +905,7 @@ export function initPackageBuilder() {
             const added = present.has(String(item.id)) || (text && presentText.has(text));
             return `<label class="${added ? 'is-added' : ''}">
                 <input class="form-check-input" type="checkbox" value="${item.id}" ${added ? 'disabled' : ''}>
-                <span><strong>${escapeHtml(title)}</strong>${added ? ' <span class="badge text-bg-light">Added</span>' : ''}${detail ? `<small>${escapeHtml(detail)}</small>` : ''}</span>
+                <span><strong>${escapeHtml(title)}</strong>${added ? ' <span class="badge text-bg-light">Added</span>' : ''}<span class="usage-note">${item.used ? `Used in ${item.used} ${item.used === 1 ? 'package' : 'packages'}` : 'Not used in any package yet'}</span>${detail ? `<small>${escapeHtml(detail)}</small>` : ''}</span>
             </label>`;
         }).join('');
     }
@@ -814,7 +967,7 @@ export function initPackageBuilder() {
 
             const ok = await askConfirm({
                 title: `Copy from ${data.code || data.name}?`,
-                message: 'The ticked parts of this form will be replaced with the copy. Nothing is saved until you press a save button.',
+                message: describeCopy(data.content, sections),
                 button: 'Copy', tone: 'primary',
             });
             if (!ok) return;
@@ -830,6 +983,36 @@ export function initPackageBuilder() {
             button.disabled = false;
         }
     });
+
+    /**
+     * Exactly what a copy brings in and what it replaces, counted, so nothing
+     * in this form is ever overwritten without the admin reading it first.
+     */
+    function describeCopy(content, sections) {
+        const n = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+        const here = (name) => form.querySelectorAll(`[data-row="${name}"]`).length;
+        const lines = [];
+        const want = (s) => sections.includes(s);
+
+        if (want('pricing') || want('hotels')) {
+            const codes = (content.variants || []).map((v) => v.code).filter(Boolean);
+            lines.push(`Hotel options: ${codes.length ? codes.join(', ') : 'none'} (replaces ${n(optionRows().length, 'option')} here)`);
+        }
+        if (want('pricing')) lines.push(`Room prices: ${n((content.room_options || []).length, 'row')} (replaces ${here('room_options')})`);
+        if (want('hotels')) lines.push(`Hotels: ${n((content.accommodations || []).length, 'hotel')} and the Aziziya details (replaces ${here('accommodations')})`);
+        if (want('meals') && !want('hotels')) lines.push('Meal plans: set on hotels here that match by city and option');
+        if (want('journey')) lines.push(`Journey plan: ${n((content.itinerary || []).length, 'day')} (replaces ${here('itinerary')})`);
+        if (want('mashaer')) {
+            const places = ['mina', 'arafat', 'muzdalifah'].filter((p) => Object.values(content.mashaer?.[p] || {}).some((v) => v !== null && v !== ''));
+            lines.push(`Mina, Arafat & Muzdalifah: ${places.length ? places.map((p) => p[0].toUpperCase() + p.slice(1)).join(', ') : 'nothing described'} (replaces all three cards)`);
+        }
+        [['transport', 'transportation', 'Transport', 'line'], ['inclusions', 'inclusions', 'Included', 'line'], ['exclusions', 'exclusions', 'Not included', 'line'], ['extras', 'upgrades', 'Additional options', 'option'], ['notes', 'notes', 'Notes', 'note']]
+            .forEach(([section, name, label, word]) => {
+                if (want(section)) lines.push(`${label}: ${n((content[name] || []).length, word)} (replaces ${here(name)})`);
+            });
+
+        return `This will copy:\n• ${lines.join('\n• ')}\n\nThe title, code, photos and internal notes are not copied. Nothing is saved until you press a save button.`;
+    }
 
     function replaceOptions(variants) {
         optionRows().forEach((row) => row.remove());
@@ -1065,29 +1248,220 @@ export function initPackageBuilder() {
         };
     }
 
-    function updateDerived() {
-        const done = stepDone();
+    function markSteps(done) {
         let count = 0;
         form.querySelectorAll('[data-step-button]').forEach((button) => {
-            const key = button.dataset.stepButton;
-            const isDone = !!done[key];
+            const isDone = !!done[button.dataset.stepButton];
             if (isDone) count++;
             button.classList.toggle('is-done', isDone);
             if (!button.classList.contains('has-error')) {
                 button.querySelector('.step-state').innerHTML = isDone ? '<i class="bi bi-check-circle-fill text-success"></i>' : '';
             }
         });
-        const total = form.querySelectorAll('[data-step-button]').length;
-        const text = form.querySelector('[data-progress-text]');
-        const bar = form.querySelector('[data-progress-bar]');
-        if (text) text.textContent = `${count} of ${total} steps filled in`;
-        if (bar) {
-            bar.style.width = `${Math.round((count / total) * 100)}%`;
-            bar.parentElement.setAttribute('aria-valuenow', count);
+        return count;
+    }
+
+    function setProgress(text, value, max) {
+        const label = form.querySelector('[data-progress-text]');
+        const meter = form.querySelector('[data-progress-meter]');
+        if (label) label.textContent = text;
+        if (meter) {
+            meter.querySelector('[data-progress-bar]').style.width = `${Math.round((value / max) * 100)}%`;
+            meter.setAttribute('aria-valuenow', value);
         }
+    }
+
+    function updateDerived({ assess = true } = {}) {
+        if (assessUrl) {
+            if (assess) scheduleAssess();
+        } else {
+            // Templates: no publishing, so a simple local count is enough.
+            const count = markSteps(stepDone());
+            const total = form.querySelectorAll('[data-step-button]').length;
+            setProgress(`${count} of ${total} steps filled in`, count, total);
+        }
+        form.querySelectorAll('[data-row]').forEach(refreshLibBadge);
         refreshStays();
         renderMealSummary();
         renderSeo();
+        renderOptionSummaries();
+        renderPriceSummary();
+        refreshMashaerShared();
+    }
+
+    // ---------------------------------------------------------------------
+    // The server's verdict: checklist, step ticks, review, publish button
+    // ---------------------------------------------------------------------
+    // Asked as the admin types (debounced), from the unsaved form. The server
+    // owns the rules, so the checklist can never disagree with what publishing
+    // allows — see App\Support\Packages\PackageReview.
+    const assessUrl = form.dataset.assessUrl || null;
+    const reviewedInput = form.querySelector('[data-reviewed]');
+    const reviewedAtLoad = form.dataset.reviewedSaved === '1';
+    let assessTimer = null;
+    let assessController = null;
+
+    function scheduleAssess() {
+        window.clearTimeout(assessTimer);
+        assessTimer = window.setTimeout(assessNow, 600);
+    }
+
+    async function assessNow() {
+        if (!assessUrl) return;
+        window.clearTimeout(assessTimer);
+        assessController?.abort();
+        assessController = new AbortController();
+
+        const body = new FormData();
+        let newMedia = 0;
+        new FormData(form).forEach((value, key) => {
+            if (value instanceof File) {
+                if (value.size === 0) return;
+                if (key === 'cover_image') body.append('_new_cover', '1');
+                else if (key.startsWith('media[')) newMedia++;
+                return;
+            }
+            if (key === '_method' || key === '_reviewed') return;
+            body.append(key, value);
+        });
+        body.append('_new_media', String(newMedia));
+        const reviewed = reviewedInput?.value === '1' || (reviewedAtLoad && !dirty);
+        body.append('_reviewed', reviewed ? '1' : '0');
+
+        try {
+            const response = await fetch(assessUrl, {
+                method: 'POST', body, signal: assessController.signal, credentials: 'same-origin',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+            });
+            if (!response.ok) return;
+            applyAssessment(await response.json());
+        } catch (e) {
+            // Aborted by a newer check, or offline: the last verdict stays on screen.
+        }
+    }
+
+    function applyAssessment(result) {
+        markSteps(result.steps || {});
+        setProgress(`${result.percent}% complete`, result.percent, 100);
+
+        const list = form.querySelector('[data-checklist]');
+        if (list) {
+            list.innerHTML = result.checklist.map((item) => `<li class="${item.done ? 'is-done' : ''}">
+                <a href="#step-${item.step}" data-step-link="${item.step}"><i class="bi ${item.done ? 'bi-check-circle-fill' : 'bi-circle'}" aria-hidden="true"></i>${escapeHtml(item.label)}<span class="visually-hidden">: ${item.done ? 'done' : 'not done'}</span></a>
+            </li>`).join('');
+            const count = form.querySelector('[data-checklist-count]');
+            if (count) count.textContent = `${result.checklist.filter((i) => i.done).length} of ${result.checklist.length}`;
+        }
+
+        const reviewBody = form.querySelector('[data-review-body]');
+        if (reviewBody && result.review_html) {
+            reviewBody.innerHTML = result.review_html;
+            const announce = form.querySelector('[data-review-announce]');
+            if (announce && stepInput.value === 'review') {
+                const p = result.problems.length;
+                const w = result.warnings.length;
+                announce.textContent = `Review updated: ${p} ${p === 1 ? 'problem' : 'problems'}, ${w} ${w === 1 ? 'suggestion' : 'suggestions'}.`;
+            }
+        }
+
+        const publish = form.querySelector('[data-publish-button]');
+        const blockers = form.querySelector('[data-publish-blockers]');
+        if (publish) {
+            publish.disabled = !result.can_publish;
+            if (result.can_publish) publish.removeAttribute('aria-describedby'); else publish.setAttribute('aria-describedby', 'publish-blockers');
+        }
+        if (blockers) {
+            blockers.hidden = result.can_publish;
+            blockers.querySelector('ul').innerHTML = result.problems
+                .map((p) => `<li><a href="#step-${p.step}" data-step-link="${p.step}">${escapeHtml(p.message)}</a></li>`).join('');
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Live summaries: each option, the prices, shared Mashaer arrangements
+    // ---------------------------------------------------------------------
+    const money = (currency, value) => (value === '' || value === null || value === undefined
+        ? '<span class="review-na">N/A</span>'
+        : `${currency} ${Number(value).toLocaleString('en-US')}`);
+
+    function roomRowsFor(code) {
+        return Array.from(form.querySelectorAll('[data-row="room_options"]'))
+            .filter((row) => (row.querySelector('[data-field="variant_code"]').value || '').toUpperCase() === code);
+    }
+
+    function renderOptionSummaries() {
+        const holder = form.querySelector('[data-option-summaries]');
+        if (!holder) return;
+        const options = optionRows().map((row) => ({ code: optionCode(row), label: (row.querySelector('[data-field="label"]').value || '').trim() })).filter((o) => o.code);
+        const card = form.querySelector('[data-options-card-summary]');
+        if (card) card.hidden = options.length === 0;
+
+        const sharedRooms = roomRowsFor('').filter((row) => row.querySelector('[data-field="is_available"]').checked);
+        const sharedHotels = Array.from(form.querySelectorAll('[data-option-group="accommodations"][data-option-uid="shared"] [data-field="hotel_name"]')).map((f) => f.value.trim()).filter(Boolean);
+
+        holder.innerHTML = options.map(({ code, label }) => {
+            const rooms = roomRowsFor(code).filter((row) => row.querySelector('[data-field="is_available"]').checked);
+            const hotels = Array.from(form.querySelectorAll(`[data-option-group="accommodations"][data-option-code="${CSS.escape(code)}"] [data-field="hotel_name"]`)).map((f) => f.value.trim()).filter(Boolean);
+            const usd = [...rooms, ...sharedRooms].map((row) => row.querySelector('[data-field="price_usd"]').value).filter((v) => v !== '').map(Number);
+            const problems = [];
+            if (!label) problems.push('No name yet');
+            if (!rooms.length && !sharedRooms.length) problems.push('No room price yet');
+            if (!hotels.length) problems.push('No hotel of its own yet');
+            const tone = ['A', 'B', 'C', 'D', 'E'].includes(code) ? code : 'shared';
+            return `<div class="option-summary option-tone-${tone}">
+                <div class="option-summary-head"><span class="option-chip">${escapeHtml(code)}</span><strong>${label ? escapeHtml(label) : 'Option ' + escapeHtml(code)}</strong></div>
+                <dl>
+                    <div><dt>Hotels</dt><dd>${hotels.length ? escapeHtml(hotels.join(', ')) : '—'}${sharedHotels.length ? ` <small>+ ${sharedHotels.length} shared</small>` : ''}</dd></div>
+                    <div><dt>Room types</dt><dd>${rooms.length}${sharedRooms.length ? ` <small>+ ${sharedRooms.length} shared</small>` : ''}</dd></div>
+                    <div><dt>From</dt><dd>${usd.length ? money('USD', Math.min(...usd)) : '—'}</dd></div>
+                </dl>
+                ${problems.length ? `<p class="option-summary-todo"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>${escapeHtml(problems.join(' · '))}</p>` : '<p class="option-summary-ok"><i class="bi bi-check-circle" aria-hidden="true"></i>Has a name, prices and a hotel</p>'}
+            </div>`;
+        }).join('');
+    }
+
+    function renderPriceSummary() {
+        const holder = form.querySelector('[data-price-summary]');
+        if (!holder) return;
+        const rows = Array.from(form.querySelectorAll('[data-row="room_options"]'));
+        if (!rows.length) {
+            holder.innerHTML = '<p class="form-help mb-0">No room prices yet. Add a room type above and its prices appear here.</p>';
+            return;
+        }
+
+        const available = [];
+        const body = rows.map((row) => {
+            const get = (f) => row.querySelector(`[data-field="${f}"]`).value;
+            const on = row.querySelector('[data-field="is_available"]').checked;
+            const label = get('display_label') || get('sharing_type') || 'Room without a name';
+            const code = get('variant_code');
+            if (on && get('price_usd') !== '') available.push(Number(get('price_usd')));
+            const missing = on && ['price_usd', 'price_sar', 'price_pkr'].every((f) => get(f) === '');
+            return `<tr class="${on ? '' : 'text-muted'}">
+                <td>${escapeHtml(label)}${missing ? ' <span class="badge text-bg-warning">No price</span>' : ''}</td>
+                <td>${code ? `Option ${escapeHtml(code)}` : 'Every option'}</td>
+                <td>${money('USD', get('price_usd'))}</td><td>${money('SAR', get('price_sar'))}</td><td>${money('PKR', get('price_pkr'))}</td>
+                <td>${on ? 'Available' : 'Not offered'}</td>
+            </tr>`;
+        }).join('');
+
+        holder.innerHTML = `<p class="mb-2"><strong>"From" price on the website:</strong> ${available.length ? money('USD', Math.min(...available)) : '<span class="review-missing">none yet — add an available USD price</span>'}</p>
+            <div class="table-responsive"><table class="table table-sm review-table mb-0">
+                <thead><tr><th scope="col">Room</th><th scope="col">For</th><th scope="col">USD</th><th scope="col">SAR</th><th scope="col">PKR</th><th scope="col">Status</th></tr></thead>
+                <tbody>${body}</tbody>
+            </table></div>`;
+    }
+
+    function refreshMashaerShared() {
+        form.querySelectorAll('[data-mashaer-shared]').forEach((note) => {
+            const card = note.closest('[data-mashaer-card]');
+            const record = (library.mashaer || []).find((m) => String(m.id) === card.querySelector('[data-mashaer-picker]').value);
+            note.hidden = !record;
+            if (!record) return;
+            note.querySelector('[data-mashaer-shared-name]').textContent = `"${record.name}"`;
+            note.querySelector('[data-mashaer-shared-count]').textContent = record.used ? `used in ${record.used} ${record.used === 1 ? 'package' : 'packages'}` : 'not used by any package yet';
+            note.querySelector('[data-mashaer-shared-link]').href = record.edit_url;
+        });
     }
 
     // ---------------------------------------------------------------------
@@ -1101,6 +1475,8 @@ export function initPackageBuilder() {
     function markDirty() {
         if (silent) return;
         dirty = true;
+        // A change after looking at the review means it needs another look.
+        if (reviewedInput && stepInput.value !== 'review') reviewedInput.value = '0';
         if (dirtyFlag) dirtyFlag.hidden = false;
         if (savedFlag) savedFlag.hidden = true;
         window.clearTimeout(saveTimer);
@@ -1258,7 +1634,8 @@ export function initPackageBuilder() {
     // ---------------------------------------------------------------------
     form.querySelectorAll('[data-row="room_options"]').forEach(syncRoomTypeSelect);
     syncOptionGroups();
-    updateDerived();
+    // The page arrives with the server's verdict already drawn; no need to ask again.
+    updateDerived({ assess: false });
     showStep(form.dataset.initialStep, { focus: false });
     offerRestore();
 

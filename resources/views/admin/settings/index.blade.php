@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Site Settings')
+@section('guide', 'settings')
 @section('subtitle', 'Company details, integrations and legal content used across the public website.')
 
 @section('content')

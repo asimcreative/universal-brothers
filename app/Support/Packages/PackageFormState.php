@@ -133,7 +133,8 @@ class PackageFormState
             'itinerary' => $package->itineraryDays->map(fn ($d) => [
                 'day_number' => $d->day_number, 'date_gregorian' => $d->date_gregorian?->format('Y-m-d'),
                 'date_hijri_label' => $d->date_hijri_label, 'city' => $d->city,
-                'accommodation_a' => $d->accommodation_a, 'accommodation_b' => $d->accommodation_b, 'notes' => $d->notes,
+                'accommodation_a' => $d->accommodation_a, 'accommodation_b' => $d->accommodation_b,
+                'transport' => $d->transport, 'notes' => $d->notes,
             ])->values()->all(),
 
             'mashaer' => $mashaer,

@@ -4,6 +4,8 @@
     <p>Transfers and travel between cities, and the meal plan at each hotel.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'transport'])
+
 <div class="builder-card">
     <header>
         <h3><i class="bi bi-bus-front" aria-hidden="true"></i>Transport</h3>

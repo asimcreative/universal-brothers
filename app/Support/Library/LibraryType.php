@@ -5,6 +5,7 @@ namespace App\Support\Library;
 use App\Models\Package;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -84,6 +85,35 @@ class LibraryType
             ->orderBy('sort_order');
     }
 
+    /**
+     * How many packages use each record, for every record of this type in one
+     * query — the "Used in 4 packages" labels in the builder's pickers. Counts
+     * packages, not rows: a hotel used by Option A and Option B of one package
+     * counts once. Deleted packages are not counted, matching packagesUsing().
+     *
+     * @return array<int, int> record id => number of packages
+     */
+    public function usageCounts(): array
+    {
+        if (! $this->tracksUsage()) {
+            return [];
+        }
+
+        $relation = $this->newRecord()->{$this->usageRelation}();
+        $table = $relation->getRelated()->getTable();
+        $foreignKey = $table.'.'.$relation->getForeignKeyName();
+
+        return DB::table($table)
+            ->join('packages', 'packages.id', '=', "{$table}.package_id")
+            ->whereNull('packages.deleted_at')
+            ->whereNotNull($foreignKey)
+            ->groupBy($foreignKey)
+            ->selectRaw("{$foreignKey} as record_id, count(distinct {$table}.package_id) as packages")
+            ->pluck('packages', 'record_id')
+            ->map(fn ($count) => (int) $count)
+            ->all();
+    }
+
     public function canPushToPackages(): bool
     {
         return $this->tracksUsage() && $this->syncMap !== [];
@@ -141,7 +171,7 @@ class LibraryType
             if ($field['type'] === 'days') {
                 $rules["{$name}.*.day_number"] = ['nullable', 'integer', 'min:1', 'max:60'];
                 $rules["{$name}.*.date_gregorian"] = ['nullable', 'date'];
-                foreach (['date_hijri_label', 'city', 'accommodation_a', 'accommodation_b'] as $text) {
+                foreach (['date_hijri_label', 'city', 'accommodation_a', 'accommodation_b', 'transport'] as $text) {
                     $rules["{$name}.*.{$text}"] = ['nullable', 'string', 'max:255'];
                 }
                 $rules["{$name}.*.notes"] = ['nullable', 'string', 'max:2000'];

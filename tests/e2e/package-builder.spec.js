@@ -8,7 +8,8 @@ import { clickAndConfirm } from './helpers/confirm.js';
 // the journey plan tools, publishing rules, duplication, the browser copy of
 // unsaved work, and the phone layout.
 
-const stepButton = (page, name) => page.locator('.builder-steps').getByRole('button', { name });
+// The full step list (on phones it opens from the compact "Step 4 of 14" line).
+const stepButton = (page, name) => page.locator('#builder-step-list').getByRole('button', { name });
 
 async function openStep(page, name) {
     await stepButton(page, name).click();
@@ -54,7 +55,7 @@ test.describe('Hajj package builder', () => {
 
             // Step 2 — setup
             await page.getByRole('button', { name: /Next: Package setup/ }).click();
-            await page.getByText('Madinah first', { exact: true }).click();
+            await page.getByText('Arrive in Madinah', { exact: true }).click();
             await page.getByText('Optional upgrade', { exact: true }).click();
 
             // Step 3 — options: choosing "Yes" adds Option A and B
@@ -285,12 +286,14 @@ test.describe('Hajj package builder', () => {
         await page.goto('/admin/hajj-packages?q=UB001');
         await page.getByRole('row', { name: /UB001/ }).first().getByRole('link', { name: 'Edit' }).click();
 
-        for (const step of [/Room prices/, /Hotels & accommodation/, /Journey plan/, /Transport & meals/]) {
+        for (const step of [/Room prices/, /Hotels & accommodation/, /Journey plan/, /Transport & meals/, /Review everything/, /Save, preview & publish/]) {
+            await page.locator('[data-steps-toggle]').click();
             await stepButton(page, step).click();
             const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
             expect(overflow, `sideways scroll on ${step}`).toBeLessThanOrEqual(1);
         }
 
-        await expect(page.getByRole('button', { name: 'Save changes' })).toBeVisible();
+        // The save bar stays on screen on every step (the Publish step has its own copy too).
+        await expect(page.locator('.builder-actionbar').getByRole('button', { name: 'Save changes' })).toBeVisible();
     });
 });

@@ -12,7 +12,7 @@ class PackageItineraryDay extends Model
 
     protected $fillable = [
         'package_id', 'day_number', 'date_gregorian', 'date_hijri_label',
-        'city', 'accommodation_a', 'accommodation_b', 'notes',
+        'city', 'accommodation_a', 'accommodation_b', 'transport', 'notes',
     ];
 
     protected function casts(): array

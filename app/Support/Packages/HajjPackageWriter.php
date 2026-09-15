@@ -92,7 +92,7 @@ class HajjPackageWriter
         $package->itineraryDays()->delete();
 
         foreach (array_values($rows) as $i => $row) {
-            if (blank($row['city'] ?? null) && blank($row['accommodation_a'] ?? null) && blank($row['date_hijri_label'] ?? null) && blank($row['notes'] ?? null)) {
+            if (blank($row['city'] ?? null) && blank($row['accommodation_a'] ?? null) && blank($row['date_hijri_label'] ?? null) && blank($row['notes'] ?? null) && blank($row['transport'] ?? null)) {
                 continue;
             }
             $package->itineraryDays()->create([
@@ -102,6 +102,7 @@ class HajjPackageWriter
                 'city' => $row['city'] ?? null,
                 'accommodation_a' => $row['accommodation_a'] ?? null,
                 'accommodation_b' => $row['accommodation_b'] ?? null,
+                'transport' => $row['transport'] ?? null,
                 'notes' => $row['notes'] ?? null,
             ]);
         }

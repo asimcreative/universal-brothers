@@ -1,8 +1,10 @@
 <div class="builder-panel-header">
     <div class="builder-panel-eyebrow">Step 12</div>
     <h2 id="step-title-media">Photos &amp; search engines</h2>
-    <p>The main photo, extra photos, and how the package appears on Google and when shared.</p>
+    <p>Photos make a package page trustworthy. The search engine boxes decide the title and description Google shows, and what appears when the page is shared on WhatsApp. All of this is optional: empty boxes use the package title, short description and a stock photograph.</p>
 </div>
+
+@include('admin.hajj-packages.partials.need-help', ['step' => 'media'])
 
 <div class="builder-card">
     <header>

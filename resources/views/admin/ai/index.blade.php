@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'AI Assistant')
+@section('guide', 'ai-assistant')
 
 @section('content')
     <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-4">

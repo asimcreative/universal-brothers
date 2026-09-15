@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Inquiry from '.$inquiry->name)
+@section('guide', 'enquiries')
 
 @section('actions')
     <a href="{{ route('admin.inquiries.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to Inquiries</a>

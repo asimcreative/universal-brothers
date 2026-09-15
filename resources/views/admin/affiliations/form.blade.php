@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', $affiliation->exists ? 'Edit Affiliation' : 'New Affiliation')
+@section('guide', 'affiliations')
 
 @section('content')
     <form method="POST" action="{{ $affiliation->exists ? route('admin.affiliations.update', $affiliation) : route('admin.affiliations.store') }}" enctype="multipart/form-data">

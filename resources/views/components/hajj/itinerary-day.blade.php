@@ -39,6 +39,10 @@
             <p class="hajj-day-stay">{{ $ubA !== '' ? $ubA : $ubB }}</p>
         @endif
 
+        @if($day->transport)
+            <p class="hajj-day-note"><i class="bi bi-bus-front" aria-hidden="true"></i> <span class="visually-hidden">Transport:</span> {{ $day->transport }}</p>
+        @endif
+
         @if($day->notes)
             <p class="hajj-day-note">{{ $day->notes }}</p>
         @endif

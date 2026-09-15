@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Media Gallery')
+@section('guide', 'website-content')
 
 @section('actions')
     <a href="{{ route('admin.media.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Media Item</a>

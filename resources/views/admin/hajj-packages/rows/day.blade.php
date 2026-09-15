@@ -27,8 +27,14 @@
         <input type="text" id="day-stay-b-{{ $i }}" name="itinerary[{{ $i }}][accommodation_b]" data-field="accommodation_b" value="{{ $row['accommodation_b'] ?? '' }}" list="dl-journey-stays" class="form-control" placeholder="Leave empty if the same" aria-label="Stay for the second option">
     </div>
     <x-admin.row-actions label="day" duplicate />
-    <div class="b-row-wide">
-        <label class="visually-hidden" for="day-notes-{{ $i }}">Description or note</label>
-        <input type="text" id="day-notes-{{ $i }}" name="itinerary[{{ $i }}][notes]" data-field="notes" value="{{ $row['notes'] ?? '' }}" class="form-control form-control-sm" placeholder="Description or note for this day (optional)">
+    <div class="b-row-wide day-extra">
+        <div>
+            <label class="visually-hidden" for="day-transport-{{ $i }}">Transport on this day</label>
+            <input type="text" id="day-transport-{{ $i }}" name="itinerary[{{ $i }}][transport]" data-field="transport" value="{{ $row['transport'] ?? '' }}" class="form-control form-control-sm" maxlength="255" placeholder="Transport (optional), e.g. Private luxury bus">
+        </div>
+        <div>
+            <label class="visually-hidden" for="day-notes-{{ $i }}">Description or note</label>
+            <input type="text" id="day-notes-{{ $i }}" name="itinerary[{{ $i }}][notes]" data-field="notes" value="{{ $row['notes'] ?? '' }}" class="form-control form-control-sm" placeholder="Description or note for this day (optional)">
+        </div>
     </div>
 </div>

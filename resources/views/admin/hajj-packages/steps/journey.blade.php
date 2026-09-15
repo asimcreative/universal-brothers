@@ -4,6 +4,8 @@
     <p>Day by day: the date, the Islamic date, where pilgrims are, and where they stay. Start from a template or another package to save typing.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'journey'])
+
 <div class="builder-card">
     <header>
         <h3><i class="bi bi-magic" aria-hidden="true"></i>Start faster</h3>
@@ -37,7 +39,7 @@
             <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#saveJourneyModal"><i class="bi bi-bookmark-plus me-1" aria-hidden="true"></i>Save as template</button>
             <button type="button" class="btn btn-sm btn-primary" data-add-row="itinerary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Add day</button>
         </div>
-        <p>Dates: pick the English date from the calendar. Write the Islamic date as it appears in the brochure, for example "08 Zil Hajj".</p>
+        <p>Dates: pick the English date from the calendar. Write the Islamic date as it appears in the brochure, for example "08 Zil Hajj". Add transport on days pilgrims travel. The Review step warns if days are missing or dates are out of order.</p>
     </header>
     <div class="collapse" id="fillDatesPanel">
         <div class="builder-card-body border-bottom row g-2 align-items-end">
@@ -57,6 +59,17 @@
                 @include('admin.hajj-packages.rows.day', ['i' => $i, 'row' => $row, 'hasOptionB' => $hasOptionB, 'optionALabel' => $optionALabel, 'optionBLabel' => $optionBLabel])
             @endforeach
         </div>
-        <div class="rows-empty" data-rows-empty @if(count($state['itinerary'] ?? [])) hidden @endif>No days yet. Add a day, apply a template, or copy from another package.</div>
+        <div class="rows-empty" data-rows-empty @if(count($state['itinerary'] ?? [])) hidden @endif>
+            <p class="mb-2">No days yet. Add a day, apply a template, or copy from another package. A day looks like this:</p>
+            <div class="journey-example" aria-label="Example day">
+                <span><small>Day</small>8</span>
+                <span><small>English date</small>14/05/2027</span>
+                <span><small>Islamic date</small>08 Zil Hajj</span>
+                <span><small>City / place</small>To Mina</span>
+                <span><small>Where they stay</small>Mina camp, Zone 1</span>
+                <span><small>Transport</small>Private luxury bus</span>
+                <span class="journey-example-wide"><small>Description</small>Leave the hotel after Fajr for the Mina camp. Zuhr, Asr, Maghrib and Isha prayers in Mina.</span>
+            </div>
+        </div>
     </div>
 </div>

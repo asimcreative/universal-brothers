@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', $faq->exists ? 'Edit FAQ' : 'New FAQ')
+@section('guide', 'faqs')
 
 @section('content')
     <form method="POST" action="{{ $faq->exists ? route('admin.faqs.update', $faq) : route('admin.faqs.store') }}">

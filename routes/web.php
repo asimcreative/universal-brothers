@@ -6,13 +6,14 @@ use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\AwardController as AdminAwardController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
+use App\Http\Controllers\Admin\GuideController;
 use App\Http\Controllers\Admin\HajjPackageController;
-use App\Http\Controllers\Admin\HelpController;
 use App\Http\Controllers\Admin\InquiryController as AdminInquiryController;
 use App\Http\Controllers\Admin\LibraryController;
-use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\MediaItemController as AdminMediaItemController;
+use App\Http\Controllers\Admin\NewsArticleController as AdminNewsArticleController;
 use App\Http\Controllers\Admin\OfficeController as AdminOfficeController;
+use App\Http\Controllers\Admin\OnboardingController;
 use App\Http\Controllers\Admin\PackageCategoryController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\PackageTemplateController;
@@ -99,10 +100,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // resources above — the controller type-hints `Package $package`,
         // and Route::resource('hajj-packages', ...) would otherwise
         // generate a mismatched {hajj_package} parameter.
+        // Registered before the resource so "assess" is never read as a {package}.
+        Route::post('hajj-packages/assess', [HajjPackageController::class, 'assess'])->name('hajj-packages.assess');
         Route::resource('hajj-packages', HajjPackageController::class)
             ->except(['show'])
             ->parameters(['hajj-packages' => 'package']);
         Route::prefix('hajj-packages/{package}')->name('hajj-packages.')->group(function () {
+            Route::post('assess', [HajjPackageController::class, 'assess'])->name('assess-existing');
             Route::patch('quick/{action}', [HajjPackageController::class, 'quick'])
                 ->whereIn('action', ['publish', 'unpublish', 'feature', 'unfeature', 'archive', 'restore'])
                 ->name('quick');
@@ -141,7 +145,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::delete('{id}', [LibraryController::class, 'destroy'])->whereNumber('id')->name('destroy');
             });
 
-        Route::get('help', [HelpController::class, 'index'])->name('help');
+        // The admin guide: help centre, first-visit welcome and the guided tour.
+        Route::get('help', fn () => redirect()->route('admin.guide.index'))->name('help');
+        Route::get('guide', [GuideController::class, 'index'])->name('guide.index');
+        Route::get('guide/{section}', [GuideController::class, 'show'])->name('guide.show');
+        Route::post('guide/{section}/complete', [GuideController::class, 'complete'])->name('guide.complete');
+        Route::delete('guide/{section}/complete', [GuideController::class, 'uncomplete'])->name('guide.uncomplete');
+        Route::post('onboarding/tour', [OnboardingController::class, 'tour'])->name('onboarding.tour');
+        Route::post('onboarding/dismiss', [OnboardingController::class, 'dismiss'])->name('onboarding.dismiss');
+        Route::post('onboarding/restart', [OnboardingController::class, 'restart'])->name('onboarding.restart');
 
         Route::get('categories', [PackageCategoryController::class, 'index'])->name('categories.index');
         Route::get('categories/{category}/edit', [PackageCategoryController::class, 'edit'])->name('categories.edit');

@@ -62,7 +62,7 @@
                             </div>
                         @endforeach
                     </fieldset>
-                    <p class="form-help mb-0 mt-2">What you tick <strong>replaces</strong> that part of this form. Hotel options are copied along with room prices or hotels, so every price stays with its hotel. Nothing is saved until you press a save button.</p>
+                    <p class="form-help mb-0 mt-2">What you tick <strong>replaces</strong> that part of this form. Hotel options are copied along with room prices or hotels, so every price stays with its hotel. Before anything changes you will see exactly what is copied and what it replaces. The title, code, photos and internal notes are never copied. Nothing is saved until you press a save button.</p>
                     <div class="alert alert-danger py-2 mt-2 mb-0" data-copy-error hidden></div>
                 </div>
                 <div class="modal-footer">
@@ -110,6 +110,48 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" data-new-hotel-accept>Save hotel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Search the saved hotels, see a hotel's details, and add it --}}
+    <div class="modal fade" id="findHotelModal" tabindex="-1" aria-labelledby="findHotelTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="findHotelTitle">Find a hotel</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="form-help mt-0">Search your saved hotels. Adding one copies its name and stars into this package; you can still change them for this package only.</p>
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-7">
+                            <label class="visually-hidden" for="findHotelSearch">Hotel name</label>
+                            <input type="search" id="findHotelSearch" class="form-control" placeholder="Type a hotel name…" data-find-hotel-search data-no-dirty>
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="visually-hidden" for="findHotelCity">City</label>
+                            <select id="findHotelCity" class="form-select" data-find-hotel-city data-no-dirty>
+                                <option value="">Every city</option>
+                                @foreach(\App\Models\Hotel::LOCATIONS as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="find-hotel">
+                        <div class="picker-list find-hotel-list" data-find-hotel-list role="listbox" aria-label="Saved hotels"></div>
+                        <div class="find-hotel-details" data-find-hotel-details aria-live="polite">
+                            <p class="text-muted mb-0">Choose a hotel to see its details.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer flex-wrap">
+                    <label class="form-label mb-0 me-1" for="findHotelFor">Add to</label>
+                    <select id="findHotelFor" class="form-select w-auto" data-find-hotel-for data-no-dirty></select>
+                    <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" data-find-hotel-accept disabled>Add this hotel</button>
                 </div>
             </div>
         </div>

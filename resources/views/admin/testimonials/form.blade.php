@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', $testimonial->exists ? 'Edit Testimonial' : 'New Testimonial')
+@section('guide', 'testimonials')
 
 @section('content')
     <form method="POST" action="{{ $testimonial->exists ? route('admin.testimonials.update', $testimonial) : route('admin.testimonials.store') }}" enctype="multipart/form-data">

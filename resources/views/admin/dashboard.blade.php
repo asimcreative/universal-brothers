@@ -9,6 +9,28 @@
 @endsection
 
 @section('content')
+    @if($showOnboarding)
+        @php $canResume = in_array($tourStatus, ['paused', 'in_progress'], true) && $tourStep > 0; @endphp
+        <section class="onboarding-panel" aria-labelledby="onboarding-title" data-onboarding-panel>
+            <div class="onboarding-icon" aria-hidden="true"><i class="bi bi-signpost-split"></i></div>
+            <div class="onboarding-body">
+                <h2 id="onboarding-title">Welcome to your website admin, {{ auth()->user()->name }}</h2>
+                <p>A short tour shows where everything is — {{ $tourLength }} quick stops, about two minutes. You can skip it, stop half-way and continue later, or read the guide instead.</p>
+                <div class="onboarding-actions">
+                    <button type="button" class="btn btn-primary" data-tour-start="{{ $canResume ? $tourStep : 0 }}">
+                        <i class="bi bi-play-fill me-1" aria-hidden="true"></i>{{ $canResume ? 'Resume tour (step '.($tourStep + 1).' of '.$tourLength.')' : 'Start guided tour' }}
+                    </button>
+                    <a href="{{ route('admin.guide.index') }}" class="btn btn-outline-primary"><i class="bi bi-book me-1" aria-hidden="true"></i>Open the guide</a>
+                    <form method="POST" action="{{ route('admin.onboarding.dismiss') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-link">Skip for now</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    <div data-tour="dashboard">
     <h2 class="admin-section-heading">Hajj packages</h2>
     <div class="row g-3 mb-4">
         @foreach([
@@ -28,6 +50,7 @@
                 </a>
             </div>
         @endforeach
+    </div>
     </div>
 
     <h2 class="admin-section-heading">Enquiries and content</h2>
@@ -75,6 +98,31 @@
                             <a href="{{ route('admin.inquiries.index', ['status' => 'new']) }}" class="btn btn-sm btn-outline-primary">Review</a>
                         </div>
                     @endif
+                </div>
+            @endif
+
+            @if($unfinishedDrafts->isNotEmpty())
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        Unfinished drafts
+                        <a href="{{ route('admin.hajj-packages.index', ['status' => 'draft']) }}" class="btn btn-sm btn-outline-secondary">All drafts</a>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach($unfinishedDrafts as $item)
+                            @php $percent = $item['review']->percent(); @endphp
+                            <li class="list-group-item draft-progress-item">
+                                <div class="min-w-0 flex-grow-1">
+                                    <a href="{{ route('admin.hajj-packages.edit', $item['package']) }}" class="admin-table-primary">{{ $item['package']->code ? $item['package']->code.' — ' : '' }}{{ $item['package']->name }}</a>
+                                    <span class="admin-table-secondary">Last saved {{ $item['package']->updated_at->diffForHumans() }}</span>
+                                    <div class="completion-meter" role="progressbar" aria-label="{{ $item['package']->name }} is {{ $percent }}% complete" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $percent }}">
+                                        <span style="width: {{ $percent }}%"></span>
+                                    </div>
+                                </div>
+                                <span class="completion-number">{{ $percent }}%</span>
+                                <a href="{{ route('admin.hajj-packages.edit', ['package' => $item['package'], 'step' => $item['package']->builder_step ?: $item['review']->nextStep()]) }}" class="btn btn-sm btn-primary">Continue</a>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -163,7 +211,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     Reusable content
-                    <a href="{{ route('admin.help') }}" class="small">What is this?</a>
+                    <a href="{{ route('admin.guide.show', 'safe-editing') }}" class="small">What is this?</a>
                 </div>
                 <ul class="list-group list-group-flush">
                     @foreach($libraryCounts as $item)

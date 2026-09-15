@@ -2,11 +2,13 @@
 // provides window.bootstrap), and never by the public site.
 
 import { initPackageBuilder } from './admin/package-builder';
+import { initTour } from './admin/tour';
 
 /**
  * One confirmation dialog for the whole admin.
  *
- * A form with `data-confirm="Message"` asks before it submits. Optional:
+ * A form with `data-confirm="Message"` asks before it submits — or only when a
+ * particular submit button carrying the same attributes is pressed. Optional:
  *   data-confirm-title   heading (default "Are you sure?")
  *   data-confirm-button  label for the confirm button (default "Confirm")
  *   data-confirm-tone    "danger" (default) or "primary"
@@ -27,7 +29,9 @@ function initConfirmDialog() {
 
     document.addEventListener('submit', (event) => {
         const form = event.target;
-        if (!(form instanceof HTMLFormElement) || !form.dataset.confirm) return;
+        if (!(form instanceof HTMLFormElement)) return;
+        const settings = event.submitter?.dataset.confirm ? event.submitter.dataset : form.dataset;
+        if (!settings.confirm) return;
         if (form.dataset.confirmed === '1') {
             delete form.dataset.confirmed;
             return;
@@ -37,10 +41,10 @@ function initConfirmDialog() {
         event.stopImmediatePropagation();
         pending = { form, submitter: event.submitter || null };
 
-        const tone = form.dataset.confirmTone === 'primary' ? 'primary' : 'danger';
-        title.textContent = form.dataset.confirmTitle || 'Are you sure?';
-        message.textContent = form.dataset.confirm;
-        accept.textContent = form.dataset.confirmButton || 'Confirm';
+        const tone = settings.confirmTone === 'primary' ? 'primary' : 'danger';
+        title.textContent = settings.confirmTitle || 'Are you sure?';
+        message.textContent = settings.confirm;
+        accept.textContent = settings.confirmButton || 'Confirm';
         accept.className = `btn btn-${tone}`;
         icon.classList.toggle('is-primary', tone === 'primary');
         modal.show();
@@ -146,8 +150,25 @@ function initImagePreviews() {
     });
 }
 
+/**
+ * Ties each error message to its field: the field is marked invalid and
+ * described by the message, so assistive technology reads "Package code —
+ * This code is already used" together rather than the message on its own.
+ */
+function initFieldErrors() {
+    document.querySelectorAll('.invalid-feedback[id]').forEach((message) => {
+        const container = message.parentElement;
+        const field = container?.querySelector('.is-invalid, input:not([type="hidden"]), select, textarea');
+        if (!field) return;
+        field.setAttribute('aria-invalid', 'true');
+        const ids = new Set((field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+        ids.add(message.id);
+        field.setAttribute('aria-describedby', Array.from(ids).join(' '));
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    [initConfirmDialog, initSubmitLoading, initCharCounters, initAutoSubmitFilters, initImagePreviews, initPackageBuilder].forEach((fn) => {
+    [initConfirmDialog, initSubmitLoading, initCharCounters, initAutoSubmitFilters, initImagePreviews, initFieldErrors, initPackageBuilder, initTour].forEach((fn) => {
         try {
             fn();
         } catch (error) {

@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Package Templates')
+@section('guide', 'templates')
 @section('subtitle', 'Starting points for new packages. A package made from a template gets its own copy, so editing a template never changes an existing package.')
 
 @section('actions')

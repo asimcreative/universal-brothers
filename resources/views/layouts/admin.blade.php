@@ -86,7 +86,7 @@
                     <a href="{{ route('home') }}" class="admin-topbar-icon d-none d-sm-inline-flex" target="_blank" rel="noopener" title="View the website" aria-label="View the website (opens in a new tab)">
                         <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
                     </a>
-                    <a href="{{ route('admin.help') }}" class="admin-topbar-icon d-none d-sm-inline-flex" title="Help" aria-label="Help">
+                    <a href="{{ route('admin.guide.index') }}" class="admin-topbar-icon" title="Guide and help" aria-label="Guide and help" data-tour="help">
                         <i class="bi bi-question-circle" aria-hidden="true"></i>
                     </a>
 
@@ -101,7 +101,13 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                             <li><h6 class="dropdown-header">{{ $currentUser?->email }}</h6></li>
                             <li><a class="dropdown-item" href="{{ route('home') }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-2" aria-hidden="true"></i>View website</a></li>
-                            <li><a class="dropdown-item" href="{{ route('admin.help') }}"><i class="bi bi-question-circle me-2" aria-hidden="true"></i>Help</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.guide.index') }}"><i class="bi bi-book me-2" aria-hidden="true"></i>Admin guide</a></li>
+                            <li>
+                                <form method="POST" action="{{ route('admin.onboarding.restart') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item"><i class="bi bi-signpost-split me-2" aria-hidden="true"></i>Take the guided tour</button>
+                                </form>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('admin.logout') }}">
@@ -138,6 +144,10 @@
                     </div>
                 @endif
 
+                @hasSection('guide')
+                    @include('admin.partials.page-help', ['key' => trim($__env->yieldContent('guide'))])
+                @endif
+
                 @yield('content')
             </main>
         </div>
@@ -161,6 +171,21 @@
             </div>
         </div>
     </div>
+
+    @auth
+        {{-- The guided tour's steps and this admin's place in it. --}}
+        @php
+            $tourData = [
+                'steps' => \App\Support\Guide\GuideContent::tour(),
+                'status' => $currentUser->tour_status,
+                'step' => (int) $currentUser->tour_step,
+                'stateUrl' => route('admin.onboarding.tour'),
+                'dashboardUrl' => route('admin.dashboard'),
+                'guideUrl' => route('admin.guide.index'),
+            ];
+        @endphp
+        <script type="application/json" id="admin-tour-data">@json($tourData)</script>
+    @endauth
 
     @stack('modals')
     @stack('scripts')

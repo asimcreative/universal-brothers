@@ -111,17 +111,20 @@ class PackageTemplateController extends Controller
         $state = PackageFormState::withOldInput($state, session()->getOldInput() ?? []);
         $placeholder = new Package(['package_category_id' => PackageCategory::where('slug', 'hajj')->value('id')]);
 
+        $steps = array_diff_key(PackageCompleteness::STEPS, array_flip(PackageCompleteness::PACKAGE_ONLY_STEPS));
+
         return view('admin.hajj-packages.form', [
             'package' => $placeholder,
             'template' => $template,
             'state' => $state,
             'mode' => 'template',
             'fromTemplate' => null,
-            'steps' => array_diff_key(PackageCompleteness::STEPS, ['media' => true]),
+            'steps' => $steps,
             'stepStatus' => PackageCompleteness::stepStatus($state),
             'library' => PackageBuilderData::for($placeholder),
             'previewUrl' => null,
-            'initialStep' => array_key_exists((string) request('step'), PackageCompleteness::STEPS) ? request('step') : 'basics',
+            'review' => null,
+            'initialStep' => array_key_exists((string) request('step'), $steps) ? request('step') : 'basics',
         ]);
     }
 }

@@ -4,6 +4,8 @@
     <p>Use options when customers can choose between different hotels for the same package — for example Option A at Dar Al Tawhid and Option B at Fairmont.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'options'])
+
 <div class="builder-card">
     <header><h3><i class="bi bi-signpost-split" aria-hidden="true"></i>Does this package offer a choice of hotels?</h3></header>
     <div class="builder-card-body">
@@ -34,5 +36,15 @@
             @endforeach
         </div>
         <div class="rows-empty" data-rows-empty @if(count($variantRows)) hidden @endif>No options yet.</div>
+    </div>
+</div>
+
+<div class="builder-card" data-options-card-summary @if(! $hasOptions) hidden @endif>
+    <header>
+        <h3><i class="bi bi-card-checklist" aria-hidden="true"></i>What each option has so far</h3>
+        <p>Updates as you work. Every option needs its own room price and hotel before the package is complete.</p>
+    </header>
+    <div class="builder-card-body">
+        <div class="option-summaries" data-option-summaries aria-live="polite"></div>
     </div>
 </div>

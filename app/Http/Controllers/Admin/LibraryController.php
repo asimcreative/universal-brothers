@@ -117,6 +117,27 @@ class LibraryController extends Controller
     {
         $library = $this->type($type);
         $record = $library->query()->findOrFail($id);
+
+        // "Save as a new separate record": the edited details become a new
+        // saved record; the original, and every package using it, stay as
+        // they were.
+        if ($request->input('_save_as') === 'copy') {
+            $copy = $record->replicate(['cover_image']);
+            $copy->fill($library->attributesFrom($request->validated()));
+            if ($copy->libraryTitle() === $record->libraryTitle()) {
+                $copy->{$library->titleColumn()} = str($record->libraryTitle())->limit(240, '').' (Copy)';
+            }
+            $copy->is_active = true;
+            $this->applyImages($library, $copy, $request);
+            $this->fillDerivedColumns($library, $copy);
+            $copy->save();
+
+            AdminActivity::record('library_copied', $copy, "Saved the edited {$library->singular} \"{$record->libraryTitle()}\" as a new record, \"{$copy->libraryTitle()}\". The original was not changed.");
+
+            return redirect()->route('admin.library.edit', [$type, $copy->getKey()])
+                ->with('status', "Saved as a new {$library->singular}, \"{$copy->libraryTitle()}\". The original \"{$record->libraryTitle()}\" and the packages using it were not changed.");
+        }
+
         $record->fill($library->attributesFrom($request->validated()));
         $this->applyImages($library, $record, $request);
         $this->fillDerivedColumns($library, $record);

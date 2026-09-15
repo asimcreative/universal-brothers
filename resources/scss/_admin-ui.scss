@@ -411,41 +411,6 @@ $option-colors: (
         }
     }
 
-    // ---- Help page ------------------------------------------------------------
-    .admin-help {
-        max-width: 860px;
-
-        h2 {
-            font-family: $headings-font-family;
-            font-size: 1.2rem;
-            color: $ub-navy;
-            margin-top: 2rem;
-        }
-
-        h3 { font-size: 1rem; font-weight: 700; margin-top: 1.25rem; }
-        p, li { color: #374151; line-height: 1.65; }
-
-        .help-step {
-            display: flex;
-            gap: 0.85rem;
-            margin-bottom: 0.9rem;
-
-            .help-step-number {
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                background-color: $ub-navy;
-                color: #fff;
-                font-weight: 700;
-                font-size: 0.85rem;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-            }
-        }
-    }
-
     // ---- Confirmation dialog -------------------------------------------------
     .admin-confirm-modal {
         .modal-content { border: none; border-radius: $border-radius-lg; }
@@ -563,28 +528,46 @@ $option-colors: (
             }
         }
 
+        .builder-steps-toggle { display: none; }
+
+        // Tablets and phones: one line — "Step 4 of 14 · Room prices" — that
+        // opens the full list, instead of a sideways-scrolling strip.
         @media (max-width: 991.98px) {
             position: static;
             max-height: none;
             padding: 0.5rem;
+            overflow: visible;
 
-            ol {
+            .builder-steps-toggle {
                 display: flex;
-                gap: 0.35rem;
-                overflow-x: auto;
-                padding-bottom: 0.25rem;
-                scroll-snap-type: x proximity;
+                border: 1px solid $admin-border;
+                background-color: #fff;
+
+                .builder-steps-toggle-text {
+                    display: flex;
+                    flex-direction: column;
+                    line-height: 1.2;
+                    min-width: 0;
+
+                    small { color: $admin-muted; font-size: 0.72rem; }
+                    strong { color: $ub-navy; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                }
+
+                .bi-chevron-down { margin-left: auto; transition: transform 0.2s; }
+                .step-number { background-color: $ub-navy; border-color: $ub-navy; color: #fff; }
             }
 
-            li { flex: 0 0 auto; scroll-snap-align: start; }
+            .builder-progress { padding: 0.5rem 0.25rem 0; }
 
-            button {
-                width: auto;
-                white-space: nowrap;
-                border: 1px solid $admin-border;
-                padding: 0.4rem 0.65rem;
+            ol, .builder-checklist { display: none; }
 
-                .step-state { display: none; }
+            &.is-open {
+                max-height: calc(100vh - 6rem);
+                overflow-y: auto;
+
+                ol { display: block; margin-top: 0.35rem; }
+                .builder-checklist { display: block; }
+                .builder-steps-toggle .bi-chevron-down { transform: rotate(180deg); }
             }
         }
     }

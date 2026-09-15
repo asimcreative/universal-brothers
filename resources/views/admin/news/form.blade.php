@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', $article->exists ? 'Edit Article' : 'New Article')
+@section('guide', 'news')
 
 @section('content')
     <form method="POST" action="{{ $article->exists ? route('admin.news.update', $article) : route('admin.news.store') }}" enctype="multipart/form-data">

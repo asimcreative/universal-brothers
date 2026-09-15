@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Inquiries')
+@section('guide', 'enquiries')
 @section('subtitle', 'Enquiries submitted from the public site\'s contact and package forms.')
 
 @section('content')

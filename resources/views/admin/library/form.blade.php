@@ -1,9 +1,14 @@
 @extends('layouts.admin')
 
-@php $isNew = ! $record->exists; @endphp
+@php
+    $isNew = ! $record->exists;
+    $isShared = ! $isNew && ($usageCount ?? 0) > 0;
+    $guideKey = ['hotels' => 'hotels', 'meal-plans' => 'meals', 'transport' => 'transport', 'inclusions' => 'inclusions', 'exclusions' => 'exclusions', 'upgrades' => 'upgrades', 'mashaer' => 'mashaer', 'notes' => 'notes', 'journey-templates' => 'itinerary'][$library->key] ?? 'safe-editing';
+@endphp
 
 @section('title', $isNew ? 'Add '.$library->singular : $record->libraryTitle())
 @section('subtitle', $library->intro)
+@section('guide', $guideKey)
 
 @section('breadcrumb')
     <a href="{{ route('admin.dashboard') }}">Dashboard</a> /
@@ -17,14 +22,15 @@
 
 @section('content')
     @if(! $isNew && $library->tracksUsage())
-        <div class="alert {{ ($usageCount ?? 0) > 0 ? 'alert-info' : 'alert-light border' }} admin-alert" role="note">
-            <i class="bi bi-diagram-2" aria-hidden="true"></i>
+        <div class="alert {{ $isShared ? 'alert-warning' : 'alert-light border' }} admin-alert" role="note" id="shared-record-note">
+            <i class="bi {{ $isShared ? 'bi-exclamation-diamond' : 'bi-diagram-2' }}" aria-hidden="true"></i>
             <div class="admin-alert-body">
-                @if(($usageCount ?? 0) > 0)
-                    Used in <strong>{{ $usageCount }} {{ Str::plural('package', $usageCount) }}</strong>.
+                @if($isShared)
+                    <strong>This is shared information. Used in {{ $usageCount }} {{ Str::plural('package', $usageCount) }}.</strong>
                     Saving changes here does <strong>not</strong> change those packages straight away — each package keeps its own copy.
+                    Choose below whether to update this saved record, or keep it as it is and save your changes as a new, separate record.
                     @if($library->canPushToPackages())
-                        After saving, open <a href="{{ route('admin.library.usage', [$library->key, $record->getKey()]) }}">Where it is used</a> to update them.
+                        After updating, open <a href="{{ route('admin.library.usage', [$library->key, $record->getKey()]) }}">Where it is used</a> if the packages should get the new details too.
                     @endif
                 @else
                     Not used in any package yet.
@@ -98,8 +104,18 @@
                 @endforeach
             </div>
             <div class="admin-card-footer d-flex flex-wrap gap-2 justify-content-between">
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>Save</button>
+                <div class="d-flex flex-wrap gap-2">
+                    @if($isShared)
+                        <button type="submit" class="btn btn-primary" aria-describedby="shared-record-note" data-confirm-title="Update the shared record?" data-confirm-button="Update shared record" data-confirm-tone="primary"
+                                data-confirm="The saved {{ $library->singular }} changes for future use. The {{ $usageCount }} {{ Str::plural('package', $usageCount) }} using it keep their current details until you update them from &quot;Where it is used&quot;.">
+                            <i class="bi bi-check2 me-1" aria-hidden="true"></i>Update shared record
+                        </button>
+                        <button type="submit" class="btn btn-outline-primary" name="_save_as" value="copy" aria-describedby="shared-record-note">
+                            <i class="bi bi-copy me-1" aria-hidden="true"></i>Save as a new separate record
+                        </button>
+                    @else
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1" aria-hidden="true"></i>Save</button>
+                    @endif
                     <a href="{{ route('admin.library.index', $library->key) }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
                 @unless($isNew)

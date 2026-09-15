@@ -4,6 +4,8 @@
     <p>Upgrades and supplements customers can add — a Kaaba-view room, an extra night in Madinah, a larger tent. Aziziya rooms are set in the Hotels step.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'extras'])
+
 <div class="builder-card">
     <header>
         <h3><i class="bi bi-plus-square" aria-hidden="true"></i>Additional options</h3>
@@ -12,7 +14,7 @@
             <button type="button" class="btn btn-sm btn-outline-primary" data-open-picker="upgrades"><i class="bi bi-bookmark-plus me-1" aria-hidden="true"></i>Add saved option</button>
             <button type="button" class="btn btn-sm btn-primary" data-add-row="upgrades"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Add your own</button>
         </div>
-        <p>Leave the price empty when it is "on request".</p>
+        <p>These are additional services customers may choose at extra cost. They are not added to the room price — customers see them as separate choices. Leave the price empty when it is "on request". Example: Kaaba View Supplement, US$2,200 per person, subject to availability.</p>
     </header>
     <div class="builder-card-body">
         <div data-rows="upgrades">

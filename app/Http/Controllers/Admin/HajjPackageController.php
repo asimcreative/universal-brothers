@@ -15,6 +15,7 @@ use App\Support\Packages\PackageCompleteness;
 use App\Support\Packages\PackageDuplicator;
 use App\Support\Packages\PackageFormState;
 use App\Support\Packages\PackagePreview;
+use App\Support\Packages\PackageReview;
 use App\Support\Packages\PackageTemplates;
 use DomainException;
 use Illuminate\Http\JsonResponse;
@@ -51,7 +52,7 @@ class HajjPackageController extends Controller
         $sort = $request->string('sort')->toString() ?: 'order';
 
         $packages = (clone $base)
-            ->with('series')
+            ->with(array_merge(['series'], PackageFormState::RELATIONS))
             ->when($status === 'archived', fn ($q) => $q->archived(), fn ($q) => $q->notArchived())
             ->when(in_array($status, ['published', 'draft'], true), fn ($q) => $q->where('status', $status))
             ->when($request->filled('q'), function ($q) use ($request) {
@@ -80,6 +81,7 @@ class HajjPackageController extends Controller
 
         return view('admin.hajj-packages.index', [
             'packages' => $packages,
+            'progress' => $packages->getCollection()->mapWithKeys(fn (Package $p) => [$p->id => PackageReview::forPackage($p)]),
             'counts' => $counts,
             'series' => $category->series()->orderBy('sort_order')->get(),
             'durations' => (clone $base)->whereNotNull('duration_days')->distinct()->orderBy('duration_days')->pluck('duration_days'),
@@ -112,6 +114,7 @@ class HajjPackageController extends Controller
 
         $this->writer->syncNested($package, $data);
         $this->syncMedia($package, $request);
+        $this->recordProgress($package, $request);
 
         AdminActivity::record('created', $package, "Created Hajj package {$package->code} — {$package->name} as ".($package->isPublished() ? 'published' : 'a draft').'.');
 
@@ -127,6 +130,43 @@ class HajjPackageController extends Controller
         return $this->builder($package, PackageFormState::fromPackage($package));
     }
 
+    /**
+     * How complete the form is right now, without saving anything: the
+     * checklist, step marks, publishing problems, advice and the review
+     * screen. The builder calls this as the admin types, so what it shows is
+     * always the server's own verdict — the same one publishing uses.
+     */
+    public function assess(Request $request, ?Package $package = null): JsonResponse
+    {
+        if ($package) {
+            $this->ensureHajj($package);
+        }
+
+        $base = $package ? PackageFormState::fromPackage($package) : PackageFormState::blank();
+        $input = $request->except(['_token', '_method', '_intent', '_step', '_reviewed', '_new_cover', '_new_media']);
+        $state = PackageFormState::withOldInput($base, $input);
+
+        $review = new PackageReview($state, $package, [
+            'new_cover' => $request->boolean('_new_cover'),
+            'new_media' => $request->integer('_new_media'),
+            'remove_cover' => $request->boolean('remove_cover_image'),
+            'reviewed' => $request->boolean('_reviewed'),
+        ]);
+
+        return response()->json([
+            'percent' => $review->percent(),
+            'checklist' => $review->checklist(),
+            'steps' => $review->stepStatus(),
+            'problems' => $review->problems(),
+            'warnings' => $review->warnings(),
+            'can_publish' => $review->canPublish(),
+            'review_html' => view('admin.hajj-packages.partials.review-body', [
+                'review' => $review,
+                'steps' => PackageCompleteness::STEPS,
+            ])->render(),
+        ]);
+    }
+
     public function update(HajjPackageRequest $request, Package $package): RedirectResponse
     {
         $this->ensureHajj($package);
@@ -139,6 +179,7 @@ class HajjPackageController extends Controller
 
         $this->writer->syncNested($package, $data);
         $this->syncMedia($package, $request);
+        $this->recordProgress($package, $request);
 
         if ($wasPublished !== $package->isPublished()) {
             AdminActivity::record($package->isPublished() ? 'published' : 'unpublished', $package, ($package->isPublished() ? 'Published' : 'Moved to draft').": {$package->code} — {$package->name}.");
@@ -301,6 +342,22 @@ class HajjPackageController extends Controller
     private function builder(Package $package, array $state, ?PackageTemplate $fromTemplate = null): View
     {
         $state = PackageFormState::withOldInput($state, session()->getOldInput() ?? []);
+        $review = new PackageReview($state, $package->exists ? $package : null, [
+            'reviewed' => $package->exists && PackageReview::isReviewed($package),
+        ]);
+
+        // An unfinished draft opens where the admin stopped last time; an
+        // explicit ?step always wins.
+        $requested = (string) request('step');
+        $resumed = ! array_key_exists($requested, PackageCompleteness::STEPS)
+            && $package->exists && ! $package->isPublished()
+            && array_key_exists((string) $package->builder_step, PackageCompleteness::STEPS)
+            && $package->builder_step !== 'basics';
+        $initialStep = match (true) {
+            array_key_exists($requested, PackageCompleteness::STEPS) => $requested,
+            $resumed => $package->builder_step,
+            default => 'basics',
+        };
 
         return view('admin.hajj-packages.form', [
             'package' => $package,
@@ -308,11 +365,36 @@ class HajjPackageController extends Controller
             'mode' => 'package',
             'fromTemplate' => $fromTemplate,
             'steps' => PackageCompleteness::STEPS,
-            'stepStatus' => PackageCompleteness::stepStatus($state),
+            'stepStatus' => $review->stepStatus(),
+            'review' => $review,
+            'resumed' => $resumed,
             'library' => PackageBuilderData::for($package),
             'previewUrl' => $package->exists ? $this->previewUrl($package) : null,
-            'initialStep' => array_key_exists((string) request('step'), PackageCompleteness::STEPS) ? request('step') : 'basics',
+            'initialStep' => $initialStep,
         ]);
+    }
+
+    /**
+     * Remembers the step to reopen, and — when the admin saved from the Review
+     * step with nothing blocking — fingerprints the content they reviewed. Any
+     * later change to that content un-ticks "Final review completed".
+     */
+    private function recordProgress(Package $package, Request $request): void
+    {
+        $step = $request->input('_intent') === 'continue' ? $this->nextStep($request->input('_step')) : $request->input('_step');
+        $fresh = $package->fresh();
+        $attributes = ['builder_step' => array_key_exists((string) $step, PackageCompleteness::STEPS) ? $step : $package->builder_step];
+
+        if ($request->boolean('_reviewed') && PackageReview::forPackage($fresh)->canPublish()) {
+            $attributes['reviewed_hash'] = PackageReview::fingerprint($fresh);
+        }
+
+        // Not a content change: leave updated_at alone so "last saved" and the
+        // browser's unsaved-copy check stay tied to the real save.
+        $package->forceFill($attributes);
+        $package->timestamps = false;
+        $package->saveQuietly();
+        $package->timestamps = true;
     }
 
     private function previewUrl(Package $package): string

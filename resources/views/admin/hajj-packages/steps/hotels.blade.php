@@ -12,14 +12,21 @@
     <p>Pick each hotel from your saved list. Its name and stars are filled in for you, and you can still adjust them for this package only.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'hotels'])
+
 <div class="builder-card">
     <header>
         <h3><i class="bi bi-building" aria-hidden="true"></i>Hotels</h3>
         <div class="builder-toolbar">
+            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#findHotelModal"><i class="bi bi-search me-1" aria-hidden="true"></i>Find a hotel</button>
             <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newHotelModal"><i class="bi bi-building-add me-1" aria-hidden="true"></i>New hotel</button>
             <button type="button" class="btn btn-sm btn-outline-secondary" data-open-copy="hotels"><i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>Copy from another package</button>
         </div>
-        <p>Changing a name here affects this package only. To change a hotel everywhere, edit it under Reusable Content → Hotels.</p>
+        <div class="shared-explainer">
+            <div><strong><i class="bi bi-bookmark-check" aria-hidden="true"></i>Saved hotel (shared)</strong><span>Your list of hotels, used by many packages. Picking one copies its name and stars into this package.</span></div>
+            <div><strong><i class="bi bi-pencil" aria-hidden="true"></i>This package only</strong><span>Anything you type or change in a row below — the name, stars, meals, nights — changes this package only. The saved hotel and other packages are never changed.</span></div>
+        </div>
+        <p class="mt-2">To change a hotel for every package, edit it under Reusable Content → Hotels and use "Update packages" there.</p>
     </header>
     <div class="builder-card-body" data-option-groups="accommodations">
         @error('publish.hotels')<div class="alert alert-danger py-2">{{ $message }}</div>@enderror

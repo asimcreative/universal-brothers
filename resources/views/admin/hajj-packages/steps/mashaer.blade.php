@@ -1,8 +1,10 @@
 <div class="builder-panel-header">
     <div class="builder-panel-eyebrow">Step 7</div>
     <h2 id="step-title-mashaer">Mina, Arafat &amp; Muzdalifah</h2>
-    <p>The camps and arrangements for the days of Hajj. Pick a saved arrangement to fill a card, then change anything that is different for this package.</p>
+    <p>The camps and arrangements for the days of Hajj: Mina is the tent city where pilgrims stay, Arafat is the day of standing, and Muzdalifah is the night under the sky. Pick a saved arrangement to fill a card, then change anything that is different for this package.</p>
 </div>
+
+@include('admin.hajj-packages.partials.need-help', ['step' => 'mashaer'])
 
 <div class="d-flex justify-content-end mb-2">
     <button type="button" class="btn btn-sm btn-outline-secondary" data-open-copy="mashaer"><i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>Copy from another package</button>
@@ -27,6 +29,10 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-mashaer-clear="{{ $location }}">Clear</button>
             </div>
             <p>Leave every box empty if the package does not describe {{ $placeName }}.</p>
+            <p class="shared-warning" data-mashaer-shared="{{ $location }}" hidden>
+                <i class="bi bi-exclamation-diamond" aria-hidden="true"></i>
+                <span><strong data-mashaer-shared-name></strong> is saved information <span data-mashaer-shared-count></span>. The boxes below are this package's own copy: changing them changes <strong>this package only</strong>. To change the arrangement for every package, <a href="#" data-mashaer-shared-link target="_blank" rel="noopener">edit the saved arrangement</a> and use "Update packages" there.</span>
+            </p>
         </header>
         <div class="builder-card-body row g-3">
             @foreach([

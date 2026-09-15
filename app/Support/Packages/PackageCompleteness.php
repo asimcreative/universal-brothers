@@ -32,7 +32,12 @@ class PackageCompleteness
         'extras' => 'Additional options',
         'notes' => 'Notes & policies',
         'media' => 'Photos & search engines',
+        'review' => 'Review everything',
+        'publish' => 'Save, preview & publish',
     ];
+
+    /** Steps that only make sense for a real package, not a template. */
+    public const PACKAGE_ONLY_STEPS = ['media', 'review', 'publish'];
 
     /**
      * @return list<array{step: string, field: string, message: string}>
@@ -105,6 +110,8 @@ class PackageCompleteness
             'extras' => ! empty($state['upgrades']),
             'notes' => ! empty($state['notes']),
             'media' => filled($state['meta_title'] ?? null) || filled($state['meta_description'] ?? null),
+            'review' => false,
+            'publish' => false,
         ];
     }
 

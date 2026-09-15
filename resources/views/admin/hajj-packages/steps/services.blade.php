@@ -4,10 +4,12 @@
     <p>What the price covers, and what customers pay for separately. Add saved items with one click; the same line is never added twice.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'services'])
+
 <div class="row g-3">
-    @foreach(['inclusions' => ['Included services', 'bi-check2-circle', 'included'], 'exclusions' => ['Not included', 'bi-x-circle', 'not included']] as $list => [$heading, $icon, $noun])
+    @foreach(['inclusions' => ['Included in this package', 'bi-check2-circle', 'included', 'is-included'], 'exclusions' => ['Not included in this package', 'bi-x-circle', 'not included', 'is-excluded']] as $list => [$heading, $icon, $noun, $tone])
         <div class="col-xl-6">
-            <div class="builder-card h-100">
+            <div class="builder-card h-100 service-panel {{ $tone }}">
                 <header>
                     <h3><i class="bi {{ $icon }}" aria-hidden="true"></i>{{ $heading }}</h3>
                     <div class="builder-toolbar">
@@ -15,6 +17,7 @@
                         <button type="button" class="btn btn-sm btn-outline-primary" data-open-picker="{{ $list }}"><i class="bi bi-bookmark-plus me-1" aria-hidden="true"></i>Add saved</button>
                         <button type="button" class="btn btn-sm btn-primary" data-add-row="{{ $list }}"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Add your own</button>
                     </div>
+                    <p>{{ $list === 'inclusions' ? 'Everything the package price covers, for example "Ziyarat in Madinah with guidance".' : 'What customers pay for separately, for example "Airline ticket" or "Qurbani".' }}</p>
                 </header>
                 <div class="builder-card-body">
                     <div data-rows="{{ $list }}">

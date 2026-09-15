@@ -662,7 +662,8 @@ class PackageBuilderTest extends TestCase
         foreach ([
             route('admin.package-templates.index'),
             route('admin.library.index', 'hotels'),
-            route('admin.help'),
+            route('admin.guide.index'),
+            route('admin.guide.show', 'hajj-packages'),
         ] as $url) {
             $this->get($url)->assertRedirect('/admin/login');
         }

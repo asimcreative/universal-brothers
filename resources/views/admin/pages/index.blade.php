@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Pages')
+@section('guide', 'website-content')
 
 @section('actions')
     <a href="{{ route('admin.pages.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Page</a>

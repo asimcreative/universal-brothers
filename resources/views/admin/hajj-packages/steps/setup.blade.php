@@ -4,22 +4,24 @@
     <p>The choices that shape the rest of the package.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'setup'])
+
 @php $aziziyaStatus = $state['aziziya']['status'] ?? null; @endphp
 
 <div class="builder-card">
     <header>
         <h3><i class="bi bi-airplane" aria-hidden="true"></i>Arrival city</h3>
-        <p>Where the journey starts.</p>
+        <p>Where the journey starts. This decides the order of cities on the package page.</p>
     </header>
     <div class="builder-card-body">
         <div class="choice-cards" role="radiogroup" aria-label="Arrival city">
             <label class="choice-card">
                 <input type="radio" name="medinah_first" value="1" @checked($state['medinah_first'])>
-                <span class="choice-card-body"><strong>Madinah first</strong><small>Arrive in Madinah, then travel to Makkah.</small></span>
+                <span class="choice-card-body"><strong>Arrive in Madinah</strong><small>Madinah first, then travel to Makkah for Hajj.</small></span>
             </label>
             <label class="choice-card">
                 <input type="radio" name="medinah_first" value="0" @checked(! $state['medinah_first'])>
-                <span class="choice-card-body"><strong>Makkah first</strong><small>Arrive in Jeddah for Makkah, then Madinah.</small></span>
+                <span class="choice-card-body"><strong>Arrive in Jeddah</strong><small>Makkah first, then Madinah after Hajj.</small></span>
             </label>
         </div>
     </div>

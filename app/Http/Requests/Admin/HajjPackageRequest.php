@@ -66,6 +66,7 @@ class HajjPackageRequest extends FormRequest
         return array_merge([
             '_intent' => ['nullable', Rule::in(self::INTENTS)],
             '_step' => ['nullable', Rule::in(array_keys(PackageCompleteness::STEPS))],
+            '_reviewed' => ['nullable', 'boolean'],
             'code' => ['nullable', 'string', 'max:50', Rule::unique('packages', 'code')->ignore($packageId)->where(fn ($q) => $q->whereNull('deleted_at'))],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('packages', 'slug')->ignore($packageId)->where(fn ($q) => $q->whereNull('deleted_at'))],
@@ -131,6 +132,7 @@ class HajjPackageRequest extends FormRequest
             'itinerary.*.city' => ['nullable', 'string', 'max:255'],
             'itinerary.*.accommodation_a' => ['nullable', 'string', 'max:255'],
             'itinerary.*.accommodation_b' => ['nullable', 'string', 'max:255'],
+            'itinerary.*.transport' => ['nullable', 'string', 'max:255'],
             'itinerary.*.notes' => ['nullable', 'string', 'max:2000'],
 
             'accommodations' => ['nullable', 'array', 'max:50'],

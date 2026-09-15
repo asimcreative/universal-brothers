@@ -119,7 +119,7 @@ Status key: ✅ built and tested · ◐ built with a documented limit.
 
 ## 9. How an administrator creates a package
 
-The full guide is shown in the admin at **Help** (`/admin/help`). In short:
+The full guide is shown in the admin at **Admin Guide** (`/admin/guide`; `/admin/help` redirects there since issue #11 — see [ADMIN_GUIDE_AND_WIZARD_REQUIREMENTS.md](ADMIN_GUIDE_AND_WIZARD_REQUIREMENTS.md)). In short:
 
 1. **Hajj Packages → Add Hajj Package**, or **From a template**, or open a similar package and choose **More → Duplicate**.
 2. **Basic information** — title, code (e.g. UB025), number of days. "Length as shown" fills itself.

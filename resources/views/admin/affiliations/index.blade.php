@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Affiliations')
+@section('guide', 'affiliations')
 
 @section('actions')
     <a href="{{ route('admin.affiliations.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Affiliation</a>

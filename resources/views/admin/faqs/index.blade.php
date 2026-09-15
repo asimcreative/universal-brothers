@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'FAQs')
+@section('guide', 'faqs')
 
 @section('actions')
     <a href="{{ route('admin.faqs.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New FAQ</a>

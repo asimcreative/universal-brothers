@@ -120,6 +120,14 @@
         <button type="button" class="btn btn-sm btn-outline-secondary" data-restore-discard>Discard</button>
     </div>
 
+    @if($resumed ?? false)
+        <div class="alert alert-info admin-alert" role="status">
+            <i class="bi bi-bookmark-star" aria-hidden="true"></i>
+            <div class="admin-alert-body">Opened on <strong>{{ $steps[$initialStep] }}</strong>, where you saved last time.</div>
+            <a href="{{ route('admin.hajj-packages.edit', ['package' => $package, 'step' => 'basics']) }}" class="btn btn-sm btn-outline-secondary">Start from step 1</a>
+        </div>
+    @endif
+
     @if($fromTemplate)
         <div class="alert alert-info admin-alert" role="status">
             <i class="bi bi-files" aria-hidden="true"></i>
@@ -152,20 +160,44 @@
           data-has-errors="{{ $errors->any() ? '1' : '0' }}"
           data-initial-step="{{ $initialStep }}"
           data-hotel-store-url="{{ route('admin.library.store', 'hotels') }}"
-          data-journey-store-url="{{ route('admin.library.store', 'journey-templates') }}">
+          data-journey-store-url="{{ route('admin.library.store', 'journey-templates') }}"
+          @unless($isTemplate)
+              data-assess-url="{{ $isNew ? route('admin.hajj-packages.assess') : route('admin.hajj-packages.assess-existing', $package) }}"
+              data-reviewed-saved="{{ collect($review->checklist())->firstWhere('key', 'review')['done'] ? '1' : '0' }}"
+          @endunless>
         @csrf
         @if(! $isNew) @method('PUT') @endif
         <input type="hidden" name="_step" value="{{ $initialStep }}" data-current-step>
+        @unless($isTemplate)<input type="hidden" name="_reviewed" value="0" data-reviewed>@endunless
 
         <div class="builder">
             <aside class="builder-steps" aria-label="Package steps">
+                {{-- Phones: one line saying where you are; the full list opens from it. --}}
+                <button type="button" class="builder-steps-toggle" data-steps-toggle aria-expanded="false" aria-controls="builder-step-list">
+                    <span class="step-number" data-steps-toggle-number>{{ array_search($initialStep, array_keys($steps)) + 1 }}</span>
+                    <span class="builder-steps-toggle-text">
+                        <small>Step <span data-steps-toggle-index>{{ array_search($initialStep, array_keys($steps)) + 1 }}</span> of {{ count($steps) }}</small>
+                        <strong data-steps-toggle-label>{{ $steps[$initialStep] }}</strong>
+                    </span>
+                    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+                </button>
+
                 <div class="builder-progress">
-                    <span data-progress-text>{{ collect($stepStatus)->only(array_keys($steps))->filter()->count() }} of {{ count($steps) }} steps filled in</span>
-                    <div class="progress" role="progressbar" aria-label="Steps filled in" aria-valuemin="0" aria-valuemax="{{ count($steps) }}" aria-valuenow="{{ collect($stepStatus)->only(array_keys($steps))->filter()->count() }}">
-                        <div class="progress-bar" data-progress-bar style="width: {{ round(collect($stepStatus)->only(array_keys($steps))->filter()->count() / count($steps) * 100) }}%"></div>
-                    </div>
+                    @if($review)
+                        @php $percent = $review->percent(); @endphp
+                        <span data-progress-text>{{ $percent }}% complete</span>
+                        <div class="progress" role="progressbar" aria-label="Package completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $percent }}" data-progress-meter>
+                            <div class="progress-bar" data-progress-bar style="width: {{ $percent }}%"></div>
+                        </div>
+                    @else
+                        @php $filledSteps = collect($stepStatus)->only(array_keys($steps))->filter()->count(); @endphp
+                        <span data-progress-text>{{ $filledSteps }} of {{ count($steps) }} steps filled in</span>
+                        <div class="progress" role="progressbar" aria-label="Steps filled in" aria-valuemin="0" aria-valuemax="{{ count($steps) }}" aria-valuenow="{{ $filledSteps }}" data-progress-meter>
+                            <div class="progress-bar" data-progress-bar style="width: {{ round($filledSteps / count($steps) * 100) }}%"></div>
+                        </div>
+                    @endif
                 </div>
-                <ol>
+                <ol id="builder-step-list">
                     @foreach($steps as $key => $label)
                         @php $hasError = $errorsByStep->has($key); @endphp
                         <li>
@@ -182,6 +214,22 @@
                         </li>
                     @endforeach
                 </ol>
+
+                @if($review)
+                    @php $checklist = $review->checklist(); @endphp
+                    <details class="builder-checklist" data-checklist-panel>
+                        <summary>Checklist <span class="badge text-bg-light" data-checklist-count>{{ collect($checklist)->where('done', true)->count() }} of {{ count($checklist) }}</span></summary>
+                        <ul data-checklist>
+                            @foreach($checklist as $item)
+                                <li class="{{ $item['done'] ? 'is-done' : '' }}">
+                                    <a href="#step-{{ $item['step'] }}" data-step-link="{{ $item['step'] }}">
+                                        <i class="bi {{ $item['done'] ? 'bi-check-circle-fill' : 'bi-circle' }}" aria-hidden="true"></i>{{ $item['label'] }}<span class="visually-hidden">: {{ $item['done'] ? 'done' : 'not done' }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
             </aside>
 
             <div class="builder-main">

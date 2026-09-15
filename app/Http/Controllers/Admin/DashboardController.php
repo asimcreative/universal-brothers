@@ -10,9 +10,12 @@ use App\Models\Faq;
 use App\Models\Inquiry;
 use App\Models\Package;
 use App\Models\PackageCategory;
+use App\Support\Guide\GuideContent;
 use App\Support\Library\LibraryRegistry;
 use App\Support\Packages\PackageCompleteness;
 use App\Support\Packages\PackageFormState;
+use App\Support\Packages\PackageReview;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -21,7 +24,7 @@ use Illuminate\View\View;
  */
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $hajjId = PackageCategory::where('slug', 'hajj')->value('id');
         $hajj = fn () => Package::where('package_category_id', $hajjId)->notArchived();
@@ -54,10 +57,27 @@ class DashboardController extends Controller
             ->filter(fn ($row) => $row['problems'] !== [])
             ->values();
 
+        // Drafts someone started and has not finished, most recent first, with
+        // how far each has got and the step to continue from.
+        $unfinishedDrafts = $hajj()->where('status', 'draft')
+            ->with(PackageFormState::RELATIONS)
+            ->latest('updated_at')
+            ->limit(5)
+            ->get()
+            ->map(fn (Package $p) => ['package' => $p, 'review' => PackageReview::forPackage($p)])
+            ->values();
+
+        $user = $request->user();
+
         return view('admin.dashboard', [
             'stats' => $stats,
             'libraryCounts' => $libraryCounts,
             'incompletePublished' => $incompletePublished,
+            'unfinishedDrafts' => $unfinishedDrafts,
+            'showOnboarding' => $user->shouldSeeOnboarding(),
+            'tourStatus' => $user->tour_status,
+            'tourStep' => (int) $user->tour_step,
+            'tourLength' => count(GuideContent::tour()),
             'recentInquiries' => Inquiry::with('package')->latest()->limit(6)->get(),
             'recentlyUpdatedPackages' => Package::with('category')->latest('updated_at')->limit(6)->get(),
             'recentActivity' => AdminActivity::with('user:id,name')->latest()->limit(8)->get(),

@@ -4,6 +4,8 @@
     <p>The name customers see, the package code your office uses, and how long the package lasts.</p>
 </div>
 
+@include('admin.hajj-packages.partials.need-help', ['step' => 'basics'])
+
 @if($isTemplate)
     <div class="builder-card">
         <header><h3><i class="bi bi-files" aria-hidden="true"></i>About this template</h3></header>

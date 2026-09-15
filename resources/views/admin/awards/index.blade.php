@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Awards')
+@section('guide', 'awards')
 
 @section('actions')
     <a href="{{ route('admin.awards.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Award</a>

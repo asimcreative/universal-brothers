@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Testimonials')
+@section('guide', 'testimonials')
 
 @section('actions')
     <a href="{{ route('admin.testimonials.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New Testimonial</a>

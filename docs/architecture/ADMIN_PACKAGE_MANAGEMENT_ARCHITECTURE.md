@@ -7,7 +7,7 @@
 
 The Hajj package admin has three parts:
 
-1. **The package builder** — a 12-step form for one package.
+1. **The package builder** — a 12-step form for one package (14 steps since issue #11, which added Review and Publish — see [ADMIN_GUIDE_AND_WIZARD_ARCHITECTURE.md](ADMIN_GUIDE_AND_WIZARD_ARCHITECTURE.md)).
 2. **The reusable library** — content written once and picked into many packages.
 3. **Whole-package operations** — duplicate, templates, preview, quick status actions, and an audit trail.
 
@@ -86,7 +86,7 @@ app/Http/Controllers/Admin/
   HajjPackageController       listing, builder, quick actions, duplicate, preview, content JSON, templates
   PackageTemplateController   template CRUD in the builder's "template mode"
   LibraryController           every library section
-  DashboardController, HelpController
+  DashboardController, GuideController, OnboardingController (issue #11 replaced HelpController)
 resources/views/admin/hajj-packages/
   form.blade.php  steps/*.blade.php  rows/*.blade.php  partials/{option-group,modals}.blade.php
 resources/js/admin.js                confirm dialog, loading state, counters, filters, image previews

@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', $award->exists ? 'Edit Award' : 'New Award')
+@section('guide', 'awards')
 
 @section('content')
     <form method="POST" action="{{ $award->exists ? route('admin.awards.update', $award) : route('admin.awards.store') }}" enctype="multipart/form-data">
