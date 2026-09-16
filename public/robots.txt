@@ -2,4 +2,6 @@ User-agent: *
 Disallow: /admin
 Allow: /
 
-Sitemap: /sitemap.xml
+# The sitemap line must be a full address — a relative path is ignored by
+# search engines. Update the host here if the website moves to another domain.
+Sitemap: https://universal-brothers.iisol.co/sitemap.xml

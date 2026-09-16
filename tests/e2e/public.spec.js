@@ -286,4 +286,56 @@ test.describe('Public website', () => {
         await expect(page.getByText('10,000 Hajis')).toBeVisible();
         await expect(page.locator('.stat-number', { hasText: '10,000+' })).toBeVisible();
     });
+
+    // A keyboard user must be able to see where they are. Bootstrap gives its
+    // own button variants a focus ring; the site's custom ones never set the
+    // variable it reads, and the FAQ headers had the ring switched off to stop
+    // it showing on mouse clicks. Both were invisible to keyboard users.
+    test('keyboard focus is visible on the header buttons and the FAQ questions', async ({ page }) => {
+        // Tabbing, not el.focus(): only real keyboard focus triggers
+        // :focus-visible, which is what these rules are written against.
+        const focusRing = async (url, selector) => {
+            await page.goto(url);
+            // The mobile menu holds hidden copies of these buttons; test the one on screen.
+            const target = page.locator(`${selector}:visible`).first();
+            await expect(target).toBeVisible();
+            const before = await target.evaluate((el) => getComputedStyle(el).outlineWidth);
+
+            await target.evaluate((el) => el.setAttribute('data-focus-target', '1'));
+            let reached = false;
+            for (let i = 0; i < 60 && !reached; i += 1) {
+                await page.keyboard.press('Tab');
+                reached = await page.evaluate(() => document.activeElement?.hasAttribute('data-focus-target') ?? false);
+            }
+
+            const after = await target.evaluate((el) => {
+                const s = getComputedStyle(el);
+                return { outlineWidth: s.outlineWidth, outlineStyle: s.outlineStyle, outlineColor: s.outlineColor, boxShadow: s.boxShadow };
+            });
+            return { reached, before, after };
+        };
+
+        const visible = (ring) => {
+            const width = parseFloat(ring.after.outlineWidth) || 0;
+            const solid = ring.after.outlineStyle !== 'none' && !ring.after.outlineColor.includes('rgba(0, 0, 0, 0)');
+            const shadowRing = /\d+px \d+px|0px 0px 0px [1-9]/.test(ring.after.boxShadow) && !ring.after.boxShadow.includes('rgba(0, 0, 0, 0) 0px 0px 0px 0px');
+            return (width >= 2 && solid) || shadowRing;
+        };
+
+        const register = await focusRing('/', '.btn-register-now');
+        expect(register.reached, 'never reached Register Now by tabbing').toBe(true);
+        expect(visible(register), `Register Now shows no focus ring: ${JSON.stringify(register.after)}`).toBe(true);
+
+        // The WhatsApp button only renders inside the mobile menu, so its rule
+        // is checked in the stylesheet rather than by tabbing to it.
+        const whatsappRule = await page.evaluate(() => [...document.styleSheets]
+            .flatMap((sheet) => { try { return [...sheet.cssRules]; } catch { return []; } })
+            .filter((r) => r.selectorText === '.btn-whatsapp:focus-visible')
+            .map((r) => r.style.outline || r.style.boxShadow));
+        expect(whatsappRule.join(' '), 'the WhatsApp button has no focus-visible rule').toMatch(/3px|0 0 0/);
+
+        const faq = await focusRing('/faqs', '.faq-accordion .accordion-button');
+        expect(faq.reached, 'never reached an FAQ question by tabbing').toBe(true);
+        expect(visible(faq), `FAQ question shows no focus ring: ${JSON.stringify(faq.after)}`).toBe(true);
+    });
 });

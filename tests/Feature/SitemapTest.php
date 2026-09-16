@@ -13,6 +13,16 @@ class SitemapTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_robots_points_search_engines_at_the_full_sitemap_address(): void
+    {
+        // A relative "Sitemap: /sitemap.xml" line is ignored by search engines:
+        // the robots.txt standard asks for the complete address.
+        $robots = file_get_contents(public_path('robots.txt'));
+
+        $this->assertMatchesRegularExpression('~^Sitemap: https?://[^/\s]+/sitemap\.xml$~m', $robots);
+        $this->assertStringContainsString('Disallow: /admin', $robots);
+    }
+
     public function test_sitemap_includes_categories_packages_and_static_pages(): void
     {
         $category = PackageCategory::factory()->create(['slug' => 'hajj']);

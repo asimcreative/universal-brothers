@@ -91,6 +91,14 @@ html, body {
         border-color: #1ea952;
         color: #fff;
     }
+
+    // Same gap as `.btn-register-now`: a custom variant gets no focus ring of
+    // its own from Bootstrap. White reads against both the green button and
+    // the navy bar it sits on.
+    &:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 2px;
+    }
 }
 
 // No light-coloured shadow here: a `0 1px 0 rgba(255,255,255,.06)` inner edge
@@ -346,6 +354,16 @@ html, body {
         background: $ub-gold-light;
         border-color: $ub-gold-light;
         color: $ub-navy-dark;
+    }
+
+    // Bootstrap draws its focus ring from `--bs-btn-focus-shadow-rgb`, which a
+    // custom variant like this one never sets, so keyboard users saw nothing at
+    // all on the site's most prominent button. A white outline reads against
+    // both the gold button and the navy bar behind it. :focus-visible only, so
+    // nothing changes for mouse users.
+    &:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 2px;
     }
 }
 
@@ -3224,7 +3242,15 @@ h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3;
             color: $ub-navy;
         }
 
+        // Bootstrap's blue ring showed on mouse clicks too, which is why it was
+        // switched off. Keyboard users still need to see which question they are
+        // on, so it comes back for :focus-visible only, in the site's own navy.
         &:focus { box-shadow: none; }
+
+        &:focus-visible {
+            outline: 3px solid $ub-navy;
+            outline-offset: -3px;
+        }
     }
 }
 
