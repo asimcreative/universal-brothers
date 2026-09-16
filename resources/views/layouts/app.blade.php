@@ -18,16 +18,35 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>document.documentElement.className = document.documentElement.className.replace('no-js', 'js');</script>
-    <title>@yield('title', 'Universal Brothers — Hajj, Umrah & Tourism')</title>
-    <meta name="description" content="@yield('meta_description', "Universal Brothers (Pvt) Ltd — IATA-registered Hajj, Umrah and Tourism operator based in Karachi, Pakistan. 20+ years of trusted service.")">
     {{-- A page may name its own canonical address, sharing text and image, or
-         ask search engines not to list it (CMS pages set these from the admin). --}}
-    <link rel="canonical" href="@hasSection('canonical')@yield('canonical')@else{{ url()->current() }}@endif">
-    @hasSection('robots')<meta name="robots" content="@yield('robots')">@endif
+         ask search engines not to list it (CMS pages set these from the admin).
+
+         Each value is worked out here instead of inside the attribute. Blade
+         does not compile a directive written straight after another one, so
+         `@else@yield(...)` reached the page as literal text and every shared
+         link showed the directive instead of the page's name.
+
+         Section values are already escaped — Blade escapes the inline
+         `@section('title', $value)` form — so they are printed with {!! !!},
+         exactly as @yield would print them. Escaping again would turn "&"
+         into "&amp;amp;". --}}
+    @php
+        $ubTitle = \Illuminate\Support\Facades\View::yieldContent('title', 'Universal Brothers — Hajj, Umrah & Tourism');
+        $ubDescription = \Illuminate\Support\Facades\View::yieldContent('meta_description', 'Universal Brothers (Pvt) Ltd — IATA-registered Hajj, Umrah and Tourism operator based in Karachi, Pakistan. 20+ years of trusted service.');
+        $ubCanonical = trim(\Illuminate\Support\Facades\View::yieldContent('canonical'));
+        $ubRobots = trim(\Illuminate\Support\Facades\View::yieldContent('robots'));
+        $ubOgTitle = trim(\Illuminate\Support\Facades\View::yieldContent('og_title')) ?: trim($ubTitle);
+        $ubOgDescription = trim(\Illuminate\Support\Facades\View::yieldContent('og_description')) ?: trim($ubDescription);
+        $ubOgImage = trim(\Illuminate\Support\Facades\View::yieldContent('og_image'));
+    @endphp
+    <title>{!! $ubTitle !!}</title>
+    <meta name="description" content="{!! $ubDescription !!}">
+    <link rel="canonical" href="{{ $ubCanonical ?: url()->current() }}">
+    @if($ubRobots)<meta name="robots" content="{!! $ubRobots !!}">@endif
     <meta name="theme-color" content="#101b45">
-    <meta property="og:title" content="@hasSection('og_title')@yield('og_title')@else@yield('title', 'Universal Brothers')@endif">
-    <meta property="og:description" content="@hasSection('og_description')@yield('og_description')@else@yield('meta_description', 'Hajj, Umrah & Tourism packages from Universal Brothers.')@endif">
-    @hasSection('og_image')<meta property="og:image" content="@yield('og_image')">@endif
+    <meta property="og:title" content="{!! $ubOgTitle !!}">
+    <meta property="og:description" content="{!! $ubOgDescription !!}">
+    @if($ubOgImage)<meta property="og:image" content="{!! $ubOgImage !!}">@endif
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Universal Brothers (Pvt) Ltd">
     {{-- The brand's khatim monogram as an inline SVG favicon — the previous
