@@ -199,6 +199,58 @@ test.describe('AI assistant', () => {
         await expect(page.locator('.ai-message--assistant').last()).toContainText('PKR 3,485,000');
     });
 
+    test('a session that timed out while the page was open recovers by itself', async ({ page }) => {
+        // What the client reported: the page had been open longer than the
+        // session lasts, so the form token belonged to a session that was
+        // gone. Every message came back as "I could not answer that", and
+        // "Try again" failed the same way.
+        let chatCalls = 0;
+        let tokenCalls = 0;
+
+        await page.route('**/ai/token', (route) => {
+            tokenCalls += 1;
+            return route.fulfill({ status: 200, contentType: 'application/json', body: '{"token":"fresh-token-from-the-server"}' });
+        });
+
+        await page.route('**/ai/chat', (route) => {
+            chatCalls += 1;
+
+            if (route.request().headers()['x-csrf-token'] !== 'fresh-token-from-the-server') {
+                return route.fulfill({ status: 419, contentType: 'application/json', body: '{"message":"CSRF token mismatch."}' });
+            }
+
+            return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(REPLY) });
+        });
+
+        await openPanel(page);
+        await page.locator('[data-ai-input]').fill('What is UB010?');
+        await page.locator('[data-ai-send]').click();
+
+        // The visitor sees the answer, not a failure, and never presses anything.
+        await expect(page.locator('.ai-message--assistant').last()).toContainText('PKR 3,485,000');
+        await expect(page.locator('.ai-message--error')).toHaveCount(0);
+        expect(tokenCalls).toBe(1);
+        expect(chatCalls).toBe(2);
+    });
+
+    test('a page too old to recover says so instead of offering a retry that cannot work', async ({ page }) => {
+        await page.route('**/ai/token', (route) =>
+            route.fulfill({ status: 200, contentType: 'application/json', body: '{"token":"still-not-accepted"}' })
+        );
+        await page.route('**/ai/chat', (route) =>
+            route.fulfill({ status: 419, contentType: 'application/json', body: '{"message":"CSRF token mismatch."}' })
+        );
+
+        await openPanel(page);
+        await page.locator('[data-ai-input]').fill('What is UB010?');
+        await page.locator('[data-ai-send]').click();
+
+        const error = page.locator('.ai-message--error').last();
+        await expect(error).toContainText('session has timed out');
+        await expect(error).toContainText('refresh the page');
+        await expect(error.locator('.ai-retry')).toHaveCount(0);
+    });
+
     test('reaching the daily limit shows the message without a useless retry button', async ({ page }) => {
         await page.route('**/ai/chat', (route) =>
             route.fulfill({

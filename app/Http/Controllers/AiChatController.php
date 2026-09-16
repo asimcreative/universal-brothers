@@ -145,6 +145,22 @@ class AiChatController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /**
+     * A form token for the current session, so a panel left open past the
+     * session lifetime can retry instead of failing in front of the visitor.
+     *
+     * Requesting this starts a session if the old one has expired, which also
+     * starts a new conversation: the panel keeps showing what was said, but
+     * the assistant answers the next question without that history. That is
+     * the honest outcome of an expired session, and far better than the
+     * visitor being told the assistant cannot answer.
+     */
+    public function token(Request $request): JsonResponse
+    {
+        return response()->json(['token' => csrf_token()])
+            ->header('Cache-Control', 'no-store');
+    }
+
     private function conversation(Request $request): AiConversation
     {
         $uuid = $request->session()->get(self::SESSION_KEY);

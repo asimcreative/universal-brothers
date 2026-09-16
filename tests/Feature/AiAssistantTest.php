@@ -163,6 +163,32 @@ class AiAssistantTest extends TestCase
         }
     }
 
+    public function test_a_token_for_the_current_session_lets_an_old_page_retry(): void
+    {
+        // A visitor can leave the page open longer than the session lasts. The
+        // panel then holds a token from a session that no longer exists, and
+        // every message is refused before it reaches the assistant. This is
+        // how the panel gets a usable token back without the visitor noticing.
+        $response = $this->get(route('ai.token'));
+
+        $response->assertOk()
+            ->assertHeader('Cache-Control', 'no-store, private')
+            ->assertJsonStructure(['token']);
+
+        $this->assertSame(csrf_token(), $response->json('token'));
+        $this->assertNotEmpty($response->json('token'));
+    }
+
+    public function test_the_token_endpoint_is_read_only_and_rate_limited(): void
+    {
+        $route = app('router')->getRoutes()->getByName('ai.token');
+
+        $this->assertNotNull($route);
+        $this->assertSame(['GET'], array_values(array_diff($route->methods(), ['HEAD'])));
+        $this->assertContains('web', $route->gatherMiddleware());
+        $this->assertContains('throttle:30,1', $route->gatherMiddleware());
+    }
+
     // ------------------------------------------------------------- retrieval
 
     public function test_a_package_code_retrieves_that_exact_package(): void

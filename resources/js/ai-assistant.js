@@ -131,12 +131,17 @@ function isSafeInternalUrl(url) {
     }
 }
 
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+}
+
 class AiAssistant {
     constructor(root) {
         this.root = root;
         this.chatUrl = root.dataset.chatUrl;
         this.leadUrl = root.dataset.leadUrl;
         this.resetUrl = root.dataset.resetUrl;
+        this.tokenUrl = root.dataset.tokenUrl;
         this.maxLength = parseInt(root.dataset.maxLength, 10) || 1000;
         this.leadEnabled = root.dataset.leadEnabled === '1';
 
@@ -366,20 +371,18 @@ class AiAssistant {
         const typing = this.showTyping();
 
         try {
-            const response = await fetch(this.chatUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ message }),
-            });
+            const response = await this.post(this.chatUrl, JSON.stringify({ message }));
 
             const data = await response.json().catch(() => null);
             typing.remove();
+
+            if (response.status === 419) {
+                // A fresh token was fetched and the message still refused, so
+                // the page itself is too old to trust. Say so plainly instead
+                // of offering a "Try again" that cannot work.
+                this.appendMessage('assistant', formatReply('Your session has timed out. Please refresh the page and ask again.'), { error: true });
+                return;
+            }
 
             if (!data) {
                 this.appendRetry(message, 'Sorry — something went wrong. Please try again.');
@@ -431,6 +434,59 @@ class AiAssistant {
         wrapper.querySelector('.ai-bubble')?.appendChild(retry);
     }
 
+    /**
+     * Send a request with the page's form token, and if the session has
+     * expired while the visitor had the page open, fetch a fresh token and
+     * send it once more. Without this the visitor is simply told the
+     * assistant cannot answer, and pressing "Try again" fails the same way
+     * because the page still holds the token of a session that is gone.
+     */
+    async post(url, body = null) {
+        const send = () => fetch(url, {
+            method: 'POST',
+            headers: {
+                ...(body === null ? {} : { 'Content-Type': 'application/json' }),
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            ...(body === null ? {} : { body }),
+        });
+
+        const response = await send();
+
+        if (response.status !== 419 || !(await this.refreshToken())) {
+            return response;
+        }
+
+        return send();
+    }
+
+    async refreshToken() {
+        if (!this.tokenUrl) return false;
+
+        try {
+            const response = await fetch(this.tokenUrl, {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+
+            if (!response.ok) return false;
+
+            const data = await response.json().catch(() => null);
+
+            if (!data?.token) return false;
+
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) meta.content = data.token;
+
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     async submitLead() {
         if (!this.leadForm) return;
 
@@ -441,19 +497,16 @@ class AiAssistant {
         this.setLeadStatus('Sending…', false);
 
         try {
-            const response = await fetch(this.leadUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify(payload),
-            });
+            const response = await this.post(this.leadUrl, JSON.stringify(payload));
 
             const data = await response.json().catch(() => null);
+
+            if (response.status === 419) {
+                // Their name and number are still in the form, so refreshing
+                // the page is the one instruction that keeps their details.
+                this.setLeadStatus('Your session has timed out. Please refresh the page and send your details again.', true);
+                return;
+            }
 
             if (response.ok && data?.ok) {
                 // Removed rather than hidden: the enquiry is sent, so the form
@@ -479,15 +532,7 @@ class AiAssistant {
 
     async clear() {
         try {
-            await fetch(this.resetUrl, {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'same-origin',
-            });
+            await this.post(this.resetUrl);
         } catch {
             // A failed reset is not worth an error message: the visitor's
             // intent is a clean panel, and they get that either way.

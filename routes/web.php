@@ -77,6 +77,15 @@ Route::get('/{category}/{package:slug}', [PackageController::class, 'show'])
 // because the budget is admin-configurable rather than a fixed middleware
 // string.
 Route::prefix('ai')->name('ai.')->group(function () {
+    // A visitor can leave the site open longer than a session lasts (two
+    // hours), and the form token in the page then belongs to a session that no
+    // longer exists. Every POST below would be refused with "CSRF token
+    // mismatch", which the visitor sees only as the assistant failing. This
+    // hands the panel a token for the current session so it can retry by
+    // itself. It exposes nothing new: the same token sits in every page's head.
+    Route::get('/token', [AiChatController::class, 'token'])
+        ->middleware('throttle:30,1')
+        ->name('token');
     Route::post('/chat', [AiChatController::class, 'send'])->name('chat');
     // Reuses the same per-IP budget as the site's own inquiry form: this
     // writes to the same `inquiries` table, so it is the same abuse surface

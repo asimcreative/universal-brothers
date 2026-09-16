@@ -33,6 +33,7 @@
         id="ai-assistant"
         data-ai-assistant
         data-chat-url="{{ route('ai.chat') }}"
+        data-token-url="{{ route('ai.token') }}"
         data-lead-url="{{ route('ai.lead') }}"
         data-reset-url="{{ route('ai.reset') }}"
         data-max-length="{{ $maxLength }}"
