@@ -21,6 +21,11 @@
 // cascade is not load-bearing. Kept after the page systems so its fixed
 // overlay sits above them in source order as well as z-index.
 @import 'ai-assistant';
+// The public site's premium theme (2026-09-17). Loaded after every public
+// partial so it restyles them, and before the admin styles, which keep their
+// own look.
+@import 'theme-premium';
+
 @import 'admin';
 @import 'admin-ui';
 @import 'admin-guide';
