@@ -9,13 +9,16 @@
 {{--
     The primary nav expands at `xl`, not `lg`.
 
-    Five top-level groups: Home, Hajj & Umrah, Tourism, About, Contact, plus
-    the brand and the Register Now CTA. Ten items used to sit here and wrapped
-    mid-phrase into "About / Us" and "Awards & / Recognition" on a 1200px bar.
-    The company pages moved into the About dropdown (2026-09-16 design pass);
-    none of them left the site, and the E2E journeys now open that dropdown
-    rather than asserting a flat list. The two breakpoint assertions in
-    responsive.spec.js (toggler hidden at 1280, visible at 768) still hold.
+    Ten top-level items (Home, About Us, Hajj & Umrah, Tourism, Awards &
+    Recognition, Affiliations, Media, Testimonials, FAQs, Contact) plus a
+    brand and a CTA simply do not fit a 992px bar: on the live site they
+    wrapped mid-phrase into "About / Us", "Awards & / Recognition" and
+    "WhatsApp / Us", which was one of the most visible signs of an unfinished
+    design. Every one of those items is required to stay a *visible link
+    inside `nav.navbar`* by the E2E suite, so hiding them behind a dropdown
+    was not an option — expanding later, and giving 992–1199px the (better)
+    drawer instead, is. The two breakpoint assertions in responsive.spec.js
+    (toggler hidden at 1280, visible at 768) both still hold.
 --}}
 <header class="site-header sticky-top">
     <div class="topbar d-none d-xl-block">
@@ -78,6 +81,7 @@
             <div class="collapse navbar-collapse d-none d-xl-flex">
                 <ul class="navbar-nav me-auto mb-0 align-items-xl-center">
                     <li class="nav-item"><a class="nav-link" href="{{ route('home') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url('/about-us') }}">About Us</a></li>
 
                     @if($hajjCategory || $umrahCategory)
                         <li class="nav-item dropdown mega-menu-parent">
@@ -139,21 +143,11 @@
                         </li>
                     @endif
 
-                    {{-- The company pages sit under one heading. Ten top-level
-                         items wrapped mid-phrase on a 1200px bar and made the
-                         visitor read a list before choosing; these six belong
-                         together, and each is still one click away. --}}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="{{ url('/about-us') }}" id="aboutMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">About</a>
-                        <ul class="dropdown-menu shadow-lg" aria-labelledby="aboutMenu">
-                            <li><a class="dropdown-item" href="{{ url('/about-us') }}">About Us</a></li>
-                            <li><a class="dropdown-item" href="{{ route('awards') }}">Awards &amp; Recognition</a></li>
-                            <li><a class="dropdown-item" href="{{ route('affiliations') }}">Affiliations</a></li>
-                            <li><a class="dropdown-item" href="{{ route('testimonials') }}">Testimonials</a></li>
-                            <li><a class="dropdown-item" href="{{ route('media') }}">Media</a></li>
-                            <li><a class="dropdown-item" href="{{ route('faqs') }}">FAQs</a></li>
-                        </ul>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('awards') }}">Awards &amp; Recognition</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('affiliations') }}">Affiliations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('media') }}">Media</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('testimonials') }}">Testimonials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('faqs') }}">FAQs</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">Contact</a></li>
                 </ul>
                 <a href="{{ $registerNowUrl }}" class="btn btn-register-now" target="_blank" rel="noopener">Register Now</a>

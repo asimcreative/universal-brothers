@@ -43,17 +43,7 @@ test.describe('Public website', () => {
         await expect(nav.getByRole('button', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
         await expect(nav.getByRole('button', { name: 'Tourism', exact: true })).toBeVisible();
         await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toBeVisible();
-
-        // The company pages (About Us, Awards, Affiliations, Testimonials,
-        // Media, FAQs) moved into one About group in the 2026-09-16 design
-        // pass, so the bar carries five items instead of ten. Each page is
-        // still one click away, which is what this asserts.
-        await expect(nav.getByRole('button', { name: 'About', exact: true })).toBeVisible();
-        await nav.getByRole('button', { name: 'About', exact: true }).click();
-        for (const name of ['About Us', 'Awards & Recognition', 'Affiliations', 'Testimonials', 'Media', 'FAQs']) {
-            await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
-        }
-        await page.keyboard.press('Escape');
+        await expect(nav.getByRole('link', { name: 'About Us', exact: true })).toBeVisible();
 
         // The Hajj & Umrah mega-menu itself carries the real Hajj/Umrah
         // package links — Bootstrap's dropdown reveals it on click.

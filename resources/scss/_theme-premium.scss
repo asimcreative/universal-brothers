@@ -242,3 +242,336 @@ p, li { color: $pt-ink; }
     text-transform: none;
     letter-spacing: -0.01em;
 }
+
+
+// =============================================================================
+// Homepage composition (2026-09-17)
+//
+// The page had thirteen sections of the same shape — centred heading, then a
+// row of white cards on beige — which is what made it read as one long, flat
+// scroll. These are the pieces the rebuilt page is made of: each band looks
+// different from the one above it.
+// =============================================================================
+
+// --- Display headings with a two-tone second half ----------------------------
+.pt-display {
+    font-family: $pt-display;
+    font-size: clamp(2.1rem, 3.6vw, 3.6rem);
+    line-height: 1.05;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.015em;
+    margin-bottom: 1rem;
+}
+
+.pt-accent { color: $pt-copper-ink; }
+.pt-hajj-band .pt-accent, .final-cta .pt-accent, .pt-finder .pt-accent { color: $pt-copper-light; }
+
+.pt-lead {
+    max-width: 62ch;
+    margin-inline: auto;
+    color: $pt-ink-muted;
+    font-size: 1.05rem;
+}
+
+// --- Award strip -------------------------------------------------------------
+.pt-strip {
+    background: $pt-copper;
+    color: $pt-teal-deep;
+    padding: 0.85rem 0;
+
+    .pt-strip-track {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 2.5rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .pt-strip-track::-webkit-scrollbar { display: none; }
+
+    .pt-strip-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        font-family: $pt-display;
+        font-weight: 600;
+        font-size: 0.86rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .pt-strip-item i { font-size: 1rem; }
+}
+
+// --- Impact ------------------------------------------------------------------
+.pt-impact {
+    background: $pt-ivory;
+
+    .pt-stat-pill {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin: 0.5rem 0 1.5rem;
+        padding: 0.7rem 2rem;
+        border: 1px solid rgba($pt-copper, 0.5);
+        border-radius: $pt-radius-pill;
+        background: #fff;
+    }
+
+    .pt-stat-pill .stat-number { font-size: clamp(1.8rem, 3vw, 2.6rem); color: $pt-teal; line-height: 1; }
+    .pt-stat-pill span { font-family: $pt-display; font-size: 1.1rem; color: $pt-ink-muted; }
+}
+
+.pt-reach {
+    padding: 1.6rem 1.5rem;
+    background: #fff;
+    border-radius: $pt-radius-card;
+    box-shadow: $pt-shadow-soft;
+    height: 100%;
+
+    i { font-size: 1.6rem; color: $pt-copper-ink; }
+    h3 { margin: 0.75rem 0 0.35rem; font-size: 1.05rem; }
+    p { color: $pt-ink-muted; font-size: 0.94rem; margin: 0; }
+}
+
+// --- Photo cards (services) --------------------------------------------------
+.pt-photo-card {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: $pt-radius-card;
+    box-shadow: $pt-shadow-card;
+
+    .photo-media, picture, img { display: block; width: 100%; }
+    .photo-media { aspect-ratio: 3 / 4; }
+    img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(8, 24, 33, 0.45) 0%, rgba(8, 24, 33, 0) 45%, rgba(8, 24, 33, 0.55) 100%);
+    }
+
+    .pt-photo-card-label {
+        position: absolute;
+        top: 1.25rem;
+        left: 1.4rem;
+        z-index: 2;
+        color: #fff;
+        font-family: $pt-display;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .pt-photo-card-go {
+        position: absolute;
+        right: 1.1rem;
+        bottom: 1.1rem;
+        z-index: 2;
+        width: 3.1rem;
+        height: 3.1rem;
+        border-radius: 50%;
+        background: $pt-copper;
+        color: $pt-teal-deep;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s;
+    }
+
+    &:hover .pt-photo-card-go, &:focus-visible .pt-photo-card-go { background: $pt-copper-light; transform: translate(2px, -2px); }
+    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 3px; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .pt-photo-card:hover img { transform: scale(1.05); }
+}
+
+.pt-services-note {
+    max-width: 68ch;
+    margin: 2.25rem auto 0;
+    text-align: center;
+    color: $pt-ink-muted;
+}
+
+.pt-services-note a { color: $pt-copper-ink; font-weight: 600; text-decoration: underline; text-underline-offset: 0.18em; }
+
+// --- Hajj band ---------------------------------------------------------------
+.pt-hajj-band {
+    background: $pt-teal;
+    color: $pt-on-dark;
+    padding-block: clamp(4rem, 7vw, 7rem);
+
+    h2 { color: $pt-on-dark; }
+    p { color: $pt-on-dark-muted; }
+
+    .pt-count {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        padding: 1.1rem 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: $pt-radius-card;
+        background: rgba(255, 255, 255, 0.04);
+        text-align: left;
+        max-width: 22rem;
+    }
+
+    .pt-count .stat-number { font-size: clamp(2.5rem, 4vw, 3.4rem); color: $pt-copper-light; line-height: 1; }
+    .pt-count span { color: $pt-on-dark-muted; font-size: 0.92rem; }
+}
+
+// --- Finder ------------------------------------------------------------------
+.pt-finder {
+    background: $pt-teal-deep;
+    color: $pt-on-dark;
+
+    h2 { color: $pt-on-dark; }
+    .pt-lead { color: $pt-on-dark-muted; }
+
+    .pt-finder-bar {
+        display: grid;
+        gap: 1rem;
+        padding: 1.4rem;
+        border-radius: $pt-radius-card;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .pt-finder-bar label {
+        display: block;
+        font-family: $pt-display;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: $pt-on-dark-muted;
+        margin-bottom: 0.35rem;
+    }
+
+    .pt-finder-bar .form-control, .pt-finder-bar .form-select {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.16);
+        color: $pt-on-dark;
+        border-radius: $pt-radius-pill;
+        padding-inline: 1.1rem;
+        min-height: 48px;
+    }
+
+    .pt-finder-bar .form-control::placeholder { color: rgba(255, 255, 255, 0.45); }
+    .pt-finder-bar option { color: $pt-ink; }
+    .pt-finder-bar .btn { min-height: 48px; align-self: end; }
+}
+
+@include media-breakpoint-up(lg) {
+    .pt-finder .pt-finder-bar { grid-template-columns: repeat(3, 1fr) auto; align-items: end; }
+}
+
+// --- Image stack (why us) ----------------------------------------------------
+.pt-stack {
+    position: relative;
+    padding: 0 0 3rem 3rem;
+
+    .pt-stack-back, .pt-stack-front {
+        border-radius: $pt-radius-card;
+        overflow: hidden;
+        box-shadow: $pt-shadow-card;
+    }
+
+    .pt-stack-back { width: 78%; }
+
+    .pt-stack-front {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 54%;
+        border: 6px solid $pt-sand;
+    }
+}
+
+@include media-breakpoint-down(md) {
+    .pt-stack { padding: 0; }
+    .pt-stack .pt-stack-back { width: 100%; }
+    .pt-stack .pt-stack-front { display: none; }
+}
+
+// --- Point list (why us) -----------------------------------------------------
+.pt-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+
+    i {
+        flex: 0 0 auto;
+        width: 2.6rem;
+        height: 2.6rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid rgba($pt-copper, 0.45);
+        color: $pt-copper-ink;
+        font-size: 1.05rem;
+    }
+
+    h3 { font-size: 1rem; margin-bottom: 0.15rem; }
+    p { font-size: 0.92rem; color: $pt-ink-muted; margin: 0; }
+}
+
+// --- Affiliations ------------------------------------------------------------
+.pt-affiliations {
+    margin-top: 3.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid rgba($pt-teal, 0.1);
+
+    .pt-affiliations-label {
+        text-align: center;
+        font-family: $pt-display;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: $pt-ink-muted;
+        margin-bottom: 1.5rem;
+    }
+}
+
+// --- Final CTA ---------------------------------------------------------------
+.final-cta {
+    background: $pt-teal;
+    padding-block: clamp(4rem, 7vw, 7rem);
+
+    h2, .pt-display { color: $pt-on-dark; }
+    .pt-lead { color: $pt-on-dark-muted; }
+}
+
+.pt-band-subtitle {
+    font-family: 'Fira Sans Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 1.25rem;
+}
+
+// The service photographs are the tall format the direction uses; the shared
+// photo component emits a bare <img>, so the card itself sets the shape.
+.pt-photo-card {
+    aspect-ratio: 3 / 4;
+
+    > img, .ub-photo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .pt-photo-card { aspect-ratio: 4 / 3; }
+}

@@ -88,16 +88,9 @@ test.describe('Full business journeys — visitor', () => {
         }
     });
 
-    /** Open the header's About group and follow one of its links. */
-    async function viaAboutMenu(page, name) {
-        const nav = page.locator('nav.navbar');
-        await nav.getByRole('button', { name: 'About', exact: true }).click();
-        await nav.getByRole('link', { name, exact: true }).click();
-    }
-
     test('Journey D: Homepage -> Awards -> real award content displays', async ({ page }) => {
         await page.goto('/');
-        await viaAboutMenu(page, 'Awards & Recognition');
+        await page.getByRole('link', { name: 'Awards & Recognition', exact: true }).click();
         await expect(page).toHaveURL(/\/awards$/);
 
         await expect(page.getByRole('heading', { name: 'Excellence Recognized. Trust Earned.' })).toBeVisible();
@@ -108,7 +101,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey E: Homepage -> Affiliations -> real affiliation content displays', async ({ page }) => {
         await page.goto('/');
-        await viaAboutMenu(page, 'Affiliations');
+        await page.locator('nav.navbar').getByRole('link', { name: 'Affiliations', exact: true }).click();
         await expect(page).toHaveURL(/\/affiliations$/);
 
         await expect(page.getByRole('heading', { name: 'Strong Relationships. Trusted Connections.' })).toBeVisible();
@@ -117,7 +110,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey F: Homepage -> Media -> honest empty state (no real news/gallery/video content yet)', async ({ page }) => {
         await page.goto('/');
-        await viaAboutMenu(page, 'Media');
+        await page.locator('nav.navbar').getByRole('link', { name: 'Media', exact: true }).click();
         await expect(page).toHaveURL(/\/media$/);
 
         // Real content gap: no NewsArticle/MediaItem rows exist yet in this
@@ -128,7 +121,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey G: Homepage -> Testimonials -> real testimonial content displays', async ({ page }) => {
         await page.goto('/');
-        await viaAboutMenu(page, 'Testimonials');
+        await page.locator('nav.navbar').getByRole('link', { name: 'Testimonials', exact: true }).click();
         await expect(page).toHaveURL(/\/testimonials$/);
 
         await expect(page.getByRole('heading', { name: 'Their Journeys. Their Words.' })).toBeVisible();
@@ -138,7 +131,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey H: Homepage -> FAQs -> Contact', async ({ page }) => {
         await page.goto('/');
-        await viaAboutMenu(page, 'FAQs');
+        await page.locator('nav.navbar').getByRole('link', { name: 'FAQs', exact: true }).click();
         await expect(page).toHaveURL(/\/faqs$/);
 
         await expect(page.getByText('What is the Hajj 2027 payment plan?')).toBeVisible();
