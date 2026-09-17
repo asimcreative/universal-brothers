@@ -59,6 +59,30 @@ test.describe('Public website', () => {
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     });
 
+    test('3b. homepage packages section: one tab per category, switching shows that category only', async ({ page }) => {
+        // Hajj and Umrah used to be two separate bands of identical shape. They
+        // are one tabbed section now, so the thing worth guarding is that the
+        // tabs actually switch — a pane that never shows is a category of
+        // packages no visitor can reach from the homepage.
+        await page.goto('/');
+
+        const tabs = page.locator('.pt-tab');
+        const tabCount = await tabs.count();
+        test.skip(tabCount < 2, 'only one category has published packages in this database');
+
+        // The first pane is open on load, the others are not.
+        const firstId = await tabs.first().getAttribute('data-bs-target');
+        const secondId = await tabs.nth(1).getAttribute('data-bs-target');
+        await expect(page.locator(firstId)).toBeVisible();
+        await expect(page.locator(secondId)).toBeHidden();
+
+        await tabs.nth(1).click();
+
+        await expect(page.locator(secondId)).toBeVisible();
+        await expect(page.locator(firstId)).toBeHidden();
+        await expect(page.locator(`${secondId} .package-card`).first()).toBeVisible();
+    });
+
     test('4. Hajj category page loads with real seeded packages', async ({ page }) => {
         const response = await page.goto('/hajj');
         expect(response.status()).toBe(200);

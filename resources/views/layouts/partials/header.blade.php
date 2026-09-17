@@ -1,4 +1,14 @@
 @php
+    // Pages whose first element is a full-bleed photographic hero declare
+    // `header_overlay`; on those the bar sits ON the photograph instead of as a
+    // solid slab above it, and only takes a background once it is scrolled off
+    // the hero. Every other page keeps the sticky solid bar.
+    $ubHeaderOverlay = trim(\Illuminate\Support\Facades\View::yieldContent('header_overlay')) === '1';
+
+    $ubFacebook = \App\Models\SiteSetting::get('social_facebook');
+    $ubInstagram = \App\Models\SiteSetting::get('social_instagram');
+    $ubYoutube = \App\Models\SiteSetting::get('social_youtube');
+
     $whatsapp = $primaryOffice?->whatsapp;
     $hajjCategory = $navCategories->firstWhere('slug', 'hajj');
     $umrahCategory = $navCategories->firstWhere('slug', 'umrah');
@@ -20,7 +30,7 @@
     drawer instead, is. The two breakpoint assertions in responsive.spec.js
     (toggler hidden at 1280, visible at 768) both still hold.
 --}}
-<header class="site-header sticky-top">
+<header class="site-header {{ $ubHeaderOverlay ? 'site-header--overlay' : 'sticky-top' }}">
     <div class="topbar d-none d-xl-block">
         <div class="container-fluid px-4">
             <div class="d-flex justify-content-between align-items-center gap-3">
@@ -36,6 +46,22 @@
                         </a>
                     @endif
                 </div>
+                @if(($ubAnnouncements ?? collect())->isNotEmpty())
+                    {{-- The live news headlines, scrolling, where the reference
+                         puts its announcements. Rendered twice so the loop is
+                         seamless; the second copy is hidden from assistive tech. --}}
+                    <div class="topbar-ticker" aria-label="Latest announcements">
+                        <div class="topbar-ticker-track">
+                            @foreach($ubAnnouncements as $ubItem)
+                                <a href="{{ route('news.show', $ubItem->slug) }}"><span aria-hidden="true">&#10022;</span>{{ $ubItem->title }}</a>
+                            @endforeach
+                            @foreach($ubAnnouncements as $ubItem)
+                                <a href="{{ route('news.show', $ubItem->slug) }}" aria-hidden="true" tabindex="-1"><span>&#10022;</span>{{ $ubItem->title }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="d-flex align-items-center gap-3">
                     <span class="topbar-credential">
                         @if(\App\Models\SiteSetting::get('iata_registered', '1'))
@@ -44,6 +70,14 @@
                         @endif
                         Hajj License No. {{ \App\Models\SiteSetting::get('government_license_no', '2014') }}
                     </span>
+
+                    @if($ubFacebook || $ubInstagram || $ubYoutube)
+                        <span class="topbar-social">
+                            @if($ubFacebook)<a href="{{ $ubFacebook }}" target="_blank" rel="noopener" aria-label="Universal Brothers on Facebook"><i class="bi bi-facebook"></i></a>@endif
+                            @if($ubInstagram)<a href="{{ $ubInstagram }}" target="_blank" rel="noopener" aria-label="Universal Brothers on Instagram"><i class="bi bi-instagram"></i></a>@endif
+                            @if($ubYoutube)<a href="{{ $ubYoutube }}" target="_blank" rel="noopener" aria-label="Universal Brothers on YouTube"><i class="bi bi-youtube"></i></a>@endif
+                        </span>
+                    @endif
                     @if($whatsapp)
                         <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $whatsapp) }}" class="topbar-whatsapp" target="_blank" rel="noopener">
                             <i class="bi bi-whatsapp"></i>WhatsApp Us
@@ -69,7 +103,7 @@
                     <span class="site-brand-initials">UB</span>
                 </span>
                 <span class="site-brand-text">
-                    <span class="site-brand-name">Universal Brothers</span>
+                    <span class="site-brand-name">Universal <span class="site-brand-name-accent">Brothers</span></span>
                     <span class="site-brand-tag">Hajj &middot; Umrah &middot; Tourism</span>
                 </span>
             </a>
@@ -150,7 +184,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('faqs') }}">FAQs</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('contact') }}">Contact</a></li>
                 </ul>
-                <a href="{{ $registerNowUrl }}" class="btn btn-register-now" target="_blank" rel="noopener">Register Now</a>
+                <a href="{{ $registerNowUrl }}" class="btn btn-register-now" target="_blank" rel="noopener">Register Now<i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
             </div>
         </div>
     </nav>

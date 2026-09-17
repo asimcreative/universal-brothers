@@ -21,6 +21,9 @@ import '@fontsource/playfair-display/latin-600.css';
 import '@fontsource/playfair-display/latin-700.css';
 import '@fontsource/playfair-display/latin-900.css';
 import '@fontsource/playfair-display/latin-600-italic.css';
+// One handwritten face, used for exactly one line: the hero's closing note,
+// as in the reference. Latin 600 only — nothing else on the site sets it.
+import '@fontsource/caveat/latin-600.css';
 
 import $ from 'jquery';
 window.$ = window.jQuery = $;
@@ -240,6 +243,36 @@ function initHeaderOffset() {
     }
 }
 
+// On a page with a full-bleed photographic hero the header sits ON the
+// photograph (see `.site-header--overlay`). Once the hero has scrolled past, it
+// pins itself as the ordinary solid bar so the navigation stays reachable.
+//
+// The switch point is the hero's own height rather than a fixed number of
+// pixels: the hero is 100vh on a desktop and considerably shorter on a phone,
+// and a constant would fire in the middle of the photograph on one of them.
+function initOverlayHeader() {
+    const header = document.querySelector('.site-header--overlay');
+    if (!header) return;
+
+    const hero = document.querySelector('.hero-slide');
+    if (!hero) return;
+
+    // A sentinel at the foot of the hero, watched by the observer, costs
+    // nothing per frame — a scroll listener reading getBoundingClientRect()
+    // would run layout on every scroll event.
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'position:absolute;bottom:0;left:0;width:1px;height:1px;pointer-events:none;';
+    sentinel.setAttribute('aria-hidden', 'true');
+    hero.appendChild(sentinel);
+
+    if (!('IntersectionObserver' in window)) return;
+
+    new IntersectionObserver(
+        ([entry]) => header.classList.toggle('is-stuck', !entry.isIntersecting && entry.boundingClientRect.top < 0),
+        { threshold: 0 }
+    ).observe(sentinel);
+}
+
 // Hajj package detail: currency switching and option hand-off.
 //
 // Previously an inline <script> in show-hajj.blade.php. Two behavioural
@@ -310,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
+    [initHeaderOffset, initOverlayHeader, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {

@@ -7,8 +7,8 @@ use App\Models\Award;
 use App\Models\NewsArticle;
 use App\Models\Package;
 use App\Models\PackageCategory;
-use App\Models\Slider;
 use App\Models\SiteSetting;
+use App\Models\Slider;
 use App\Models\Testimonial;
 use Illuminate\View\View;
 
@@ -18,19 +18,26 @@ class HomeController extends Controller
     {
         $hajjCategory = PackageCategory::where('slug', 'hajj')->where('is_active', true)->first();
         $umrahCategory = PackageCategory::where('slug', 'umrah')->where('is_active', true)->first();
+        $tourismCategory = PackageCategory::where('slug', 'tourism')->where('is_active', true)->first();
 
-        $hajjPackages = $hajjCategory
-            ? $hajjCategory->packages()->published()->with('series')->orderBy('is_featured', 'desc')->orderBy('sort_order')->limit(3)->get()
-            : collect();
-        $umrahPackages = $umrahCategory
-            ? $umrahCategory->packages()->published()->with('series')->orderBy('is_featured', 'desc')->orderBy('sort_order')->limit(3)->get()
+        // One featured row per category. The homepage shows all three behind
+        // tabs in a single section, so tourism is loaded the same way the
+        // other two always were rather than being the only category whose
+        // packages the homepage could not show.
+        $featured = fn (?PackageCategory $category) => $category
+            ? $category->packages()->published()->with('series')->orderBy('is_featured', 'desc')->orderBy('sort_order')->limit(3)->get()
             : collect();
 
-        // Both lists were just loaded through their own category, so it's
-        // already in memory — avoids an N+1 lazy-load of $package->category
-        // (used by package-card) per card.
+        $hajjPackages = $featured($hajjCategory);
+        $umrahPackages = $featured($umrahCategory);
+        $tourismPackages = $featured($tourismCategory);
+
+        // Each list was just loaded through its own category, so it's already
+        // in memory — avoids an N+1 lazy-load of $package->category (used by
+        // package-card) per card.
         $hajjPackages->each(fn (Package $package) => $package->setRelation('category', $hajjCategory));
         $umrahPackages->each(fn (Package $package) => $package->setRelation('category', $umrahCategory));
+        $tourismPackages->each(fn (Package $package) => $package->setRelation('category', $tourismCategory));
 
         $sliders = Slider::where('page_context', 'home')->where('is_active', true)->orderBy('sort_order')->get();
 
@@ -81,10 +88,9 @@ class HomeController extends Controller
                 ->pluck('duration_days')
             : collect();
 
-        $tourismCategory = PackageCategory::where('slug', 'tourism')->where('is_active', true)->first();
-
         return view('home', compact(
-            'hajjCategory', 'umrahCategory', 'tourismCategory', 'hajjPackages', 'umrahPackages',
+            'hajjCategory', 'umrahCategory', 'tourismCategory',
+            'hajjPackages', 'umrahPackages', 'tourismPackages',
             'sliders', 'videoTestimonials', 'textTestimonials', 'news',
             'awards', 'affiliations', 'stats', 'counters', 'filterDurations'
         ));

@@ -265,7 +265,7 @@ p, li { color: $pt-ink; }
 }
 
 .pt-accent { color: $pt-copper-ink; }
-.pt-hajj-band .pt-accent, .final-cta .pt-accent, .pt-finder .pt-accent { color: $pt-copper-light; }
+.final-cta .pt-accent, .pt-finder .pt-accent { color: $pt-copper-light; }
 
 .pt-lead {
     max-width: 62ch;
@@ -322,61 +322,6 @@ p, li { color: $pt-ink; }
     p { color: $pt-ink-muted; font-size: 0.94rem; margin: 0; }
 }
 
-// --- Photo cards (services) --------------------------------------------------
-.pt-photo-card {
-    position: relative;
-    display: block;
-    overflow: hidden;
-    border-radius: $pt-radius-card;
-    box-shadow: $pt-shadow-card;
-
-    .photo-media, picture, img { display: block; width: 100%; }
-    .photo-media { aspect-ratio: 3 / 4; }
-    img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
-
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(8, 24, 33, 0.45) 0%, rgba(8, 24, 33, 0) 45%, rgba(8, 24, 33, 0.55) 100%);
-    }
-
-    .pt-photo-card-label {
-        position: absolute;
-        top: 1.25rem;
-        left: 1.4rem;
-        z-index: 2;
-        color: #fff;
-        font-family: $pt-display;
-        font-weight: 700;
-        font-size: 1.25rem;
-    }
-
-    .pt-photo-card-go {
-        position: absolute;
-        right: 1.1rem;
-        bottom: 1.1rem;
-        z-index: 2;
-        width: 3.1rem;
-        height: 3.1rem;
-        border-radius: 50%;
-        background: $pt-copper;
-        color: $pt-teal-deep;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.15rem;
-        transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s;
-    }
-
-    &:hover .pt-photo-card-go, &:focus-visible .pt-photo-card-go { background: $pt-copper-light; transform: translate(2px, -2px); }
-    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 3px; }
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .pt-photo-card:hover img { transform: scale(1.05); }
-}
-
 .pt-services-note {
     max-width: 68ch;
     margin: 2.25rem auto 0;
@@ -385,32 +330,6 @@ p, li { color: $pt-ink; }
 }
 
 .pt-services-note a { color: $pt-copper-ink; font-weight: 600; text-decoration: underline; text-underline-offset: 0.18em; }
-
-// --- Hajj band ---------------------------------------------------------------
-.pt-hajj-band {
-    background: $pt-teal;
-    color: $pt-on-dark;
-    padding-block: clamp(4rem, 7vw, 7rem);
-
-    h2 { color: $pt-on-dark; }
-    p { color: $pt-on-dark-muted; }
-
-    .pt-count {
-        display: inline-flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.25rem;
-        padding: 1.1rem 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: $pt-radius-card;
-        background: rgba(255, 255, 255, 0.04);
-        text-align: left;
-        max-width: 22rem;
-    }
-
-    .pt-count .stat-number { font-size: clamp(2.5rem, 4vw, 3.4rem); color: $pt-copper-light; line-height: 1; }
-    .pt-count span { color: $pt-on-dark-muted; font-size: 0.92rem; }
-}
 
 // --- Finder ------------------------------------------------------------------
 .pt-finder {
@@ -534,32 +453,6 @@ p, li { color: $pt-ink; }
 
     h2, .pt-display { color: $pt-on-dark; }
     .pt-lead { color: $pt-on-dark-muted; }
-}
-
-.pt-band-subtitle {
-    font-family: 'Fira Sans Condensed', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    margin-bottom: 1.25rem;
-}
-
-// The service photographs are the tall format the direction uses; the shared
-// photo component emits a bare <img>, so the card itself sets the shape.
-.pt-photo-card {
-    aspect-ratio: 3 / 4;
-
-    > img, .ub-photo {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-}
-
-@media (max-width: 767.98px) {
-    .pt-photo-card { aspect-ratio: 4 / 3; }
 }
 
 
@@ -847,14 +740,6 @@ $pt-greige: #d0c5c0;
     p, small, .text-secondary, .text-muted { color: $pt-on-dark-muted !important; }
 }
 
-// The Hajj band sits on a photograph of Mina. At 0.5 opacity the crowd showed
-// through behind the cards and the whole band turned to grey noise; the
-// reference's equivalent band is flat teal, so this is nearly opaque and the
-// photograph is left as texture only.
-.pt-hajj-band .ub-photo-bg::after {
-    background: linear-gradient(180deg, rgba($pt-teal-deep, 0.95) 0%, rgba($pt-teal-deep, 0.90) 100%) !important;
-}
-
 // `.hero-slide` sets `display: flex`, which loads after Bootstrap and so beats
 // `.carousel-item { display: none }` at equal specificity — every slide would
 // render stacked. Only bites once a Slider row exists, which is why it was
@@ -905,4 +790,364 @@ $pt-greige: #d0c5c0;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+// =============================================================================
+// Homepage structure, pass three (2026-09-17)
+//
+// Asim's verdict after pass two: the colours are right, the running order is
+// not. Against the reference the page was missing its one asymmetric moment —
+// the section that says who the company is, before it sells anything — and it
+// sold the same thing twice, in two bands of identical shape (Hajj cards, then
+// Umrah cards). The reference has one packages section with a tab per
+// category. Both are fixed here.
+// =============================================================================
+
+// --- Who we are: teal, off-centre --------------------------------------------
+.pt-about {
+    background: $pt-teal;
+    color: $pt-on-dark;
+
+    h2, .pt-display { color: $pt-on-dark; }
+    p { color: $pt-on-dark-muted; }
+    .pt-accent { color: $pt-copper-light; }
+    .section-eyebrow { color: $pt-copper-light; }
+}
+
+// 42px and left-aligned: the reference reserves its centred 48px treatment for
+// sections that introduce a row of cards.
+.pt-display-left {
+    font-size: clamp(1.8rem, 2.9vw, 2.625rem);
+    text-align: left;
+}
+
+.pt-rule {
+    display: block;
+    position: relative;
+    width: 7.5rem;
+    height: 1px;
+    margin: 0 0 1.6rem;
+    background: rgba(255, 255, 255, 0.22);
+
+    &::after {
+        content: '\25C6';
+        position: absolute;
+        right: -0.35rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.5rem;
+        color: $pt-copper;
+    }
+}
+
+// --- The image collage -------------------------------------------------------
+.pt-collage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    grid-template-rows: repeat(2, 1fr);
+    gap: 1rem;
+    aspect-ratio: 1 / 0.92;
+
+    > div {
+        position: relative;
+        overflow: hidden;
+        border-radius: $pt-radius-card;
+        box-shadow: $pt-shadow-card;
+    }
+
+    > div::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(8, 24, 33, 0) 55%, rgba(8, 24, 33, 0.65) 100%);
+    }
+
+    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.pt-collage-tall { grid-row: 1 / span 2; }
+
+.pt-collage-label {
+    position: absolute;
+    left: 1rem;
+    bottom: 0.85rem;
+    z-index: 2;
+    font-family: $pt-display;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.pt-collage-badge {
+    position: absolute;
+    top: -1rem;
+    right: -0.5rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 1.3rem;
+    border-radius: $pt-radius-card;
+    background: $pt-copper;
+    color: $pt-teal-deep;
+    box-shadow: $pt-shadow-card;
+
+    strong { font-family: $pt-display; font-size: 1.9rem; font-weight: 800; line-height: 1; }
+
+    span {
+        font-family: $pt-display;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        line-height: 1.25;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .pt-collage { margin-top: 2.5rem; }
+    .pt-collage-badge { top: -0.75rem; right: 0; }
+    .pt-display-left { text-align: inherit; }
+}
+
+// --- Packages: one section, one tab per category -----------------------------
+.pt-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 0 0 3rem;
+}
+
+.pt-tab {
+    font-family: $pt-display;
+    font-size: 0.95rem;
+    font-weight: 600;
+    min-height: 48px;
+    padding: 0.7rem 1.9rem;
+    border: 1px solid transparent;
+    border-radius: $pt-radius-pill;
+    background: rgba($pt-teal, 0.07);
+    color: $pt-teal;
+    transition: background-color 0.2s, color 0.2s;
+
+    &:hover { background: rgba($pt-teal, 0.13); }
+    &.active { background: $pt-copper; color: $pt-teal-deep; }
+    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 2px; }
+}
+
+.pt-pane-note {
+    max-width: 62ch;
+    margin: 0 auto 2.25rem;
+    text-align: center;
+    color: $pt-ink-muted;
+
+    strong { color: $pt-teal; font-weight: 700; }
+
+    // `x-stat-number` renders a div so the counter can be sized as a figure
+    // elsewhere; inside a sentence it has to sit on the line.
+    .stat-number { display: inline; color: $pt-teal; font-weight: 800; }
+}
+
+// =============================================================================
+// Hero, measured against the reference screenshot (2026-09-17, pass four)
+//
+// Side by side the hero still read as a different page, and the differences
+// were all in the furniture around it rather than in the type:
+//
+//   * its bar sits ON the photograph; ours was a solid slab above it, which
+//     cost the hero 120px and broke the full-bleed image in two.
+//   * its brand sets the second word in copper.
+//   * every pill it shows carries the circular arrow badge — ours had it on
+//     one button out of four.
+//   * it closes the hero with a handwritten line, bottom right.
+//   * it offers a scroll cue at the bottom centre.
+//   * its top bar carries announcements and social links.
+// =============================================================================
+
+// --- The bar on the photograph -----------------------------------------------
+.site-header--overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background: transparent;
+    box-shadow: none;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+    .topbar {
+        background: transparent;
+        border-bottom-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .site-navbar { background: transparent; }
+
+    // Scrolled clear of the hero it becomes the ordinary solid bar again and
+    // pins itself, so the navigation is still reachable from 9,000px down.
+    // The reference simply loses its header there; this is the one deliberate
+    // departure, and it is one class to remove if it is not wanted.
+    &.is-stuck {
+        position: fixed;
+        background: $pt-teal-deep;
+        box-shadow: 0 6px 24px rgba(6, 11, 30, 0.28);
+        animation: ub-header-drop 0.3s ease;
+
+        .topbar { display: none !important; }
+    }
+}
+
+@keyframes ub-header-drop {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-header--overlay.is-stuck { animation: none; }
+}
+
+.site-brand-name-accent { color: $pt-copper; }
+
+// --- Top bar: announcements and social ---------------------------------------
+.topbar-ticker {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 4rem, #000 calc(100% - 4rem), transparent);
+
+    .topbar-ticker-track {
+        display: flex;
+        width: max-content;
+        gap: 2.5rem;
+        animation: pt-marquee 55s linear infinite;
+    }
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    a span { color: $pt-copper; font-size: 0.8em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .topbar-ticker .topbar-ticker-track { animation: none; }
+}
+
+.topbar-social {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+
+    a { color: rgba(255, 255, 255, 0.72); font-size: 0.95rem; }
+    a:hover, a:focus { color: $pt-copper-light; }
+    i { margin: 0; color: inherit; }
+}
+
+// --- Register Now carries the badge like every other pill --------------------
+.btn-register-now {
+    display: inline-flex;
+    align-items: center;
+
+    > i.bi-arrow-up-right {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 1.95em;
+        height: 1.95em;
+        margin: -0.5em -0.7em -0.5em 0.7em;
+        border-radius: 50%;
+        font-size: 0.8em;
+        background: rgba(255, 255, 255, 0.92);
+        color: $pt-teal-deep;
+    }
+}
+
+// --- The handwritten closing line --------------------------------------------
+.hero-note {
+    position: absolute;
+    right: clamp(1.5rem, 5vw, 5.5rem);
+    // Level with the buttons, as the reference sets it — not down in the
+    // corner, where it read as a stray caption.
+    top: 57%;
+    z-index: 2;
+    margin: 0;
+    max-width: 16rem;
+    text-align: right;
+    font-family: 'Caveat', 'Segoe Script', cursive;
+    font-weight: 600;
+    font-size: clamp(1.5rem, 2.3vw, 2.15rem);
+    line-height: 1.15;
+    color: $pt-copper-light;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+
+    &::after {
+        content: '';
+        display: block;
+        width: 68%;
+        height: 1px;
+        margin: 0.45rem 0 0 auto;
+        background: rgba($pt-copper-light, 0.65);
+    }
+}
+
+@media (max-width: 991.98px) { .hero-note { display: none; } }
+
+// --- Scroll cue ---------------------------------------------------------------
+.hero-scroll {
+    position: absolute;
+    left: 50%;
+    bottom: 2rem;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+
+    &:hover, &:focus-visible { background: rgba(255, 255, 255, 0.12); color: #fff; }
+    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 3px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .hero-scroll i { animation: ub-nudge 2s ease-in-out infinite; }
+}
+
+@keyframes ub-nudge {
+    0%, 100% { transform: translateY(-2px); }
+    50% { transform: translateY(2px); }
+}
+
+// --- The hero itself ----------------------------------------------------------
+// The bar no longer takes 120px off the top, so the photograph is the full
+// viewport and the content has to clear the bar on its own.
+.site-header--overlay + main .hero-editorial,
+.site-header--overlay ~ main .hero-editorial {
+    min-height: 100vh;
+    padding-top: 11rem;
+    padding-bottom: 7rem;
+}
+
+// Wider screens: the reference runs the headline to ~76px rather than stopping
+// at 68.
+.hero-editorial .hero-title { font-size: clamp(2.2rem, 4.72vw, 4.75rem); }
+
+// A deeper, more even scrim. The radial one left the corners bright, which is
+// what made our photograph look washed next to theirs.
+.hero-editorial .ub-photo-bg--centered::after {
+    background:
+        linear-gradient(180deg, rgba($pt-teal-deep, 0.55) 0%, rgba($pt-teal-deep, 0.35) 42%, rgba($pt-teal-deep, 0.78) 100%),
+        radial-gradient(ellipse at 50% 45%, rgba($pt-teal-deep, 0.62) 0%, rgba($pt-teal-deep, 0.72) 55%, rgba($pt-teal-deep, 0.88) 100%) !important;
 }

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\VerifyRequiredPhpExtensions;
+use App\Models\NewsArticle;
 use App\Models\Office;
 use App\Models\PackageCategory;
 use App\Models\User;
@@ -50,11 +51,18 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('nav-categories', fn () => PackageCategory::where('is_active', true)->orderBy('sort_order')->get());
         $this->app->singleton('primary-office', fn () => Office::where('is_active', true)->orderBy('sort_order')->first());
 
+        // The header's announcement ticker. A singleton for the same reason as
+        // the two above — the header partial is matched by the composer below
+        // and would otherwise re-query on every layout view it is attached to.
+        $this->app->singleton('header-announcements', fn () => NewsArticle::where('is_active', true)
+            ->latest('published_at')->limit(5)->get(['slug', 'title']));
+
         // 'contact' added for the frontend visual redesign's quick-action
         // Call/WhatsApp/Email cards — reuses the same singleton, no extra query.
         View::composer(['layouts.partials.*', 'layouts.app', 'contact'], function ($view) {
             $view->with('navCategories', app('nav-categories'));
             $view->with('primaryOffice', app('primary-office'));
+            $view->with('ubAnnouncements', app('header-announcements'));
         });
 
         // Named limiters so the contact form, inquiry form, and admin login
