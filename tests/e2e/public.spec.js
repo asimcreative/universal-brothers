@@ -43,7 +43,17 @@ test.describe('Public website', () => {
         await expect(nav.getByRole('button', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
         await expect(nav.getByRole('button', { name: 'Tourism', exact: true })).toBeVisible();
         await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toBeVisible();
-        await expect(nav.getByRole('link', { name: 'About Us', exact: true })).toBeVisible();
+
+        // The company pages (About Us, Awards, Affiliations, Testimonials,
+        // Media, FAQs) moved into one About group in the 2026-09-16 design
+        // pass, so the bar carries five items instead of ten. Each page is
+        // still one click away, which is what this asserts.
+        await expect(nav.getByRole('button', { name: 'About', exact: true })).toBeVisible();
+        await nav.getByRole('button', { name: 'About', exact: true }).click();
+        for (const name of ['About Us', 'Awards & Recognition', 'Affiliations', 'Testimonials', 'Media', 'FAQs']) {
+            await expect(nav.getByRole('link', { name, exact: true })).toBeVisible();
+        }
+        await page.keyboard.press('Escape');
 
         // The Hajj & Umrah mega-menu itself carries the real Hajj/Umrah
         // package links — Bootstrap's dropdown reveals it on click.
@@ -291,7 +301,14 @@ test.describe('Public website', () => {
     // own button variants a focus ring; the site's custom ones never set the
     // variable it reads, and the FAQ headers had the ring switched off to stop
     // it showing on mouse clicks. Both were invisible to keyboard users.
-    test('keyboard focus is visible on the header buttons and the FAQ questions', async ({ page }) => {
+    test('keyboard focus is visible on the header buttons and the FAQ questions', async ({ page, isMobile, browserName }) => {
+        // Desktop Chromium only, for two honest reasons: at phone width these
+        // buttons live inside the closed offcanvas menu, and WebKit does not
+        // move keyboard focus to links at all unless Safari's "Tab to links"
+        // setting is on, so tabbing can never reach them there.
+        test.skip(isMobile, 'The header buttons are inside the mobile menu at this width.');
+        test.skip(browserName === 'webkit', 'WebKit does not tab to links by default.');
+
         // Tabbing, not el.focus(): only real keyboard focus triggers
         // :focus-visible, which is what these rules are written against.
         const focusRing = async (url, selector) => {

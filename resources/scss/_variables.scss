@@ -73,3 +73,44 @@ $ub-duration-slow: 0.9s;
 @function ub-navy-overlay($from: 0.82, $to: 0.55) {
     @return linear-gradient(180deg, rgba($ub-navy-dark, $from) 0%, rgba($ub-navy-dark, $to) 100%);
 }
+
+// ---------------------------------------------------------------------
+// Design direction upgrade (2026-09-16) — see
+// docs/design/UNIVERSAL_BROTHERS_DESIGN_SYSTEM.md
+// ---------------------------------------------------------------------
+// The palette above is unchanged: it comes from the real brochure branding.
+// What was missing was everything *between* white and navy — one warm
+// surface step, a proper ink scale for text, and border tokens — so every
+// section had to choose between plain white, cream or a dark band, and
+// body text was written as one-off rgba() values per component.
+
+// Surfaces. No more than two dark bands per page, never two adjacent.
+$ub-surface: #ffffff;
+$ub-surface-warm: #fbf9f4; // half a step warmer than white, for long reading sections
+$ub-surface-sand: #f1eadb; // quiet panels, table headers, chips
+$ub-surface-navy: #0d1738; // feature bands (Hajj 2027, final CTA)
+
+// Ink. Contrast measured on white unless stated.
+$ub-ink: #16203d;          // 14.8:1 — headings, primary text
+$ub-ink-body: #333b52;     // 10.4:1 — paragraphs
+$ub-ink-muted: #5a6076;    //  6.3:1 — captions, meta, helper text
+$ub-on-dark: #f4f1ea;      // 14.6:1 on navy
+$ub-on-dark-muted: #c6cbdd; //  8.1:1 on navy
+
+// Borders.
+$ub-border: rgba(16, 27, 69, 0.1);
+$ub-border-strong: rgba(16, 27, 69, 0.18);
+$ub-border-dark: rgba(255, 255, 255, 0.14);
+
+// Radius additions. `pill` is the CTA shape; `xl` is for feature cards and
+// media frames, which looked cramped at the 0.75rem card radius.
+$ub-radius-xl: 1.25rem;
+$ub-radius-pill: 999px;
+
+// A taller rhythm for the two or three feature bands on a page, so they
+// read as moments rather than as another row of content.
+$ub-section-py-lg: 7.5rem;
+
+// Reading measure. Body copy past ~65 characters is measurably slower to
+// read; several sections were using inline `max-width: 640px` instead.
+$ub-measure: 65ch;

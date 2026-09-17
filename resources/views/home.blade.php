@@ -67,49 +67,21 @@
 
             <div class="container hero-content text-white">
                 <div class="row align-items-center g-5">
-                    <div class="col-lg-7 hero-anim">
+                    <div class="col-lg-8 hero-anim">
                         <span class="hero-eyebrow">Hajj &middot; Umrah &middot; Tourism</span>
                         <h1 class="hero-title">A Sacred Journey.<br><span class="hero-title-accent">A Trusted Name.</span></h1>
                         <p class="hero-lead">Serving the Guests of Allah with Experience, Care &amp; Commitment.</p>
-                        <p class="hero-copy">For more than {{ $stats['years'] }} years, Universal Brothers has been privileged to facilitate the sacred journeys of thousands of pilgrims — combining meticulous planning, personalized care and dependable on-ground support.</p>
+                        <p class="hero-copy">For more than {{ $stats['years'] }} years, we have planned, guided and supported the sacred journeys of thousands of pilgrims.</p>
                         <div class="hero-actions">
                             @if($hajjCategory)
-                                <a href="{{ route('hajj-services') }}" class="btn btn-secondary btn-lg">Explore Hajj Services</a>
+                                <x-cta :href="route('packages.category', 'hajj')" variant="gold" size="lg">Explore Hajj 2027</x-cta>
                             @endif
                             @if($umrahCategory)
-                                <a href="{{ route('umrah-services') }}" class="btn btn-outline-light btn-lg">Plan Your Umrah</a>
+                                <x-cta :href="route('umrah-services')" variant="outline-light" size="lg" :arrow="false">Plan Your Umrah</x-cta>
                             @endif
                         </div>
                     </div>
 
-                    <div class="col-lg-5 hero-anim">
-                        <div class="hero-credentials">
-                            <span class="hero-credentials-eyebrow">Why pilgrims trust us</span>
-                            <ul class="hero-credentials-list">
-                                <li>
-                                    <span class="hero-credential-figure">{{ $stats['years'] }}</span>
-                                    <span class="hero-credential-label">Years serving pilgrims</span>
-                                </li>
-                                <li>
-                                    <span class="hero-credential-figure">{{ $stats['pilgrims'] }}</span>
-                                    <span class="hero-credential-label">Hajis served</span>
-                                </li>
-                                <li>
-                                    <span class="hero-credential-figure">{{ $stats['awards_count'] }}</span>
-                                    <span class="hero-credential-label">Awards &amp; recognitions</span>
-                                </li>
-                            </ul>
-                            <div class="hero-credentials-foot">
-                                @if($stats['iata_registered'])
-                                    <span><i class="bi bi-patch-check-fill"></i>IATA Registered</span>
-                                @endif
-                                <span><i class="bi bi-shield-check"></i>Hajj Licence No. {{ \App\Models\SiteSetting::get('government_license_no', '2014') }}</span>
-                                @if($stats['mina_camp_location'])
-                                    <span><i class="bi bi-geo-alt-fill"></i>Mina Camp &mdash; {{ $stats['mina_camp_location'] }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -129,163 +101,10 @@
         </div>
     @endif
 
-    {{-- Trust ticker strip --}}
-    <div class="trust-ticker">
-        <div class="container text-center">
-            <span><i class="bi bi-patch-check-fill me-2"></i>{{ $stats['years'] }} Years of Trust</span>
-            <span><i class="bi bi-people-fill me-2"></i>{{ $stats['pilgrims'] }} Pilgrims Served</span>
-            @if($stats['mina_camp_location'])<span><i class="bi bi-geo-alt-fill me-2"></i>{{ $stats['mina_camp_location'] }} Mina Camp</span>@endif
-            @if($stats['iata_registered'])<span><i class="bi bi-award-fill me-2"></i>IATA Registered Operator</span>@endif
-        </div>
-    </div>
-
-    {{-- 3. Experience section --}}
-    <section class="section">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 reveal-on-scroll">
-                    <span class="section-eyebrow">{{ $stats['years'] }} Years of Experience</span>
-                    <h2>Experience That Inspires Confidence</h2>
-                    <p class="text-secondary">Universal Brothers has been serving pilgrims for {{ $stats['years'] }} years with one purpose: to make their sacred journey organized, comfortable and spiritually fulfilling.</p>
-                    <p class="text-secondary">Our experience extends far beyond bookings and logistics. From pre-departure preparation to assistance in the Holy Lands and the journey home, our team understands the details that make Hajj and Umrah truly seamless.</p>
-                </div>
-                <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    {{-- Matches the pilgrims-served figure below: the same
-                         approved statistic and the same count-up behaviour, now
-                         on a real photograph instead of a generated motif panel,
-                         so the two trust sections read as one design. --}}
-                    <div class="photo-figure photo-media photo-media--panel stat-photo">
-                        <x-photo key="jamarat" sizes="(min-width: 992px) 46vw, 92vw" />
-                        <div class="photo-caption stat-photo-caption">
-                            <span class="photo-caption-eyebrow">Years of Experience</span>
-                            <x-stat-number
-                                :display="$stats['years']"
-                                :target="$counters['years']"
-                                class="stat-photo-figure" />
-                            <span class="photo-caption-meta">Specialised Hajj and Umrah operations, not general travel.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- 4. Pilgrims-served trust section --}}
-    <section class="section bg-light">
-        <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 order-lg-2 reveal-on-scroll">
-                    <span class="section-eyebrow">One Enduring Trust</span>
-                    <h2>Thousands of Journeys. One Enduring Trust.</h2>
-                    <p class="text-secondary">Behind every number is a pilgrim, a family and a sacred journey entrusted to us.</p>
-                    <p class="text-secondary">Over the years, Universal Brothers has had the honour of serving <strong>{{ $stats['pilgrims'] }} pilgrims</strong>, earning relationships that often continue across generations.</p>
-                </div>
-                <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
-                    {{-- The statistic now sits ON a real photograph of pilgrims
-                         rather than on a generated motif panel. The figure and
-                         its label are unchanged approved site data; only the
-                         surface behind them is different. --}}
-                    <div class="photo-figure photo-media photo-media--panel stat-photo">
-                        <x-photo key="mina-tents" sizes="(min-width: 992px) 46vw, 92vw" />
-                        <div class="photo-caption stat-photo-caption">
-                            <span class="photo-caption-eyebrow">Pilgrims Served</span>
-                            {{-- Still `x-stat-number`, not a plain string. Replacing
-                                 the generated stat panel with a photograph must not
-                                 quietly drop the count-up animation, nor the
-                                 server-rendered approved figure that keeps the
-                                 number correct for crawlers and for anyone whose
-                                 JavaScript never runs. --}}
-                            <x-stat-number
-                                :display="$stats['pilgrims']"
-                                :target="$counters['pilgrims']"
-                                class="stat-photo-figure" />
-                            <span class="photo-caption-meta">Relationships that often continue across generations.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{--
-        4b. Trusted by Pilgrims Around the World.
-
-        An approved homepage block (source flow item d, with its two approved
-        sub-lines "Your Sacred Journey, Wherever You Are" and "Serving Pilgrims
-        Across the Globe") that had never been implemented. No country counts or
-        office locations are claimed — the only concrete facts stated here are
-        ones the project already holds: the Hajj 2027 programme is sold to
-        overseas pilgrims as well as from Pakistan, and the operator is IATA
-        registered under the licence number recorded in settings.
-    --}}
-    <section class="section global-reach">
-        {{-- Pilgrims arriving from around the world is what this section is
-             about, so it shows the Haram full of them rather than a gradient. --}}
-        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
-            <img src="{{ \App\Support\SiteImagery::url('haram-dusk') }}"
-                 srcset="{{ \App\Support\SiteImagery::srcset('haram-dusk') }}"
-                 sizes="100vw" alt="" loading="lazy" decoding="async">
-        </div>
-        <div class="container global-reach-content">
-            <div class="row justify-content-center text-center">
-                <div class="col-lg-8 reveal-on-scroll">
-                    <span class="section-eyebrow d-inline-flex">Trusted by Pilgrims Around the World</span>
-                    <h2 class="global-reach-title">Your Sacred Journey, Wherever You Are</h2>
-                    <p class="global-reach-lead">Serving Pilgrims Across the Globe</p>
-                    <p class="global-reach-copy">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
-                </div>
-            </div>
-
-            <div class="row g-4 mt-2 justify-content-center">
-                <div class="col-md-4 reveal-on-scroll reveal-delay-1">
-                    <div class="reach-pillar">
-                        <i class="bi bi-globe2"></i>
-                        <h3>Departures From Pakistan &amp; Overseas</h3>
-                        <p>Hajj 2027 packages are offered to overseas pilgrims alongside our domestic programme.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal-on-scroll reveal-delay-2">
-                    <div class="reach-pillar">
-                        <i class="bi bi-translate"></i>
-                        <h3>Guidance In Your Language</h3>
-                        <p>Urdu and English speaking coordinators accompany our groups throughout the journey.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal-on-scroll reveal-delay-3">
-                    <div class="reach-pillar">
-                        <i class="bi bi-headset"></i>
-                        <h3>Support Before, During &amp; After</h3>
-                        <p>Assistance from first enquiry through to the journey home, not only at booking.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- 5. Awards section --}}
-    <section class="section">
-        <div class="container">
-            <div class="text-center mb-5 reveal-on-scroll">
-                <span class="section-eyebrow d-flex justify-content-center">Recognized for Excellence</span>
-                <h2>Recognized for Excellence. Remembered for Service.</h2>
-                <p class="text-secondary mx-auto" style="max-width: 640px;">Our commitment to quality, service and professional excellence has earned Universal Brothers <strong>{{ $stats['awards_count'] }} awards and recognitions</strong> over the years. For us, every award represents something greater — the confidence placed in us by our pilgrims, partners and industry.</p>
-                <div class="stat-tile d-inline-block mt-2">
-                    <x-stat-number :display="$stats['awards_count']" :target="$counters['industry_awards']" />
-                    <div class="small text-uppercase fw-semibold">Awards &amp; Recognitions</div>
-                </div>
-            </div>
-            @if($awards->isNotEmpty())
-                <div class="row g-4 mb-4">
-                    @foreach($awards as $award)
-                        <x-award-badge :award="$award" />
-                    @endforeach
-                </div>
-            @endif
-            <div class="text-center">
-                <a href="{{ route('awards') }}" class="btn btn-outline-primary">Discover Our Achievements</a>
-            </div>
-        </div>
-    </section>
+    {{-- Credibility strip. Replaces the old trust ticker and the hero's
+         credentials panel: the same approved facts, stated once, directly under
+         the first screen. --}}
+    <x-trust-strip :stats="$stats" :counters="$counters" />
 
     {{--
         5b. Servicing — Hajj 2027 / Umrah / Tourism.
@@ -370,6 +189,45 @@
         offer a length that returns nothing.
     --}}
     @if($hajjCategory || $umrahCategory)
+
+    {{-- 8. Hajj Feature section --}}
+    @if($hajjCategory)
+        <section class="section bg-primary text-white">
+            <div class="container">
+                <div class="row align-items-center g-5 mb-5">
+                    <div class="col-lg-6 reveal-on-scroll">
+                        <span class="section-eyebrow">Hajj 2027</span>
+                        <h2>Hajj — The Journey of a Lifetime</h2>
+                        <p>Hajj is more than a destination. It is a profound act of faith, devotion and submission.</p>
+                        <p>At Universal Brothers, we understand the responsibility that comes with facilitating this sacred obligation. Our Hajj services are designed to manage the practical complexities of the journey so pilgrims can focus on what matters most — their Ibadah.</p>
+                        <x-cta :href="route('hajj-services')" variant="gold" size="lg" class="mt-2">Explore Hajj 2027</x-cta>
+                    </div>
+                    <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
+                        <x-stat-panel
+                            :display="(string) $counters['hajj_packages']"
+                            :target="$counters['hajj_packages']"
+                            label="Hajj 2027 Packages"
+                            note="Real 1448 AH itineraries, hotels and pricing."
+                            :variant="4"
+                            class="stat-panel-on-dark" />
+                    </div>
+                </div>
+                @if($hajjPackages->isNotEmpty())
+                    <h3 class="h4 mb-4">Featured Hajj Packages</h3>
+                    <div class="row g-4">
+                        @foreach($hajjPackages as $package)
+                            <div class="col-md-6 col-lg-4">
+                                <x-package-card :package="$package" />
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </section>
+    @endif
+
+        {{-- The finder follows the Hajj band: the band makes the case, this is
+             the next step. Six sections used to sit between them. --}}
         <section class="section package-finder-section position-relative">
         {{-- A real photograph behind the band, with the centred scrim that keeps
              the white type at WCAG AA over it. --}}
@@ -424,35 +282,123 @@
                 </div>
             </div>
         </section>
+
+    {{-- 9. Umrah Feature section --}}
+    @if($umrahCategory)
+
     @endif
 
-    {{-- 6. Personalized Services section — visual split (image/visual one side, content the other) --}}
-    <section class="section bg-light">
+        <section class="section">
+            <div class="container">
+                <div class="row align-items-center g-5 mb-5">
+                    <div class="col-lg-6 order-lg-2 reveal-on-scroll">
+                        <div class="photo-figure photo-media photo-media--panel">
+                            <x-photo key="kaaba-close" sizes="(min-width: 992px) 46vw, 92vw" />
+                        </div>
+                    </div>
+                    <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
+                        <span class="section-eyebrow">Umrah, Anytime</span>
+                        <h2>Answer the Call. Begin Your Journey.</h2>
+                        <p class="text-secondary">Whether travelling individually, with family or as part of a group, Universal Brothers offers carefully planned Umrah solutions designed around your requirements.</p>
+                        <p class="text-secondary">From flights and accommodation to transfers, Ziyarat and on-ground coordination, we bring every element together for a smoother and more meaningful experience.</p>
+                        <a href="{{ route('packages.category', 'umrah') }}" class="btn btn-primary btn-lg mt-2">Explore Umrah Packages</a>
+                    </div>
+                </div>
+                @if($umrahPackages->isNotEmpty())
+                    <h3 class="h4 mb-4">Featured Umrah Packages</h3>
+                    <div class="row g-4">
+                        @foreach($umrahPackages as $package)
+                            <div class="col-md-6 col-lg-4">
+                                <x-package-card :package="$package" />
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </section>
+    @endif
+
+    <section class="section">
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 reveal-on-scroll">
-                    {{-- An image-and-text composition rather than another
-                         background: a main photograph with a second, smaller
-                         one overlapping it. The inset is hidden below `md`,
-                         where two stacked crops only eat vertical space. --}}
-                    <div class="photo-figure-stack">
-                        <div class="photo-figure photo-figure-main photo-media photo-media--panel">
-                            <x-photo key="haram-courtyard" sizes="(min-width: 992px) 46vw, 92vw" />
-                        </div>
-                        <div class="photo-figure-inset photo-media photo-media--square">
-                            {{-- `sizes` must never be 0px: the inset is hidden below `md` but is
-                                 visible from 768px up, and a zero descriptor left the
-                                 browser with no candidate to choose, so the image failed
-                                 to load at exactly that width. --}}
-                            <x-photo key="nabawi-dome" sizes="(min-width: 992px) 21vw, 35vw" />
+                    <span class="section-eyebrow">{{ $stats['years'] }} Years of Experience</span>
+                    <h2>Experience That Inspires Confidence</h2>
+                    <p class="text-secondary">Universal Brothers has been serving pilgrims for {{ $stats['years'] }} years with one purpose: to make their sacred journey organized, comfortable and spiritually fulfilling.</p>
+                    <p class="text-secondary">Our experience extends far beyond bookings and logistics. From pre-departure preparation to assistance in the Holy Lands and the journey home, our team understands the details that make Hajj and Umrah truly seamless.</p>
+                    <p class="text-secondary">Behind every number is a pilgrim, a family and a sacred journey entrusted to us. Over the years, Universal Brothers has had the honour of serving <strong>{{ $stats['pilgrims'] }} pilgrims</strong>, earning relationships that often continue across generations.</p>
+                </div>
+                <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
+                    {{-- Matches the pilgrims-served figure below: the same
+                         approved statistic and the same count-up behaviour, now
+                         on a real photograph instead of a generated motif panel,
+                         so the two trust sections read as one design. --}}
+                    <div class="photo-figure photo-media photo-media--panel stat-photo">
+                        <x-photo key="jamarat" sizes="(min-width: 992px) 46vw, 92vw" />
+                        <div class="photo-caption stat-photo-caption">
+                            <span class="photo-caption-eyebrow">Years of Experience</span>
+                            <x-stat-number
+                                :display="$stats['years']"
+                                :target="$counters['years']"
+                                class="stat-photo-figure" />
+                            <span class="photo-caption-meta">Specialised Hajj and Umrah operations, not general travel.</span>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                    <span class="section-eyebrow">Personalized Care</span>
-                    <h2>Because No Two Sacred Journeys Are the Same</h2>
-                    <p class="text-secondary">Every pilgrim has different expectations, requirements and circumstances. Our personalized approach allows us to provide carefully coordinated solutions covering travel arrangements, accommodation, transportation, guidance and on-ground assistance — so our guests can devote greater attention to the purpose of their journey.</p>
-                    <p class="fw-semibold fs-5 mb-0">Personal Attention. Professional Management. Spiritual Peace of Mind.</p>
+            </div>
+        </div>
+    </section>
+
+    {{--
+        4b. Trusted by Pilgrims Around the World.
+
+        An approved homepage block (source flow item d, with its two approved
+        sub-lines "Your Sacred Journey, Wherever You Are" and "Serving Pilgrims
+        Across the Globe") that had never been implemented. No country counts or
+        office locations are claimed — the only concrete facts stated here are
+        ones the project already holds: the Hajj 2027 programme is sold to
+        overseas pilgrims as well as from Pakistan, and the operator is IATA
+        registered under the licence number recorded in settings.
+    --}}
+    <section class="section global-reach">
+        {{-- Pilgrims arriving from around the world is what this section is
+             about, so it shows the Haram full of them rather than a gradient. --}}
+        <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+            <img src="{{ \App\Support\SiteImagery::url('haram-dusk') }}"
+                 srcset="{{ \App\Support\SiteImagery::srcset('haram-dusk') }}"
+                 sizes="100vw" alt="" loading="lazy" decoding="async">
+        </div>
+        <div class="container global-reach-content">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8 reveal-on-scroll">
+                    <span class="section-eyebrow d-inline-flex">Trusted by Pilgrims Around the World</span>
+                    <h2 class="global-reach-title">Your Sacred Journey, Wherever You Are</h2>
+                    <p class="global-reach-lead">Serving Pilgrims Across the Globe</p>
+                    <p class="global-reach-copy">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2 justify-content-center">
+                <div class="col-md-4 reveal-on-scroll reveal-delay-1">
+                    <div class="reach-pillar">
+                        <i class="bi bi-globe2"></i>
+                        <h3>Departures From Pakistan &amp; Overseas</h3>
+                        <p>Hajj 2027 packages are offered to overseas pilgrims alongside our domestic programme.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal-on-scroll reveal-delay-2">
+                    <div class="reach-pillar">
+                        <i class="bi bi-translate"></i>
+                        <h3>Guidance In Your Language</h3>
+                        <p>Urdu and English speaking coordinators accompany our groups throughout the journey.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal-on-scroll reveal-delay-3">
+                    <div class="reach-pillar">
+                        <i class="bi bi-headset"></i>
+                        <h3>Support Before, During &amp; After</h3>
+                        <p>Assistance from first enquiry through to the journey home, not only at booking.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -462,9 +408,9 @@
     <section class="section">
         <div class="container">
             <div class="text-center mb-5 reveal-on-scroll">
-                <span class="section-eyebrow d-flex justify-content-center">Why Universal Brothers</span>
-                <h2>A Name Built on Trust. A Service Built Around You.</h2>
-                <p class="text-secondary mx-auto" style="max-width: 640px;">For more than {{ $stats['years'] }} years, Universal Brothers has combined experience with personal care to deliver thoughtfully managed Hajj and Umrah journeys.</p>
+                <x-section-header eyebrow="Why Universal Brothers" title="A Name Built on Trust. A Service Built Around You." class="mb-0" />
+                <p class="text-secondary ub-measure mx-auto">For more than {{ $stats['years'] }} years, Universal Brothers has combined experience with personal care to deliver thoughtfully managed Hajj and Umrah journeys. Every pilgrim has different expectations and circumstances, so travel, accommodation, transport, guidance and on-ground assistance are coordinated around them.</p>
+                <p class="fw-semibold fs-5 mt-3 mb-0">Personal Attention. Professional Management. Spiritual Peace of Mind.</p>
             </div>
             <div class="row g-4">
                 <div class="col-md-6 col-lg-4">
@@ -513,75 +459,31 @@
         </div>
     </section>
 
-    {{-- 8. Hajj Feature section --}}
-    @if($hajjCategory)
-        <section class="section bg-primary text-white">
-            <div class="container">
-                <div class="row align-items-center g-5 mb-5">
-                    <div class="col-lg-6 reveal-on-scroll">
-                        <span class="section-eyebrow">Hajj 2027</span>
-                        <h2>Hajj — The Journey of a Lifetime</h2>
-                        <p>Hajj is more than a destination. It is a profound act of faith, devotion and submission.</p>
-                        <p>At Universal Brothers, we understand the responsibility that comes with facilitating this sacred obligation. Our Hajj services are designed to manage the practical complexities of the journey so pilgrims can focus on what matters most — their Ibadah.</p>
-                        <a href="{{ route('hajj-services') }}" class="btn btn-secondary btn-lg mt-2">Explore Hajj 2027</a>
-                    </div>
-                    <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
-                        <x-stat-panel
-                            :display="(string) $counters['hajj_packages']"
-                            :target="$counters['hajj_packages']"
-                            label="Hajj 2027 Packages"
-                            note="Real 1448 AH itineraries, hotels and pricing."
-                            :variant="4"
-                            class="stat-panel-on-dark" />
-                    </div>
+    {{-- 5. Awards section --}}
+    <section class="section">
+        <div class="container">
+            <div class="reveal-on-scroll">
+                <x-section-header eyebrow="Recognized for Excellence" title="Recognized for Excellence. Remembered for Service." class="mb-4" />
+                <p class="text-secondary ub-measure mx-auto text-center">Our commitment to quality, service and professional excellence has earned Universal Brothers <strong>{{ $stats['awards_count'] }} awards and recognitions</strong> over the years. For us, every award represents something greater — the confidence placed in us by our pilgrims, partners and industry.</p>
+                <div class="stat-tile d-inline-block mt-2">
+                    <x-stat-number :display="$stats['awards_count']" :target="$counters['industry_awards']" />
+                    <div class="small text-uppercase fw-semibold">Awards &amp; Recognitions</div>
                 </div>
-                @if($hajjPackages->isNotEmpty())
-                    <h3 class="h4 mb-4">Featured Hajj Packages</h3>
-                    <div class="row g-4">
-                        @foreach($hajjPackages as $package)
-                            <div class="col-md-6 col-lg-4">
-                                <x-package-card :package="$package" />
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
             </div>
-        </section>
-    @endif
-
-    {{-- 9. Umrah Feature section --}}
-    @if($umrahCategory)
-        <section class="section">
-            <div class="container">
-                <div class="row align-items-center g-5 mb-5">
-                    <div class="col-lg-6 order-lg-2 reveal-on-scroll">
-                        <div class="photo-figure photo-media photo-media--panel">
-                            <x-photo key="kaaba-close" sizes="(min-width: 992px) 46vw, 92vw" />
-                        </div>
-                    </div>
-                    <div class="col-lg-6 order-lg-1 reveal-on-scroll reveal-delay-2">
-                        <span class="section-eyebrow">Umrah, Anytime</span>
-                        <h2>Answer the Call. Begin Your Journey.</h2>
-                        <p class="text-secondary">Whether travelling individually, with family or as part of a group, Universal Brothers offers carefully planned Umrah solutions designed around your requirements.</p>
-                        <p class="text-secondary">From flights and accommodation to transfers, Ziyarat and on-ground coordination, we bring every element together for a smoother and more meaningful experience.</p>
-                        <a href="{{ route('packages.category', 'umrah') }}" class="btn btn-primary btn-lg mt-2">Explore Umrah Packages</a>
-                    </div>
+            @if($awards->isNotEmpty())
+                <div class="row g-4 mb-4">
+                    @foreach($awards as $award)
+                        <x-award-badge :award="$award" />
+                    @endforeach
                 </div>
-                @if($umrahPackages->isNotEmpty())
-                    <h3 class="h4 mb-4">Featured Umrah Packages</h3>
-                    <div class="row g-4">
-                        @foreach($umrahPackages as $package)
-                            <div class="col-md-6 col-lg-4">
-                                <x-package-card :package="$package" />
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
+            @endif
+            <div class="text-center">
+                <x-cta :href="route('awards')" variant="outline-navy">Discover Our Achievements</x-cta>
             </div>
-        </section>
-    @endif
+        </div>
+    </section>
 
-    {{-- 10. Testimonial video section --}}
+{{-- 10. Testimonial video section --}}
     @if($videoTestimonials->isNotEmpty() || $textTestimonials->isNotEmpty())
         <section class="section bg-light">
             <div class="container">

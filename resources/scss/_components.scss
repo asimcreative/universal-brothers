@@ -3300,3 +3300,232 @@ h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3;
         min-height: 360px;
     }
 }
+
+// =============================================================================
+// Design direction upgrade (2026-09-16)
+// docs/design/UNIVERSAL_BROTHERS_DESIGN_SYSTEM.md
+//
+// Shared pieces every section can draw on, so a new section does not have to
+// invent its own eyebrow, heading size, button shape or measure again.
+// =============================================================================
+
+// --- Section header ----------------------------------------------------------
+.ub-section-header {
+    max-width: $ub-measure;
+    margin-bottom: 3rem;
+
+    .ub-eyebrow {
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: $ub-eyebrow-letter-spacing;
+        text-transform: uppercase;
+        color: $ub-gold-dark;
+        margin-bottom: 0.75rem;
+    }
+
+    .ub-section-title {
+        font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+        line-height: 1.2;
+        color: $ub-ink;
+        margin-bottom: 0;
+    }
+
+    .ub-section-lead {
+        font-size: 1.125rem;
+        line-height: 1.7;
+        color: $ub-ink-body;
+        margin: 1rem 0 0;
+    }
+
+    &.text-center .ub-section-lead { margin-inline: auto; }
+
+    // On a navy band the same header needs the light end of the ink scale;
+    // gold-dark eyebrows disappear against it.
+    &.is-on-dark {
+        .ub-eyebrow { color: $ub-gold; }
+        .ub-section-title { color: $ub-on-dark; }
+        .ub-section-lead { color: $ub-on-dark-muted; }
+    }
+}
+
+// --- Chips -------------------------------------------------------------------
+.ub-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: $border-radius-sm;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    i { font-size: 0.85em; }
+}
+
+.ub-chip-default { background: $ub-surface-sand; color: $ub-ink; }
+.ub-chip-gold { background: rgba($ub-gold, 0.16); color: $ub-gold-dark; }
+.ub-chip-dark { background: rgba(255, 255, 255, 0.1); color: $ub-on-dark; }
+
+// --- Call to action ----------------------------------------------------------
+.ub-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 48px;
+    padding: 0.75rem 1.6rem;
+    border: 2px solid transparent;
+    border-radius: $ub-radius-pill;
+    font-weight: 600;
+    font-size: 0.98rem;
+    text-align: center;
+    transition: background-color $ub-duration-fast $ub-ease,
+                border-color $ub-duration-fast $ub-ease,
+                color $ub-duration-fast $ub-ease,
+                box-shadow $ub-duration-fast $ub-ease;
+
+    .ub-cta-arrow { transition: transform $ub-duration-fast $ub-ease; }
+
+    &:hover .ub-cta-arrow { transform: translateX(3px); }
+
+    // The focus ring is part of the component, not an afterthought: this is
+    // the gap the accessibility audit found on the site's custom buttons.
+    &:focus-visible {
+        outline: 3px solid $ub-navy;
+        outline-offset: 2px;
+    }
+}
+
+.ub-cta-sm { min-height: 40px; padding: 0.5rem 1.15rem; font-size: 0.9rem; }
+.ub-cta-lg { min-height: 56px; padding: 0.95rem 2rem; font-size: 1.05rem; }
+
+.ub-cta-gold {
+    background: $ub-gold;
+    border-color: $ub-gold;
+    color: $ub-navy-dark;
+
+    &:hover, &:focus { background: $ub-gold-light; border-color: $ub-gold-light; color: $ub-navy-dark; }
+}
+
+.ub-cta-navy {
+    background: $ub-navy;
+    border-color: $ub-navy;
+    color: #fff;
+
+    &:hover, &:focus { background: $ub-navy-dark; border-color: $ub-navy-dark; color: #fff; }
+}
+
+.ub-cta-outline-light {
+    border-color: rgba(255, 255, 255, 0.75);
+    color: #fff;
+
+    &:hover, &:focus { background: rgba(255, 255, 255, 0.12); border-color: #fff; color: #fff; }
+    &:focus-visible { outline-color: #fff; }
+}
+
+.ub-cta-outline-navy {
+    border-color: $ub-border-strong;
+    color: $ub-navy;
+
+    &:hover, &:focus { background: rgba($ub-navy, 0.06); border-color: $ub-navy; color: $ub-navy; }
+}
+
+.ub-cta-quiet {
+    min-height: auto;
+    padding: 0.35rem 0;
+    border: none;
+    color: $ub-gold-dark;
+    font-weight: 600;
+
+    &:hover, &:focus { color: $ub-navy; }
+}
+
+// On a dark band the navy focus ring is invisible, so every CTA there gets
+// the white one instead.
+.ub-on-navy .ub-cta:focus-visible,
+.bg-primary .ub-cta:focus-visible,
+.ub-trust-strip .ub-cta:focus-visible { outline-color: #fff; }
+
+// --- Trust strip -------------------------------------------------------------
+.ub-trust-strip {
+    background: $ub-surface-navy;
+    padding: 1.5rem 0;
+
+    .ub-trust-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.1rem 1.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .ub-trust-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        color: $ub-on-dark-muted;
+        font-size: 0.92rem;
+
+        i { color: $ub-gold; font-size: 1rem; }
+    }
+
+    .ub-trust-value {
+        font-family: $headings-font-family;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: $ub-on-dark;
+    }
+
+    @include media-breakpoint-up(lg) {
+        .ub-trust-list { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .ub-trust-item { flex-direction: column; align-items: flex-start; gap: 0.15rem; }
+    }
+}
+
+// --- Feature card ------------------------------------------------------------
+.ub-feature-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid $ub-border;
+    border-radius: $ub-radius-xl;
+    box-shadow: $ub-shadow-sm;
+    transition: transform $ub-duration-fast $ub-ease, box-shadow $ub-duration-fast $ub-ease;
+
+    .ub-feature-media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; }
+    .ub-feature-media img { width: 100%; height: 100%; object-fit: cover; }
+
+    .ub-feature-body { display: flex; flex-direction: column; gap: 0.6rem; padding: 1.5rem; flex: 1 1 auto; }
+    .ub-feature-title { font-size: clamp(1.35rem, 1.9vw, 1.75rem); color: $ub-ink; margin: 0; }
+    .ub-feature-text { color: $ub-ink-body; margin: 0; }
+    .ub-feature-foot { margin-top: auto; padding-top: 0.5rem; }
+
+    &:hover { box-shadow: $ub-shadow-md; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .ub-feature-card:hover { transform: translateY(-2px); }
+}
+
+// --- Surfaces ----------------------------------------------------------------
+.ub-surface-warm { background-color: $ub-surface-warm; }
+.ub-surface-sand { background-color: $ub-surface-sand; }
+.ub-band-navy {
+    background-color: $ub-surface-navy;
+    color: $ub-on-dark;
+
+    p { color: $ub-on-dark-muted; }
+}
+.ub-section-lg { padding-block: $ub-section-py-sm; }
+
+@include media-breakpoint-up(lg) {
+    .ub-section-lg { padding-block: $ub-section-py-lg; }
+}
+
+.ub-measure { max-width: $ub-measure; }
