@@ -52,8 +52,7 @@
 
         <div class="row g-5">
             <div class="col-lg-7">
-                <span class="section-eyebrow">Our Offices</span>
-                <h2 class="h4 mb-4">Visit or Reach Us</h2>
+                <x-section-header eyebrow="Our Offices" title="Visit or Reach Us" align="start" class="mb-3" />
                 @foreach($offices as $office)
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body">

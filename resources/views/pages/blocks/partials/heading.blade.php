@@ -1,15 +1,13 @@
-{{-- Eyebrow, heading and introduction shared by most sections. Needs $data; optional $center. --}}
+{{-- Eyebrow, heading and introduction shared by most sections. Needs $data; optional $center.
+
+     Uses the same section header as the rest of the site, so a page built in
+     the admin has the same rhythm and reading measure as a coded page. --}}
 @php($center = $center ?? true)
 @if(filled($data['eyebrow'] ?? null) || filled($data['heading'] ?? null) || filled($data['intro'] ?? null))
-    <div class="pb-heading {{ $center ? 'pb-heading--center' : '' }} reveal-on-scroll">
-        @if(filled($data['eyebrow'] ?? null))
-            <span class="section-eyebrow {{ $center ? 'd-flex justify-content-center' : '' }}">{{ $data['eyebrow'] }}</span>
-        @endif
-        @if(filled($data['heading'] ?? null))
-            <h2>{{ $data['heading'] }}</h2>
-        @endif
-        @if(filled($data['intro'] ?? null))
-            <p class="pb-intro">{{ $data['intro'] }}</p>
-        @endif
-    </div>
+    <x-section-header
+        :eyebrow="$data['eyebrow'] ?? null"
+        :title="$data['heading'] ?? ''"
+        :lead="$data['intro'] ?? null"
+        :align="$center ? 'center' : 'start'"
+        class="pb-heading reveal-on-scroll" />
 @endif

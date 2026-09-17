@@ -23,8 +23,7 @@
     <section class="section">
         <div class="container text-center">
             <div class="mx-auto reveal-on-scroll" style="max-width: 720px;">
-                <span class="section-eyebrow d-flex justify-content-center">Fully Customizable</span>
-                <h2>One Journey. Designed Around You.</h2>
+                <x-section-header eyebrow="Fully Customizable" title="One Journey. Designed Around You." class="mb-0" />
                 <p class="text-secondary">Services can include:</p>
                 <p class="fw-semibold">Visa Assistance • Flights • Makkah Hotels • Madinah Hotels • Airport Transfers • Intercity Transportation • Ziyarat • Group Arrangements • Family Packages • Customized Itineraries</p>
             </div>
@@ -56,7 +55,7 @@
     <section id="how-to-apply" class="section bg-light text-center">
         <div class="container">
             <h2 id="umrah-process">Ready to Plan Your Umrah?</h2>
-            <p class="text-secondary mx-auto mb-4" style="max-width: 640px;">Share your preferred dates and requirements with our team and we'll guide you through the available options and next steps.</p>
+            <p class="text-secondary mx-auto mb-4" class="ub-measure">Share your preferred dates and requirements with our team and we'll guide you through the available options and next steps.</p>
             <a href="{{ route('contact') }}" class="btn btn-primary">Start Your Umrah Enquiry</a>
         </div>
     </section>
@@ -66,8 +65,7 @@
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 reveal-on-scroll" id="accommodation-transport">
-                    <span class="section-eyebrow">Where You'll Stay</span>
-                    <h2>Accommodation &amp; Transport</h2>
+                    <x-section-header eyebrow="Where You'll Stay" title="Accommodation &amp; Transport" align="start" class="mb-3" />
                     <p class="text-secondary">Makkah and Madinah hotel choices, airport transfers and intercity transportation are arranged as part of every Umrah package — exact hotels and arrangements vary by package. See each package's detail page for full accommodation and transport information.</p>
                 </div>
                 <div class="col-lg-6 reveal-on-scroll reveal-delay-2">
@@ -91,8 +89,7 @@
     <section class="section">
         <div class="container">
             <div class="text-center mb-5">
-                <span class="section-eyebrow d-flex justify-content-center">Umrah Packages</span>
-                <h2>Explore Umrah Packages</h2>
+                <x-section-header eyebrow="Umrah Packages" title="Explore Umrah Packages" class="mb-0" />
             </div>
             @if($packages->isNotEmpty())
                 <div class="row g-4">

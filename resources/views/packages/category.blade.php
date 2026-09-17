@@ -104,8 +104,8 @@
                                     <label for="filter-star5" class="form-check-label">5-Star Only</label>
                                 </div>
                                 <div class="col-12 d-grid gap-2 pt-2">
-                                    <button type="submit" class="btn btn-primary">Apply Filters</button>
-                                    <a href="{{ route('packages.category', $category->slug) }}" class="btn btn-outline-secondary">Reset</a>
+                                    <x-cta variant="navy" :arrow="false">Apply Filters</x-cta>
+                                    <x-cta :href="route('packages.category', $category->slug)" variant="outline-navy" :arrow="false">Reset</x-cta>
                                 </div>
                             </form>
                         </div>
@@ -123,6 +123,47 @@
                         @foreach($series as $s)
                             <a href="{{ route('packages.category', [$category->slug, 'series' => $s->slug]) }}" class="series-pill {{ request('series') === $s->slug ? 'is-active' : '' }}">{{ $s->name }}</a>
                         @endforeach
+                    </div>
+                @endif
+
+                @php
+                    $ubApplied = [];
+                    $ubLabels = [
+                        'days' => fn ($v) => $v . ' days',
+                        'variant' => fn ($v) => 'Package ' . $v,
+                        'arrival' => fn ($v) => $v === 'madina' ? 'Madina first' : 'Jeddah first',
+                        'aziziya' => fn ($v) => 'Aziziya: ' . str_replace('_', ' ', $v),
+                        'sharing' => fn ($v) => ucfirst($v) . ' sharing',
+                        'price_max' => fn ($v) => 'Up to US$' . number_format((int) $v),
+                        'star5' => fn ($v) => '5-star only',
+                        'series' => fn ($v) => optional($series->firstWhere('slug', $v))->name ?? $v,
+                    ];
+
+                    foreach ($ubLabels as $ubKey => $ubFormat) {
+                        $ubValue = request($ubKey);
+                        if (filled($ubValue) && $ubValue !== 'any') {
+                            $ubApplied[] = [
+                                'label' => $ubFormat($ubValue),
+                                'remove' => route('packages.category', array_merge(
+                                    ['category' => $category->slug],
+                                    collect(request()->query())->except($ubKey, 'page')->all()
+                                )),
+                            ];
+                        }
+                    }
+                @endphp
+
+                @if($ubApplied)
+                    <div class="listing-applied" role="group" aria-label="Filters you have applied">
+                        <span class="listing-applied-label">Filtered by</span>
+                        @foreach($ubApplied as $ubFilter)
+                            <a href="{{ $ubFilter['remove'] }}" class="ub-chip ub-chip-default listing-applied-chip">
+                                {{ $ubFilter['label'] }}
+                                <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                <span class="visually-hidden">— remove this filter</span>
+                            </a>
+                        @endforeach
+                        <a href="{{ route('packages.category', $category->slug) }}" class="listing-applied-clear">Clear all</a>
                     </div>
                 @endif
 

@@ -23,8 +23,7 @@
     <section class="section">
         <div class="container">
             <div class="mx-auto text-center reveal-on-scroll" style="max-width: 720px;">
-                <span class="section-eyebrow d-flex justify-content-center">Understanding Hajj</span>
-                <h2>A Journey Unlike Any Other</h2>
+                <x-section-header eyebrow="Understanding Hajj" title="A Journey Unlike Any Other" class="mb-0" />
                 <p class="text-secondary">Hajj is one of the five pillars of Islam and one of life's most profound spiritual journeys. Millions answer the call each year, yet every pilgrim's Hajj is deeply personal.</p>
                 <p class="text-secondary">Understanding the rituals, preparing physically and spiritually, and making appropriate travel arrangements are all important parts of that journey. Universal Brothers helps pilgrims prepare for each stage with information, coordination and experienced support.</p>
             </div>
@@ -57,7 +56,7 @@
         <div class="container">
             <div class="text-center mb-5 reveal-on-scroll">
                 <h2>From Intention to Departure — We Make the Process Clear</h2>
-                <p class="text-secondary mx-auto" style="max-width: 640px;">The Hajj application process can involve multiple requirements and stages. Our team assists pilgrims in understanding the applicable procedures and completing the necessary arrangements.</p>
+                <p class="text-secondary ub-measure mx-auto">The Hajj application process can involve multiple requirements and stages. Our team assists pilgrims in understanding the applicable procedures and completing the necessary arrangements.</p>
             </div>
             <div class="row g-4">
                 @foreach([
@@ -84,7 +83,7 @@
         <div class="container">
             <div class="text-center mb-5 reveal-on-scroll">
                 <h2>Every Stage Planned. Every Detail Considered.</h2>
-                <p class="text-secondary mx-auto" style="max-width: 640px;">From the day you register until the day you return home, our team remains committed to helping you navigate each stage of your Hajj journey.</p>
+                <p class="text-secondary ub-measure mx-auto">From the day you register until the day you return home, our team remains committed to helping you navigate each stage of your Hajj journey.</p>
             </div>
             <x-hajj-process-timeline />
         </div>
@@ -95,8 +94,7 @@
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 reveal-on-scroll">
-                    <span class="section-eyebrow">Ritual Guidance</span>
-                    <h2>Guidance You Can Rely On</h2>
+                    <x-section-header eyebrow="Ritual Guidance" title="Guidance You Can Rely On" align="start" class="mb-3" />
                     <ul class="text-secondary">
                         <li class="mb-2">Mufti/Aalim available for ritual guidance throughout the journey.</li>
                         <li class="mb-2">Personalized, escorted service at every step of Hajj.</li>
@@ -116,8 +114,7 @@
         <div class="container">
             <div class="row align-items-center g-5">
                 <div class="col-lg-6 order-lg-2 reveal-on-scroll">
-                    <span class="section-eyebrow">Where You'll Stay</span>
-                    <h2>Accommodation &amp; Transport</h2>
+                    <x-section-header eyebrow="Where You'll Stay" title="Accommodation &amp; Transport" align="start" class="mb-3" />
                     <ul class="text-secondary">
                         <li class="mb-2">Choice of hotels near Haram in Makkah and Madinah.</li>
                         <li class="mb-2">Best location in Mina, near Jamarat @if($minaCampLocation)— {{ $minaCampLocation }}@endif.</li>

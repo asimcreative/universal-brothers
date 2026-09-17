@@ -3529,3 +3529,39 @@ h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3;
 }
 
 .ub-measure { max-width: $ub-measure; }
+
+// --- Applied filters (package listing) ---------------------------------------
+// Which filters are on used to be readable only by opening every select in the
+// panel — and on a phone that panel is closed, so it was invisible.
+.listing-applied {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    .listing-applied-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: $ub-eyebrow-letter-spacing;
+        text-transform: uppercase;
+        color: $ub-ink-muted;
+    }
+
+    .listing-applied-chip {
+        transition: background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
+
+        i { font-size: 0.7em; opacity: 0.6; }
+
+        &:hover, &:focus-visible { background: rgba($ub-navy, 0.12); color: $ub-navy; }
+        &:focus-visible { outline: 3px solid $ub-navy; outline-offset: 2px; }
+    }
+
+    .listing-applied-clear {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: $ub-gold-dark;
+
+        &:hover, &:focus-visible { color: $ub-navy; }
+    }
+}
