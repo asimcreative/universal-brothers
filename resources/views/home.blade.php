@@ -5,28 +5,28 @@
 
 @section('content')
     {{--
-        The homepage is composed as a sequence of deliberately different bands —
-        photograph, copper strip, ivory, sand, dark — rather than the same
-        centred-heading-over-white-cards shape repeated a dozen times, which is
-        what made the page read as one long, flat scroll. Every value shown
-        still comes from the CMS and the packages tables.
+        Section order and band colours follow the reference template measured at
+        1440px (ref_probe.json): photograph, teal, greige, teal, copper, teal,
+        ivory, ivory, greige, teal, ivory, photograph. Every value shown still
+        comes from the CMS and the packages tables — only the arrangement is
+        borrowed.
     --}}
 
-    {{-- 1. Hero ---------------------------------------------------------- --}}
+    {{-- 1. Hero — centred over a full-height photograph -------------------- --}}
     @if($sliders->isNotEmpty())
         <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
                 @foreach($sliders as $i => $slide)
-                    <div class="carousel-item hero-slide {{ $i === 0 ? 'active' : '' }}">
+                    <div class="carousel-item hero-slide hero-editorial {{ $i === 0 ? 'active' : '' }}">
                         <div class="hero-slide-bg parallax-layer" style="background-image: url('{{ Storage::url($slide->image) }}')"></div>
                         <div class="container hero-content py-5">
-                            <div class="hero-anim" style="max-width: 900px;">
+                            <div class="hero-anim">
                                 <span class="hero-eyebrow">Hajj &middot; Umrah &middot; Tourism</span>
-                                <h1>{{ $slide->title }}</h1>
+                                <h1 class="hero-title">{{ $slide->title }}</h1>
                                 @if($slide->subtitle)<p class="hero-lead">{{ $slide->subtitle }}</p>@endif
                                 <div class="hero-actions">
                                     @if($slide->cta_label)
-                                        <a href="{{ $slide->cta_url }}" class="btn btn-secondary btn-lg">{{ $slide->cta_label }}<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                                        <a href="{{ $slide->cta_url }}" class="btn btn-secondary btn-lg">{{ $slide->cta_label }}<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                                     @endif
                                     @if($slide->secondary_cta_label)
                                         <a href="{{ $slide->secondary_cta_url }}" class="btn btn-outline-light btn-lg">{{ $slide->secondary_cta_label }}</a>
@@ -50,21 +50,21 @@
         </div>
     @else
         <section class="hero-slide hero-editorial">
-            <div class="ub-photo-bg parallax-layer" aria-hidden="true">
+            <div class="ub-photo-bg ub-photo-bg--centered parallax-layer" aria-hidden="true">
                 <img src="{{ \App\Support\SiteImagery::url('kaaba-tawaf') }}"
                      srcset="{{ \App\Support\SiteImagery::srcset('kaaba-tawaf') }}"
                      sizes="100vw" alt="" loading="eager" fetchpriority="high" decoding="async">
             </div>
 
             <div class="container hero-content text-white">
-                <div class="hero-anim" style="max-width: 900px;">
+                <div class="hero-anim">
                     <span class="hero-eyebrow">Hajj &middot; Umrah &middot; Tourism</span>
                     <h1 class="hero-title">A Sacred Journey.<br><span class="hero-title-accent">A Trusted Name.</span></h1>
                     <p class="hero-lead">Serving the Guests of Allah with Experience, Care &amp; Commitment.</p>
                     <p class="hero-copy">For more than {{ $stats['years'] }} years, we have planned, guided and supported the sacred journeys of thousands of pilgrims.</p>
                     <div class="hero-actions">
                         @if($hajjCategory)
-                            <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">Explore Hajj 2027<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                            <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">Explore Hajj 2027<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                         @endif
                         @if($umrahCategory)
                             <a href="{{ route('umrah-services') }}" class="btn btn-outline-light btn-lg">Plan Your Umrah</a>
@@ -75,67 +75,10 @@
         </section>
     @endif
 
-    {{-- 2. Credibility facts --------------------------------------------- --}}
+    {{-- 2. Credibility facts ---------------------------------------------- --}}
     <x-trust-strip :stats="$stats" :counters="$counters" />
 
-    {{-- 2. Recognition strip ---------------------------------------------- --}}
-    {{-- A thin copper band of the real award names, so the first thing under
-         the hero is proof rather than another block of prose. --}}
-    @if($awards->isNotEmpty())
-        <div class="pt-strip" role="region" aria-label="Awards and recognitions">
-            <div class="container">
-                <div class="pt-strip-track">
-                    @foreach($awards as $award)
-                        <span class="pt-strip-item"><i class="bi bi-award" aria-hidden="true"></i>{{ $award->name }}</span>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- 3. Impact --------------------------------------------------------- --}}
-    <section class="section pt-impact">
-        <div class="container text-center">
-            <span class="section-eyebrow">Our impact</span>
-            <h2 class="pt-display">Trusted by Pilgrims<br><span class="pt-accent">Around the World</span></h2>
-
-            <div class="pt-stat-pill">
-                <x-stat-number :display="$stats['pilgrims']" :target="$counters['pilgrims']" />
-                <span>Hajis served</span>
-            </div>
-
-            <p class="pt-lead">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
-
-            <div class="row g-4 mt-2 text-start">
-                <div class="col-md-4 reveal-on-scroll reveal-delay-1">
-                    <div class="pt-reach">
-                        <i class="bi bi-globe2" aria-hidden="true"></i>
-                        <h3>Departures from Pakistan &amp; overseas</h3>
-                        <p>Hajj 2027 packages are offered to overseas pilgrims alongside our domestic programme.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal-on-scroll reveal-delay-2">
-                    <div class="pt-reach">
-                        <i class="bi bi-translate" aria-hidden="true"></i>
-                        <h3>Guidance in your language</h3>
-                        <p>Urdu and English speaking coordinators accompany our groups throughout the journey.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 reveal-on-scroll reveal-delay-3">
-                    <div class="pt-reach">
-                        <i class="bi bi-headset" aria-hidden="true"></i>
-                        <h3>Support before, during &amp; after</h3>
-                        <p>Assistance from first enquiry through to the journey home, not only at booking.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- 4. Services ------------------------------------------------------- --}}
-    {{-- Tall photographs with the name over the image and one arrow, instead of
-         three text cards. The sentence that described each service sits under
-         the row, where it does not compete with the pictures. --}}
+    {{-- 3. Services — greige band, wide dark cards ------------------------- --}}
     <section class="section pt-band-sand">
         <div class="container">
             <div class="text-center mb-5">
@@ -145,108 +88,50 @@
 
             <div class="row g-4">
                 @if($hajjCategory)
-                    <div class="col-md-4 reveal-on-scroll reveal-delay-1">
-                        <a href="{{ route('hajj-services') }}" class="pt-photo-card">
-                            <x-photo key="haram-dusk" sizes="(min-width: 768px) 31vw, 92vw" />
-                            <span class="pt-photo-card-label">Hajj 2027</span>
-                            <span class="pt-photo-card-go"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+                    <div class="col-lg-4 col-md-6 reveal-on-scroll reveal-delay-1">
+                        <a href="{{ route('hajj-services') }}" class="pt-service-card">
+                            <div class="pt-service-media"><x-photo key="haram-dusk" sizes="(min-width: 992px) 12vw, 30vw" /></div>
+                            <div class="pt-service-body">
+                                <h3>Hajj 2027</h3>
+                                <p>Real 1448 AH itineraries and our own ground team.</p>
+                            </div>
+                            <span class="pt-service-go"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
                         </a>
                     </div>
                 @endif
                 @if($umrahCategory)
-                    <div class="col-md-4 reveal-on-scroll reveal-delay-2">
-                        <a href="{{ route('umrah-services') }}" class="pt-photo-card">
-                            <x-photo key="nabawi-aerial" sizes="(min-width: 768px) 31vw, 92vw" />
-                            <span class="pt-photo-card-label">Umrah</span>
-                            <span class="pt-photo-card-go"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+                    <div class="col-lg-4 col-md-6 reveal-on-scroll reveal-delay-2">
+                        <a href="{{ route('umrah-services') }}" class="pt-service-card">
+                            <div class="pt-service-media"><x-photo key="nabawi-aerial" sizes="(min-width: 992px) 12vw, 30vw" /></div>
+                            <div class="pt-service-body">
+                                <h3>Umrah</h3>
+                                <p>All year round, arranged around your dates.</p>
+                            </div>
+                            <span class="pt-service-go"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
                         </a>
                     </div>
                 @endif
                 @if($tourismCategory)
-                    <div class="col-md-4 reveal-on-scroll reveal-delay-3">
-                        <a href="{{ route('packages.category', 'tourism') }}" class="pt-photo-card">
-                            <x-photo key="hunza-attabad" sizes="(min-width: 768px) 31vw, 92vw" />
-                            <span class="pt-photo-card-label">Tourism</span>
-                            <span class="pt-photo-card-go"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
+                    <div class="col-lg-4 col-md-6 reveal-on-scroll reveal-delay-3">
+                        <a href="{{ route('packages.category', 'tourism') }}" class="pt-service-card">
+                            <div class="pt-service-media"><x-photo key="hunza-attabad" sizes="(min-width: 992px) 12vw, 30vw" /></div>
+                            <div class="pt-service-body">
+                                <h3>Tourism</h3>
+                                <p>Northern Pakistan and destinations abroad.</p>
+                            </div>
+                            <span class="pt-service-go"><i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
                         </a>
                     </div>
                 @endif
             </div>
 
-            <p class="pt-services-note">Complete Hajj programmes with real itineraries and on-ground support, Umrah arranged around your dates, and leisure travel across Pakistan and abroad — planned by the same team.
+            <p class="pt-services-note">Visas, flights, hotels and complete ziyarat guidance — every part of the journey handled by the same team.
                 @if($hajjCategory)<a href="{{ route('hajj-services') }}">See all services</a>@endif
             </p>
         </div>
     </section>
 
-    {{-- 5. Hajj 2027 ------------------------------------------------------ --}}
-    @if($hajjCategory)
-        <section class="section pt-hajj-band position-relative">
-            <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
-                <img src="{{ \App\Support\SiteImagery::url('mina-tents') }}"
-                     srcset="{{ \App\Support\SiteImagery::srcset('mina-tents') }}"
-                     sizes="100vw" alt="" loading="lazy" decoding="async">
-            </div>
-
-            <div class="container position-relative">
-                <div class="row align-items-end g-4 mb-5">
-                    <div class="col-lg-7 reveal-on-scroll">
-                        <span class="section-eyebrow">Hajj 2027 &middot; 1448 AH</span>
-                        <h2>Hajj — The Journey<br>of a Lifetime</h2>
-                        <p>Our Hajj services are designed to manage the practical complexities of the journey so pilgrims can focus on what matters most — their Ibadah.</p>
-                    </div>
-                    <div class="col-lg-5 text-lg-end reveal-on-scroll reveal-delay-2">
-                        <div class="pt-count">
-                            <x-stat-number :display="(string) $counters['hajj_packages']" :target="$counters['hajj_packages']" />
-                            <span>Hajj 2027 packages with real 1448 AH itineraries, hotels and pricing</span>
-                        </div>
-                    </div>
-                </div>
-
-                @if($hajjPackages->isNotEmpty())
-                    <h3 class="pt-band-subtitle">Featured Hajj Packages</h3>
-                    <div class="row g-4">
-                        @foreach($hajjPackages as $package)
-                            <div class="col-md-6 col-xl-4">
-                                <x-package-card :package="$package" />
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-
-                <div class="text-center mt-5">
-                    <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">See all {{ $counters['hajj_packages'] }} Hajj packages<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- 5b. Umrah ------------------------------------------------------- --}}
-    @if($umrahCategory && $umrahPackages->isNotEmpty())
-        <section class="section pt-impact">
-            <div class="container">
-                <div class="text-center mb-5">
-                    <span class="section-eyebrow">Umrah, any time of year</span>
-                    <h2 class="pt-display">Answer the Call. <span class="pt-accent">Begin Your Journey.</span></h2>
-                    <p class="pt-lead">Individual, family and group Umrah arranged around your preferred dates, duration, accommodation and travel requirements.</p>
-                </div>
-
-                <div class="row g-4">
-                    @foreach($umrahPackages as $package)
-                        <div class="col-md-6 col-xl-4">
-                            <x-package-card :package="$package" />
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="text-center mt-5">
-                    <a href="{{ route('umrah-services') }}" class="btn btn-outline-primary">Explore Umrah services<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- 6. Package finder ------------------------------------------------- --}}
+    {{-- 4. Package finder — teal band -------------------------------------- --}}
     @if($hajjCategory || $umrahCategory)
         <section class="section pt-finder">
             <div class="container">
@@ -281,13 +166,137 @@
                         <input type="number" name="price_max" id="finder-budget" class="form-control" min="0" step="500" placeholder="e.g. 12000" inputmode="numeric">
                     </div>
 
-                    <button type="submit" class="btn btn-secondary">Search packages<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></button>
+                    <button type="submit" class="btn btn-secondary">Search packages<i class="bi bi-arrow-right" aria-hidden="true"></i></button>
                 </form>
             </div>
         </section>
     @endif
 
-    {{-- 7. Why Universal Brothers ----------------------------------------- --}}
+    {{-- 5. Copper marquee of the real award names -------------------------- --}}
+    {{-- The list is rendered twice and the track animates by exactly -50%, so
+         the loop is seamless; the second copy is hidden from assistive tech. --}}
+    @if($awards->isNotEmpty())
+        <div class="pt-strip" role="region" aria-label="Awards and recognitions">
+            <div class="container">
+                <div class="pt-strip-track">
+                    @foreach($awards as $award)
+                        <span class="pt-strip-item"><i class="bi bi-asterisk" aria-hidden="true"></i>{{ $award->name }}</span>
+                    @endforeach
+                    @foreach($awards as $award)
+                        <span class="pt-strip-item" aria-hidden="true"><i class="bi bi-asterisk"></i>{{ $award->name }}</span>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- 6. Hajj 2027 — teal band over Mina --------------------------------- --}}
+    @if($hajjCategory)
+        <section class="section pt-hajj-band position-relative">
+            <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
+                <img src="{{ \App\Support\SiteImagery::url('mina-tents') }}"
+                     srcset="{{ \App\Support\SiteImagery::srcset('mina-tents') }}"
+                     sizes="100vw" alt="" loading="lazy" decoding="async">
+            </div>
+
+            <div class="container position-relative">
+                <div class="row align-items-end g-4 mb-5">
+                    <div class="col-lg-7 reveal-on-scroll">
+                        <span class="section-eyebrow">Hajj 2027 &middot; 1448 AH</span>
+                        <h2 class="pt-display">Hajj — The Journey<br><span class="pt-accent">of a Lifetime</span></h2>
+                        <p>Our Hajj services are designed to manage the practical complexities of the journey so pilgrims can focus on what matters most — their Ibadah.</p>
+                    </div>
+                    <div class="col-lg-5 text-lg-end reveal-on-scroll reveal-delay-2">
+                        <div class="pt-count">
+                            <x-stat-number :display="(string) $counters['hajj_packages']" :target="$counters['hajj_packages']" />
+                            <span>Hajj 2027 packages with real 1448 AH itineraries, hotels and pricing</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if($hajjPackages->isNotEmpty())
+                    <h3 class="pt-band-subtitle">Featured Hajj Packages</h3>
+                    <div class="row g-4">
+                        @foreach($hajjPackages as $package)
+                            <div class="col-md-6 col-xl-4">
+                                <x-package-card :package="$package" />
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="text-center mt-5">
+                    <a href="{{ route('packages.category', 'hajj') }}" class="btn btn-secondary btn-lg">See all {{ $counters['hajj_packages'] }} Hajj packages<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    {{-- 7. Umrah — ivory band ---------------------------------------------- --}}
+    @if($umrahCategory && $umrahPackages->isNotEmpty())
+        <section class="section pt-band-ivory">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <span class="section-eyebrow">Umrah, any time of year</span>
+                    <h2 class="pt-display">Answer the Call. <span class="pt-accent">Begin Your Journey.</span></h2>
+                    <p class="pt-lead">Individual, family and group Umrah arranged around your preferred dates, duration, accommodation and travel requirements.</p>
+                </div>
+
+                <div class="row g-4">
+                    @foreach($umrahPackages as $package)
+                        <div class="col-md-6 col-xl-4">
+                            <x-package-card :package="$package" />
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="text-center mt-5">
+                    <a href="{{ route('umrah-services') }}" class="btn btn-outline-primary">Explore Umrah services<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    {{-- 8. Impact — the page's one loud heading ---------------------------- --}}
+    <section class="section pt-impact">
+        <div class="container text-center">
+            <span class="section-eyebrow">Our impact</span>
+            <h2 class="pt-display-xl">Trusted by Pilgrims<br><span class="pt-accent">Around the World</span></h2>
+
+            <div class="pt-stat-pill">
+                <x-stat-number :display="$stats['pilgrims']" :target="$counters['pilgrims']" />
+                <span>Hajis served</span>
+            </div>
+
+            <p class="pt-lead">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
+
+            <div class="row g-4 mt-2 text-start">
+                <div class="col-md-4 reveal-on-scroll reveal-delay-1">
+                    <div class="pt-reach">
+                        <i class="bi bi-globe2" aria-hidden="true"></i>
+                        <h3>Departures from Pakistan &amp; overseas</h3>
+                        <p>Hajj 2027 packages are offered to overseas pilgrims alongside our domestic programme.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal-on-scroll reveal-delay-2">
+                    <div class="pt-reach">
+                        <i class="bi bi-translate" aria-hidden="true"></i>
+                        <h3>Guidance in your language</h3>
+                        <p>Urdu and English speaking coordinators accompany our groups throughout the journey.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal-on-scroll reveal-delay-3">
+                    <div class="pt-reach">
+                        <i class="bi bi-headset" aria-hidden="true"></i>
+                        <h3>Support before, during &amp; after</h3>
+                        <p>Assistance from first enquiry through to the journey home, not only at booking.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- 9. Why Universal Brothers — greige band ---------------------------- --}}
     <section class="section pt-band-sand">
         <div class="container">
             <div class="row align-items-center g-5">
@@ -312,54 +321,15 @@
                         <div class="col-sm-6"><div class="pt-point"><i class="bi bi-geo-alt" aria-hidden="true"></i><div><h3>On-Ground Support</h3><p>Assistance where it matters most throughout your sacred journey.</p></div></div></div>
                     </div>
 
-                    <a href="{{ url('/about-us') }}" class="btn btn-secondary mt-4">Read more about us<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                    <a href="{{ url('/about-us') }}" class="btn btn-secondary mt-4">Read more about us<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- 8. Recognition ---------------------------------------------------- --}}
-    <section class="section">
-        <div class="container">
-            <div class="text-center mb-5">
-                <span class="section-eyebrow">Recognized for excellence</span>
-                <h2 class="pt-display">A Legacy of <span class="pt-accent">Recognition</span></h2>
-                <p class="pt-lead">Our commitment to quality and service has earned Universal Brothers awards and recognitions over the years.</p>
-
-                <div class="pt-stat-pill">
-                    <x-stat-number :display="$stats['awards_count']" :target="$counters['industry_awards']" />
-                    <span>Awards &amp; recognitions</span>
-                </div>
-            </div>
-
-            @if($awards->isNotEmpty())
-                <div class="row g-4">
-                    @foreach($awards->take(6) as $award)
-                        <x-award-badge :award="$award" />
-                    @endforeach
-                </div>
-            @endif
-
-            <div class="text-center mt-4">
-                <a href="{{ route('awards') }}" class="btn btn-outline-primary">View all awards<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
-            </div>
-
-            @if($affiliations->isNotEmpty())
-                <div class="pt-affiliations">
-                    <p class="pt-affiliations-label">Connected with trusted institutions</p>
-                    <div class="row g-3 justify-content-center">
-                        @foreach($affiliations as $affiliation)
-                            <x-affiliation-badge :affiliation="$affiliation" />
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-        </div>
-    </section>
-
-    {{-- 9. Pilgrim voices ------------------------------------------------- --}}
+    {{-- 10. Pilgrim voices — teal band ------------------------------------- --}}
     @if($textTestimonials->isNotEmpty() || $videoTestimonials->isNotEmpty())
-        <section class="section pt-band-sand">
+        <section class="section pt-band-dark">
             <div class="container">
                 <div class="text-center mb-5">
                     <span class="section-eyebrow">Pilgrim stories</span>
@@ -383,13 +353,52 @@
                 @endif
 
                 <div class="text-center mt-4">
-                    <a href="{{ route('testimonials') }}" class="btn btn-outline-primary">Read all testimonials<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                    <a href="{{ route('testimonials') }}" class="btn btn-outline-light">Read all testimonials<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 </div>
             </div>
         </section>
     @endif
 
-    {{-- 10. Talk to us ---------------------------------------------------- --}}
+    {{-- 11. Recognition and affiliations — ivory band ---------------------- --}}
+    <section class="section pt-band-ivory">
+        <div class="container">
+            <div class="text-center mb-5">
+                <span class="section-eyebrow">Recognized for excellence</span>
+                <h2 class="pt-display">Recognised, Accredited <span class="pt-accent">&amp; Well Connected</span></h2>
+                <p class="pt-lead">Our commitment to quality and service has earned Universal Brothers awards and recognitions over the years.</p>
+
+                <div class="pt-stat-pill">
+                    <x-stat-number :display="$stats['awards_count']" :target="$counters['industry_awards']" />
+                    <span>Awards &amp; recognitions</span>
+                </div>
+            </div>
+
+            @if($awards->isNotEmpty())
+                <div class="row g-4">
+                    @foreach($awards->take(6) as $award)
+                        <x-award-badge :award="$award" />
+                    @endforeach
+                </div>
+            @endif
+
+            <div class="text-center mt-4">
+                <a href="{{ route('awards') }}" class="btn btn-outline-primary">View all awards<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            </div>
+
+            @if($affiliations->isNotEmpty())
+                <div class="pt-affiliations">
+                    <p class="pt-affiliations-label">Connected with trusted institutions</p>
+                    <div class="row g-3 justify-content-center">
+                        @foreach($affiliations as $affiliation)
+                            <x-affiliation-badge :affiliation="$affiliation" />
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    </section>
+
+    {{-- 12. Talk to us ----------------------------------------------------- --}}
     <section class="section final-cta text-center position-relative">
         <div class="ub-photo-bg ub-photo-bg--centered" aria-hidden="true">
             <img src="{{ \App\Support\SiteImagery::url('haram-panorama') }}"
@@ -403,7 +412,7 @@
             <p class="pt-lead">Whether you are preparing for Hajj, planning Umrah or simply need guidance before making a decision, our experienced team is ready to assist you.</p>
             <div class="d-flex justify-content-center flex-wrap gap-2 mt-4">
                 @if($hajjCategory)
-                    <a href="{{ route('contact') }}" class="btn btn-secondary btn-lg">Hajj enquiry<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+                    <a href="{{ route('contact') }}" class="btn btn-secondary btn-lg">Hajj enquiry<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 @endif
                 @if($umrahCategory)
                     <a href="{{ route('contact') }}" class="btn btn-outline-light btn-lg">Umrah enquiry</a>

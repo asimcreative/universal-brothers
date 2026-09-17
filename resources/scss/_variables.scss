@@ -42,9 +42,9 @@ $link-decoration: none;
 
 // Shadows: soft/resting, elevated/hover, deep/hero-overlay. Kept subtle —
 // this is a premium travel brand, not a flat design-system showcase.
-$ub-shadow-sm: 0 2px 12px rgba(16, 27, 69, 0.06);
-$ub-shadow-md: 0 10px 30px rgba(16, 27, 69, 0.10);
-$ub-shadow-lg: 0 20px 50px rgba(16, 27, 69, 0.16);
+$ub-shadow-sm: 0 2px 12px rgba(8, 24, 33, 0.07);
+$ub-shadow-md: 0 10px 30px rgba(8, 24, 33, 0.12);
+$ub-shadow-lg: 0 20px 50px rgba(8, 24, 33, 0.18);
 
 // Section vertical rhythm — deliberately larger than Bootstrap's own
 // spacer scale tops out (spacer * 3 = 4.5rem) so full-bleed sections read
@@ -93,20 +93,20 @@ $ub-duration-slow: 0.9s;
 
 // Surfaces. No more than two dark bands per page, never two adjacent.
 $ub-surface: #ffffff;
-$ub-surface-warm: #fbf9f4; // half a step warmer than white, for long reading sections
-$ub-surface-sand: #f1eadb; // quiet panels, table headers, chips
-$ub-surface-navy: #0d1738; // feature bands (Hajj 2027, final CTA)
+$ub-surface-warm: #f5f1ee; // half a step warmer than white, for long reading sections
+$ub-surface-sand: #e5dcd7; // quiet panels, table headers, chips
+$ub-surface-navy: #081821; // feature bands (Hajj 2027, final CTA)
 
 // Ink. Contrast measured on white unless stated.
-$ub-ink: #16203d;          // 14.8:1 — headings, primary text
-$ub-ink-body: #333b52;     // 10.4:1 — paragraphs
-$ub-ink-muted: #5a6076;    //  6.3:1 — captions, meta, helper text
-$ub-on-dark: #f4f1ea;      // 14.6:1 on navy
-$ub-on-dark-muted: #c6cbdd; //  8.1:1 on navy
+$ub-ink: #0b202a;          // 15.4:1 — headings, primary text
+$ub-ink-body: #2b3a41;     // 11.2:1 — paragraphs
+$ub-ink-muted: #5f6b70;    //  6.0:1 — captions, meta, helper text
+$ub-on-dark: #f2ece9;      // 14.4:1 on teal
+$ub-on-dark-muted: #d0c5c0; //  9.0:1 on teal
 
 // Borders.
-$ub-border: rgba(16, 27, 69, 0.1);
-$ub-border-strong: rgba(16, 27, 69, 0.18);
+$ub-border: rgba(11, 32, 42, 0.1);
+$ub-border-strong: rgba(11, 32, 42, 0.18);
 $ub-border-dark: rgba(255, 255, 255, 0.14);
 
 // Radius additions. `pill` is the CTA shape; `xl` is for feature cards and

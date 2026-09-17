@@ -308,20 +308,6 @@ p, li { color: $pt-ink; }
 // --- Impact ------------------------------------------------------------------
 .pt-impact {
     background: $pt-ivory;
-
-    .pt-stat-pill {
-        display: inline-flex;
-        align-items: baseline;
-        gap: 0.75rem;
-        margin: 0.5rem 0 1.5rem;
-        padding: 0.7rem 2rem;
-        border: 1px solid rgba($pt-copper, 0.5);
-        border-radius: $pt-radius-pill;
-        background: #fff;
-    }
-
-    .pt-stat-pill .stat-number { font-size: clamp(1.8rem, 3vw, 2.6rem); color: $pt-teal; line-height: 1; }
-    .pt-stat-pill span { font-family: $pt-display; font-size: 1.1rem; color: $pt-ink-muted; }
 }
 
 .pt-reach {
@@ -574,4 +560,349 @@ p, li { color: $pt-ink; }
 
 @media (max-width: 767.98px) {
     .pt-photo-card { aspect-ratio: 4 / 3; }
+}
+
+
+// =============================================================================
+// Template alignment, pass two (2026-09-17)
+//
+// Pass one took the reference's colours and face. Side by side at 1440px the
+// page still did not read like it, and the measurements say why:
+//
+//   * the reference alternates ivory #efe9e6 / greige #d0c5c0 / teal #0b202a.
+//     Our "alternating" band was #e2d9d3 — two steps off ivory, so the rhythm
+//     never actually alternated and the whole page read as one pale surface.
+//   * its section headings are a flat 48/60 w700; ours were a clamp that
+//     landed near 52 at w800 — heavier and more cramped, never calmer.
+//   * it spends 112px on exactly ONE heading. That single loud moment is what
+//     gives the scroll a peak. We had no peak.
+//   * its cards on light bands are dark teal. Ours were white, which is why
+//     every band looked like the same row of white boxes.
+//   * its buttons carry a circular arrow badge, not an inline arrow glyph.
+//
+// Values: ref_probe.json in the session scratchpad.
+// =============================================================================
+
+$pt-greige: #d0c5c0;
+
+// --- Bands -------------------------------------------------------------------
+.pt-band-sand, .section.bg-light, .bg-light { background-color: $pt-greige !important; }
+.pt-band-ivory { background-color: $pt-ivory; }
+
+.pt-band-dark {
+    background-color: $pt-teal;
+    color: $pt-on-dark;
+
+    h1, h2, h3, h4, .h1, .h2, .h3, .h4, strong, b { color: $pt-on-dark; }
+    p, li, .text-secondary, .text-muted, small, dd { color: $pt-on-dark-muted !important; }
+    .pt-accent { color: $pt-copper-light; }
+    .section-eyebrow { color: $pt-copper-light; }
+    .pt-lead { color: $pt-on-dark-muted; }
+}
+
+// --- Type --------------------------------------------------------------------
+// h2: 48px / 60px line / w700 / uppercase, at every width above lg.
+.pt-display {
+    font-size: clamp(1.9rem, 3.35vw, 3rem);
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-bottom: 1rem;
+}
+
+// The one heading the reference lets run to 112px. Used once per page.
+.pt-display-xl {
+    font-family: $pt-display;
+    font-size: clamp(2.6rem, 7.8vw, 7rem);
+    line-height: 0.87;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.012em;
+    margin-bottom: 1.5rem;
+}
+
+.pt-lead { font-size: 1.05rem; line-height: 1.6; }
+
+// --- Hero --------------------------------------------------------------------
+// Centred, 68px, -1.7px tracking, a full 900px tall.
+.hero-editorial {
+    min-height: min(100vh, 900px);
+    padding: 5rem 0;
+    text-align: center;
+
+    .hero-anim { max-width: 62rem !important; margin-inline: auto; }
+    .hero-eyebrow { justify-content: center; }
+    .hero-eyebrow::before { display: inline-block !important; }
+    .hero-actions { justify-content: center; }
+    .hero-lead, .hero-copy { margin-inline: auto; }
+    .hero-copy { max-width: 46rem; }
+
+    .hero-title {
+        font-size: clamp(2.2rem, 4.72vw, 4.25rem);
+        line-height: 1.06;
+        letter-spacing: -0.025em;
+    }
+
+    @media (max-width: 991.98px) { min-height: auto; padding: 4rem 0; }
+}
+
+// The reference sets both halves of the headline in the same upright face; the
+// italic was ours and it fought the condensed capitals.
+.hero-title-accent { font-style: normal; color: $pt-copper-light; }
+
+// --- Buttons: the circular arrow badge ---------------------------------------
+.btn, .ub-cta { display: inline-flex; align-items: center; justify-content: center; }
+
+.btn > i.bi-arrow-right,
+.btn > i.bi-arrow-up-right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.95em;
+    height: 1.95em;
+    margin: -0.5em -0.7em -0.5em 0.7em !important;
+    border-radius: 50%;
+    font-size: 0.8em;
+    background: rgba(255, 255, 255, 0.92);
+    color: $pt-teal-deep;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .btn:hover > i.bi-arrow-right { transform: translateX(2px); }
+}
+
+// A near-white badge disappears on a near-white button.
+.btn-outline-light > i.bi-arrow-right,
+.btn-light > i.bi-arrow-right,
+.btn-outline-primary > i.bi-arrow-right,
+.btn-outline-secondary > i.bi-arrow-right {
+    background: rgba($pt-teal, 0.1);
+    color: $pt-teal;
+}
+
+// --- Cards on light bands are dark -------------------------------------------
+// This is the single biggest difference between the two pages: the reference
+// puts dark teal cards on its light bands, so each band reads as one object.
+// Ours put white cards on near-white, so each band dissolved.
+.package-card {
+    background: $pt-teal;
+    color: $pt-on-dark;
+    box-shadow: 0 18px 40px rgba(8, 24, 33, 0.18);
+
+    .card-body { background: transparent; }
+    .package-card-title { color: $pt-on-dark; }
+    .package-card-series { color: $pt-copper-light; }
+    p, small, .text-secondary, .text-muted { color: $pt-on-dark-muted !important; }
+
+    .package-card-meta span {
+        color: $pt-on-dark-muted;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .package-card-meta i { color: $pt-copper-light; }
+    .package-card-foot { border-top-color: rgba(255, 255, 255, 0.12); }
+
+    .package-card-price {
+        color: #fff;
+        small { color: rgba(255, 255, 255, 0.6); }
+    }
+}
+
+// --- Services: the reference's wide card, not three tall photographs ---------
+.pt-service-card {
+    display: flex;
+    gap: 1.15rem;
+    align-items: stretch;
+    position: relative;
+    height: 100%;
+    min-height: 12.6rem;
+    padding: 1.15rem;
+    border-radius: 1rem;
+    background: $pt-teal;
+    color: $pt-on-dark;
+    text-decoration: none;
+    box-shadow: $pt-shadow-card;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+
+    // Proportional, not a fixed 170px: at the lg container a fixed photo left
+    // barely 50px for the sentence beside it.
+    .pt-service-media {
+        flex: 0 0 40%;
+        max-width: 11rem;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        align-self: stretch;
+    }
+
+    .pt-service-media img, .pt-service-media picture {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .pt-service-body { flex: 1 1 auto; min-width: 0; padding-right: 2.75rem; }
+
+    h3 {
+        font-family: $pt-display;
+        font-size: clamp(1.35rem, 2vw, 1.875rem);
+        font-weight: 700;
+        line-height: 1.25;
+        color: $pt-on-dark;
+        margin-bottom: 0.4rem;
+    }
+
+    p { color: $pt-on-dark-muted; font-size: 0.95rem; margin: 0; }
+
+    .pt-service-go {
+        position: absolute;
+        right: 1.15rem;
+        bottom: 1.15rem;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 50%;
+        background: $pt-copper;
+        color: $pt-teal-deep;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        transition: background-color 0.25s, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    &:hover, &:focus-visible { color: $pt-on-dark; }
+    &:hover .pt-service-go { background: $pt-copper-light; transform: translate(2px, -2px); }
+    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 3px; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .pt-service-card:hover { transform: translateY(-4px); }
+}
+
+// Below lg the three cards sit two-up or one-up and the row is too narrow to
+// hold a photograph and a sentence side by side, so the photograph goes on top.
+@media (max-width: 991.98px) {
+    .pt-service-card {
+        flex-direction: column;
+        min-height: 0;
+        .pt-service-media { flex: 0 0 auto; max-width: none; aspect-ratio: 16 / 10; }
+        .pt-service-body { padding-right: 3.5rem; }
+    }
+}
+
+// --- The copper band is a marquee, not a caption -----------------------------
+// Measured: 93px tall, light text, set large enough to be the page's loudest
+// horizontal rule. Ours was 40px of 13px capitals and read as fine print.
+.pt-strip {
+    padding: 0;
+    height: 5.8rem;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: $pt-on-dark;
+
+    > .container { max-width: none; width: 100%; padding: 0; overflow: hidden; }
+
+    .pt-strip-track {
+        display: flex;
+        width: max-content;
+        gap: 3rem;
+        overflow: visible;
+        animation: pt-marquee 48s linear infinite;
+    }
+
+    .pt-strip-item {
+        font-size: clamp(1.05rem, 1.9vw, 1.75rem);
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: none;
+        color: $pt-on-dark;
+        gap: 0.9rem;
+    }
+
+    .pt-strip-item i { font-size: 0.7em; color: rgba(255, 255, 255, 0.72); }
+}
+
+@keyframes pt-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pt-strip .pt-strip-track { animation: none; }
+}
+
+// --- Dark bands that carry cards ---------------------------------------------
+.pt-band-dark .testimonial-card,
+.pt-band-dark .video-testimonial-card,
+.pt-band-dark .card {
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: $pt-on-dark;
+    box-shadow: none;
+
+    h3, h4, .testimonial-author-name { color: $pt-on-dark; }
+    p, small, .text-secondary, .text-muted { color: $pt-on-dark-muted !important; }
+}
+
+// The Hajj band sits on a photograph of Mina. At 0.5 opacity the crowd showed
+// through behind the cards and the whole band turned to grey noise; the
+// reference's equivalent band is flat teal, so this is nearly opaque and the
+// photograph is left as texture only.
+.pt-hajj-band .ub-photo-bg::after {
+    background: linear-gradient(180deg, rgba($pt-teal-deep, 0.95) 0%, rgba($pt-teal-deep, 0.90) 100%) !important;
+}
+
+// `.hero-slide` sets `display: flex`, which loads after Bootstrap and so beats
+// `.carousel-item { display: none }` at equal specificity — every slide would
+// render stacked. Only bites once a Slider row exists, which is why it was
+// never seen; fixed here rather than left as a trap.
+.carousel-item.hero-slide:not(.active) { display: none; }
+
+// --- Corrections found by screenshotting the two pages side by side ----------
+
+// One definition, at the top level. It used to live inside `.pt-impact`, so the
+// identical pill in the recognition section rendered as two lines of naked text.
+.pt-stat-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0.5rem 0 2rem;
+    padding: 0.85rem 2.75rem;
+    border: 2px solid rgba($pt-copper, 0.55);
+    border-radius: $pt-radius-pill;
+    background: #fff;
+
+    .stat-number { font-size: clamp(1.9rem, 3.9vw, 3.5rem); color: $pt-teal; line-height: 1; }
+    span { font-family: $pt-display; font-size: clamp(1.25rem, 2.6vw, 2.35rem); font-weight: 400; color: $pt-teal; }
+}
+
+// The recognition pill repeats a figure the page has already shown; it reads as
+// a caption there, not as the headline moment.
+.pt-band-ivory .pt-stat-pill {
+    padding: 0.55rem 1.9rem;
+    margin-bottom: 0;
+
+    .stat-number { font-size: clamp(1.4rem, 2.2vw, 2rem); }
+    span { font-size: clamp(0.95rem, 1.3vw, 1.15rem); }
+}
+
+// A testimonial's quote is a `blockquote`, which the dark-band text rules did
+// not name — the quotes rendered dark ink on teal and were invisible.
+.pt-band-dark {
+    blockquote, .testimonial-quote { color: $pt-on-dark-muted; }
+    .testimonial-quote-mark { color: rgba(255, 255, 255, 0.12); }
+    .testimonial-author-tag { color: $pt-copper-light; }
+    .video-testimonial-card .fw-semibold { color: $pt-on-dark; }
+}
+
+// Three lines of description is all the card has room for beside a 170px
+// photograph; past that the text ran under the arrow badge.
+.pt-service-card p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
