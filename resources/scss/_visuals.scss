@@ -164,8 +164,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 // variants still reads as one family.
 
 .ub-visual--v0 {
-    --ubv-from: #16255c;
-    --ubv-to: #080f2a;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 8%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-khatim}");
     --ubv-motif-size: 80px 80px;
     --ubv-bloom-x: 80%;
@@ -173,8 +173,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 }
 
 .ub-visual--v1 {
-    --ubv-from: #14213f;
-    --ubv-to: #0b1733;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 6%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-circles}");
     --ubv-motif-size: 66px 66px;
     --ubv-motif-alpha: 0.2;
@@ -184,8 +184,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 }
 
 .ub-visual--v2 {
-    --ubv-from: #1b2a55;
-    --ubv-to: #0a1128;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 12%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-arcade}");
     --ubv-motif-size: 118px 142px;
     --ubv-motif-alpha: 0.28;
@@ -195,8 +195,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 }
 
 .ub-visual--v3 {
-    --ubv-from: #122246;
-    --ubv-to: #070d24;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 10%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-girih}");
     --ubv-motif-size: 54px 54px;
     --ubv-motif-alpha: 0.18;
@@ -205,8 +205,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 }
 
 .ub-visual--v4 {
-    --ubv-from: #172d51;
-    --ubv-to: #0a1430;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 14%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-zellige}");
     --ubv-motif-size: 72px 72px;
     --ubv-motif-alpha: 0.22;
@@ -215,8 +215,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 }
 
 .ub-visual--v5 {
-    --ubv-from: #101d43;
-    --ubv-to: #0c1531;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 7%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-chevron}");
     --ubv-motif-size: 56px 38px;
     --ubv-motif-alpha: 0.2;
@@ -226,8 +226,8 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 }
 
 .ub-visual--v6 {
-    --ubv-from: #1a2b4e;
-    --ubv-to: #080f27;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 12%)};
+    --ubv-to: #{$ub-navy-dark};
     --ubv-motif: url("#{$ub-motif-khatim}");
     --ubv-motif-size: 108px 108px;
     --ubv-motif-alpha: 0.2;
@@ -362,7 +362,7 @@ $ub-motif-grain: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' w
 .ub-visual--stage {
     position: absolute;
     inset: 0;
-    --ubv-from: #16255c;
+    --ubv-from: #{mix(#ffffff, $ub-navy, 8%)};
     --ubv-to: #060b1e;
     --ubv-motif: url("#{$ub-motif-rosette}");
     --ubv-motif-size: min(150vh, 1100px) min(150vh, 1100px);

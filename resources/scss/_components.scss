@@ -1947,7 +1947,7 @@ html, body {
     isolation: isolate;
     overflow: hidden;
     border-radius: $border-radius-lg;
-    background: linear-gradient(135deg, #16255c 0%, #0a1230 100%);
+    background: linear-gradient(135deg, mix(#ffffff, $ub-navy, 8%) 0%, $ub-navy-dark 100%);
     border: 1px solid rgba($ub-gold, 0.28);
     box-shadow: $ub-shadow-lg;
     padding: 2.5rem 2.25rem;

@@ -12,7 +12,7 @@ $cms-focus: $ub-gold;
     // ---- Panels ------------------------------------------------------------
     .admin-panel {
         border: none;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
     }
 
     .admin-panel-header {
@@ -374,7 +374,7 @@ $cms-focus: $ub-gold;
             min-height: calc(100% - 1rem);
             margin: 0 auto;
             background-color: #fff;
-            box-shadow: 0 1px 4px rgba(16, 27, 69, 0.1);
+            box-shadow: 0 1px 4px rgba($ub-navy, 0.1);
             padding: 2rem;
         }
     }
@@ -514,7 +514,7 @@ $cms-focus: $ub-gold;
         // `.card` is a flex column; tabs run along one row and scroll sideways on small screens.
         flex-direction: row;
         border: none;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
     }
 
     .pb-toolbar {
@@ -535,16 +535,16 @@ $cms-focus: $ub-gold;
     .pb-section-card {
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         border-left: 4px solid rgba($ub-navy, 0.15);
         transition: box-shadow 0.15s ease, border-color 0.15s ease;
 
         &.is-open { border-left-color: $ub-gold; }
-        &:focus-visible, &:focus-within { box-shadow: 0 0 0 2px rgba($ub-navy, 0.14), 0 4px 14px rgba(16, 27, 69, 0.08); }
+        &:focus-visible, &:focus-within { box-shadow: 0 0 0 2px rgba($ub-navy, 0.14), 0 4px 14px rgba($ub-navy, 0.08); }
 
         &.is-hidden {
             border-left-color: #cbd0d8;
-            background-image: repeating-linear-gradient(135deg, transparent 0 12px, rgba(16, 27, 69, 0.025) 12px 24px);
+            background-image: repeating-linear-gradient(135deg, transparent 0 12px, rgba($ub-navy, 0.025) 12px 24px);
 
             .pb-section-name, .pb-section-summary { color: $cms-muted; }
         }

@@ -218,7 +218,7 @@
     .card {
         border: none;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
     }
 
     .card-header {
@@ -329,7 +329,7 @@
         border-radius: $border-radius-lg;
         padding: 1.1rem 1.25rem;
         background-color: #fff;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         display: flex;
         align-items: center;
         gap: 0.9rem;

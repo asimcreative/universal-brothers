@@ -11,7 +11,7 @@
         gap: 1.25rem;
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         padding: 1.5rem;
         margin-bottom: 1.75rem;
 
@@ -68,7 +68,7 @@
         transition: border-color 0.15s, box-shadow 0.15s;
         min-width: 0;
 
-        &:hover, &:focus-visible { border-color: rgba($ub-navy, 0.45); box-shadow: 0 2px 8px rgba(16, 27, 69, 0.08); }
+        &:hover, &:focus-visible { border-color: rgba($ub-navy, 0.45); box-shadow: 0 2px 8px rgba($ub-navy, 0.08); }
 
         .guide-card-icon {
             width: 38px;
@@ -110,7 +110,7 @@
     .guide-block {
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         padding: 1.1rem 1.25rem;
         margin-bottom: 1rem;
 
@@ -199,7 +199,7 @@
     .guide-aside-card {
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         padding: 1rem;
 
         h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: $admin-muted; margin-bottom: 0.5rem; }
@@ -811,7 +811,7 @@
     .training-player-card {
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         padding: 0.75rem;
         margin-bottom: 1rem;
     }

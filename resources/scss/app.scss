@@ -26,6 +26,17 @@
 // own look.
 @import 'theme-premium';
 
+// The admin keeps the palette the client already signed off on. Sass reads
+// top to bottom, so reassigning the brand tokens here means every admin
+// partial below compiles against the original navy and gold without any of
+// those files having to change.
+$ub-navy: #101b45;
+$ub-navy-dark: #0a1230;
+$ub-gold: #c9a227;
+$ub-gold-light: #e8c766;
+$ub-gold-dark: #7a5f14;
+$ub-cream: #f7f3e8;
+
 @import 'admin';
 @import 'admin-ui';
 @import 'admin-guide';

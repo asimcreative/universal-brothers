@@ -1,441 +1,178 @@
 // =============================================================================
 // Premium theme (2026-09-17)
 //
-// The public site moves onto the design direction the client approved: deep
-// teal surfaces, a copper accent, ivory and sand section backgrounds, and a
-// condensed display face set large and uppercase. Everything here is
-// presentation only — the same Blade views, the same data, the same routes.
+// The palette and the type family now live in `_variables.scss`, so every
+// existing rule already draws teal, copper and the condensed face. What is
+// left here is only what the direction adds on top of that: the display
+// treatment, the pill button, the star eyebrow, softer card shapes, and the
+// few places that had colours written into them directly.
 //
-// Loaded last, so it overrides the earlier navy/gold component styling without
-// those files having to be rewritten while both exist.
+// Loaded after the public partials and before the admin ones, so the admin
+// keeps its own look.
 // =============================================================================
 
-// --- Palette -----------------------------------------------------------------
-$pt-teal: #0b202a;          // primary surface and text
-$pt-teal-deep: #081821;     // header, footer, the darkest band
-$pt-teal-soft: #14303d;     // panels on a dark band
-$pt-copper: #b9865a;        // accent: CTAs, eyebrows, the second half of a heading
-$pt-copper-light: #d2a077;
-$pt-copper-ink: #7e5939;    // copper as text on a light surface (~4.7:1)
-$pt-ivory: #efe9e6;         // default light section
-$pt-sand: #d9cec9;          // alternating light section
-$pt-ink: #12262f;           // body text on light
-$pt-ink-muted: #4a5c66;     // secondary text on light (~7:1 on ivory)
+$pt-teal: $ub-navy;
+$pt-teal-deep: $ub-navy-dark;
+$pt-copper: $ub-gold;
+$pt-copper-light: $ub-gold-light;
+$pt-copper-ink: $ub-gold-dark;
+$pt-ivory: $ub-cream;
+$pt-sand: #e2d9d3;          // the alternating light band, one step warmer than ivory
+$pt-ink: #12262f;
+$pt-ink-muted: #5f6b70;     // warm grey — a cold blue-grey looked dirty on ivory
 $pt-on-dark: #f2ece9;
-$pt-on-dark-muted: #c2cdd3;
-
+$pt-on-dark-muted: #c9cfd2;
 $pt-display: 'Fira Sans Condensed', 'Poppins', system-ui, sans-serif;
-$pt-radius-card: 1.5rem;
+$pt-radius-card: 1.25rem;
 $pt-radius-pill: 999px;
-$pt-shadow-card: 0 18px 40px rgba(8, 24, 33, 0.16);
-$pt-shadow-soft: 0 10px 26px rgba(8, 24, 33, 0.1);
+$pt-shadow-soft: 0 10px 26px rgba(8, 24, 33, 0.08);
+$pt-shadow-card: 0 18px 40px rgba(8, 24, 33, 0.14);
 
-// --- Base --------------------------------------------------------------------
-body {
-    background-color: $pt-ivory;
-    color: $pt-ink;
-    font-family: $pt-display;
-    font-size: 1rem;
-    line-height: 1.6;
-}
+// --- Type --------------------------------------------------------------------
+body { background-color: $pt-ivory; color: $pt-ink; line-height: 1.6; }
 
-h1, h2, h3, h4, h5, h6,
-.h1, .h2, .h3, .h4, .h5, .h6 {
-    font-family: $pt-display;
-    font-weight: 700;
-    color: $pt-teal;
-    letter-spacing: -0.01em;
-}
+h1, .h1 { font-size: clamp(2.5rem, 4.6vw, 4rem); line-height: 1.05; font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em; }
+h2, .h2 { font-size: clamp(1.9rem, 3vw, 2.9rem); line-height: 1.12; font-weight: 800; text-transform: uppercase; letter-spacing: -0.005em; }
+h3, .h3 { font-size: clamp(1.2rem, 1.6vw, 1.5rem); line-height: 1.3; font-weight: 700; }
+h4, .h4, h5, h6 { font-weight: 700; }
 
-// The display headings are the loudest part of the direction: condensed,
-// uppercase, and large enough to carry a section on their own.
-h1, .h1 { font-size: clamp(2.6rem, 5vw, 4.5rem); line-height: 1.04; text-transform: uppercase; font-weight: 800; }
-h2, .h2 { font-size: clamp(2rem, 3.6vw, 3.4rem); line-height: 1.08; text-transform: uppercase; font-weight: 800; }
-h3, .h3 { font-size: clamp(1.25rem, 1.7vw, 1.6rem); line-height: 1.25; font-weight: 700; text-transform: none; }
-h4, .h4 { font-size: 1.1rem; font-weight: 700; text-transform: none; }
-
-p { color: $pt-ink; }
+p, li { color: $pt-ink; }
 .text-secondary, .text-muted, small { color: $pt-ink-muted !important; }
-a { color: $pt-copper-ink; }
-a:hover, a:focus { color: $pt-teal; }
 
-// A heading may carry its second half in copper — the reference's signature.
-.pt-accent { color: $pt-copper-ink; }
+// Links inside body copy were taking the copper accent and speckling every
+// paragraph; only real links in prose should carry it.
+.rich-text a, .hajj-intro a, .pb-intro a, p.text-secondary a {
+    color: $pt-copper-ink;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+.rich-text a:hover, .hajj-intro a:hover { color: $pt-teal; }
+
+// --- Dark surfaces -----------------------------------------------------------
+// Body text defaults to the dark ink, which disappears on a teal band or over
+// a photograph. Everything sitting on one gets the light end of the scale.
+.bg-primary, .hero-slide, .hero-editorial, .page-hero, .global-reach,
+.package-finder-section, .final-cta, .site-footer, .ub-trust-strip, .trust-ticker {
+    color: $pt-on-dark;
+
+    p, li, .text-secondary, .text-muted, small, dd { color: $pt-on-dark-muted !important; }
+    h1, h2, h3, h4, .h1, .h2, .h3, .h4 { color: $pt-on-dark; }
+    strong, b { color: $pt-on-dark; }
+}
+
+.hero-title-accent, .global-reach-lead { color: $pt-copper-light; }
 
 // --- Eyebrow -----------------------------------------------------------------
-.section-eyebrow, .ub-eyebrow, .hero-eyebrow, .pt-eyebrow {
+.section-eyebrow, .ub-eyebrow, .hero-eyebrow, .service-panel-eyebrow, .package-card-series {
+    font-family: $pt-display;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.section-eyebrow, .ub-eyebrow, .hero-eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-family: $pt-display;
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
     color: $pt-copper-ink;
 
     &::before {
-        content: '\2726';                 // four-pointed star, the reference's marker
+        content: '\2726' !important;
+        display: inline-block !important;
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        background: none !important;
         color: $pt-copper;
         font-size: 0.85em;
-        line-height: 1;
     }
 
-    // Several sections previously drew their own rule/divider next to the
-    // eyebrow; the marker replaces it.
-    &::after { content: none !important; }
+    &::after { content: none !important; display: none !important; }
 }
 
-.hero-eyebrow, .is-on-dark .section-eyebrow, .bg-primary .section-eyebrow,
-.pt-band-dark .section-eyebrow, .pt-band-dark .ub-eyebrow {
-    color: $pt-copper-light;
-}
-
-// --- Surfaces ----------------------------------------------------------------
-.section { padding-block: clamp(3.5rem, 6vw, 6rem); }
-.section.bg-light, .bg-light { background-color: $pt-sand !important; }
-.pt-band-ivory { background-color: $pt-ivory; }
-.pt-band-sand { background-color: $pt-sand; }
-
-.section.bg-primary, .bg-primary, .pt-band-dark {
-    background-color: $pt-teal !important;
-    color: $pt-on-dark;
-
-    h1, h2, h3, h4, .h1, .h2, .h3, .h4 { color: $pt-on-dark; }
-    p, li, .text-secondary, .text-muted { color: $pt-on-dark-muted !important; }
-    .pt-accent { color: $pt-copper-light; }
-}
+.hero-eyebrow, .bg-primary .section-eyebrow, .global-reach .section-eyebrow,
+.package-finder-section .section-eyebrow, .final-cta .section-eyebrow { color: $pt-copper-light; }
 
 // --- Buttons -----------------------------------------------------------------
-// One pill shape, with the circular arrow badge the reference uses for
-// "this takes you somewhere".
 .btn, .ub-cta {
     font-family: $pt-display;
     font-weight: 600;
-    letter-spacing: 0.01em;
     border-radius: $pt-radius-pill;
-    padding: 0.7rem 1.4rem;
-    border-width: 1px;
+    padding: 0.72rem 1.45rem;
 }
 
-.btn-lg, .ub-cta-lg { padding: 0.9rem 1.7rem; font-size: 1.02rem; }
-.btn-sm, .ub-cta-sm { padding: 0.45rem 1.05rem; font-size: 0.88rem; }
+.btn-lg, .ub-cta-lg { padding: 0.9rem 1.8rem; font-size: 1rem; }
+.btn-sm, .ub-cta-sm { padding: 0.45rem 1.1rem; font-size: 0.86rem; }
 
-.btn-primary, .btn-secondary, .ub-cta-gold, .ub-cta-navy, .btn-register-now {
-    background: $pt-copper;
-    border-color: $pt-copper;
-    color: $pt-teal-deep;
+.btn-outline-light { background: rgba(255, 255, 255, 0.94); border-color: transparent; color: $pt-teal-deep; }
+.btn-outline-light:hover, .btn-outline-light:focus { background: #fff; color: $pt-teal-deep; }
 
-    &:hover, &:focus, &:active {
-        background: $pt-copper-light !important;
-        border-color: $pt-copper-light !important;
-        color: $pt-teal-deep !important;
-    }
-}
-
-.btn-outline-primary, .btn-outline-secondary, .ub-cta-outline-navy {
-    background: transparent;
-    border-color: rgba($pt-teal, 0.35);
-    color: $pt-teal;
-
-    &:hover, &:focus { background: rgba($pt-teal, 0.08); border-color: $pt-teal; color: $pt-teal; }
-}
-
-.btn-outline-light, .ub-cta-outline-light {
-    background: rgba(255, 255, 255, 0.92);
-    border-color: transparent;
-    color: $pt-teal-deep;
-
-    &:hover, &:focus { background: #fff; color: $pt-teal-deep; }
-}
-
-// The circular arrow badge. Added to any CTA marked `.pt-go`, and to the
-// site's main actions by default.
-.pt-go, .ub-cta[href], .btn-register-now {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.pt-go-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
-    color: $pt-copper-ink;
-    font-size: 0.85rem;
-    flex: 0 0 auto;
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.btn:hover .pt-go-badge, .ub-cta:hover .pt-go-badge { transform: translateX(3px); }
-
-// Focus stays visible on every one of these.
 .btn:focus-visible, .ub-cta:focus-visible, .btn-register-now:focus-visible {
     outline: 3px solid $pt-copper;
     outline-offset: 2px;
     box-shadow: none;
 }
 
-.pt-band-dark .btn:focus-visible, .site-header .btn:focus-visible { outline-color: #fff; }
+.bg-primary .btn:focus-visible, .site-header .btn:focus-visible,
+.final-cta .btn:focus-visible, .hero-slide .btn:focus-visible { outline-color: #fff; }
 
-// --- Header ------------------------------------------------------------------
-.site-header { background: $pt-teal-deep; }
-.topbar { background: $pt-teal-deep; color: $pt-on-dark-muted; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-.topbar a, .topbar-credential { color: $pt-on-dark-muted; }
-.topbar a:hover { color: $pt-copper-light; }
+// --- Surfaces and cards ------------------------------------------------------
+.section.bg-light, .bg-light { background-color: $pt-sand !important; }
 
-.navbar { background: transparent !important; }
-.navbar-nav .nav-link {
-    font-weight: 500;
-    color: $pt-on-dark !important;
-    letter-spacing: 0.01em;
-
-    &:hover, &:focus, &.active { color: $pt-copper-light !important; }
-}
-
-.dropdown-menu {
-    background: $pt-teal;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
-    box-shadow: $pt-shadow-card;
-
-    .dropdown-item {
-        color: $pt-on-dark-muted;
-        &:hover, &:focus { background: rgba(255, 255, 255, 0.06); color: $pt-copper-light; }
-    }
-}
-
-.mega-menu { background: $pt-teal; }
-.mega-menu-title, .mega-menu-links a { color: $pt-on-dark-muted; }
-.mega-menu-title { color: $pt-on-dark; }
-.mega-menu-links a:hover { color: $pt-copper-light; }
-
-// --- Cards -------------------------------------------------------------------
-.card, .package-card, .ub-feature-card, .service-panel, .icon-pillar,
-.testimonial-card, .award-badge-card, .contact-method-card {
-    background: #fff;
-    border: 1px solid rgba($pt-teal, 0.08);
+.card, .package-card, .service-panel, .icon-pillar, .testimonial-card,
+.award-badge-card, .contact-method-card, .ub-feature-card {
     border-radius: $pt-radius-card;
     box-shadow: $pt-shadow-soft;
 }
 
-.package-card {
-    overflow: hidden;
+// The "why us" tiles were tall white boxes with a small icon adrift in them.
+.icon-pillar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 1rem;
+    row-gap: 0.15rem;
+    align-items: start;
+    padding: 1.35rem 1.45rem;
+    text-align: left;
 
-    .package-card-title { font-size: 1.15rem; text-transform: none; }
-    .package-card-series { color: $pt-copper-ink; letter-spacing: 0.16em; }
-    .package-card-price { color: $pt-teal; font-family: $pt-display; }
-    .pkg-badge { border-radius: $pt-radius-pill; font-weight: 600; letter-spacing: 0.08em; }
-    .pkg-badge-featured { background: $pt-copper; color: $pt-teal-deep; }
-}
+    .icon-pillar-icon { grid-row: 1 / span 2; }
+    h3 { grid-column: 2; }
+    p { grid-column: 2; }
 
-.ub-chip, .package-card-meta span {
-    background: rgba($pt-teal, 0.06);
-    color: $pt-teal;
-    border-radius: $pt-radius-pill;
-    font-family: $pt-display;
-}
-
-.ub-chip-gold { background: rgba($pt-copper, 0.2); color: $pt-copper-ink; }
-
-// --- Trust strip and stats ---------------------------------------------------
-.ub-trust-strip, .trust-ticker { background: $pt-teal-deep; }
-.ub-trust-strip .ub-trust-value, .stat-number { font-family: $pt-display; color: $pt-on-dark; }
-.ub-trust-strip i, .trust-ticker i { color: $pt-copper-light; }
-
-// A statistic on a light surface reads as the reference's outlined pill.
-.stat-tile {
-    border: 1px solid rgba($pt-copper, 0.5);
-    border-radius: $pt-radius-pill;
-    padding: 0.85rem 1.75rem;
-    background: rgba(255, 255, 255, 0.7);
-
-    .stat-number { color: $pt-teal; }
-}
-
-// --- Forms -------------------------------------------------------------------
-.form-control, .form-select {
-    border-radius: 0.75rem;
-    border-color: rgba($pt-teal, 0.18);
-    font-family: $pt-display;
-
-    &:focus { border-color: $pt-copper; box-shadow: 0 0 0 0.2rem rgba($pt-copper, 0.25); }
-}
-
-.form-label { font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.74rem; color: $pt-ink-muted; }
-
-// The package finder sits on the dark band, like the reference's search bar.
-.package-finder {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: $pt-radius-card;
-
-    .package-finder-title { color: $pt-on-dark; }
-    .package-finder-copy { color: $pt-on-dark-muted; }
-    label, .form-label { color: $pt-on-dark-muted; }
-
-    .form-control, .form-select {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(255, 255, 255, 0.16);
-        color: $pt-on-dark;
-
-        option { color: $pt-ink; }
-    }
-}
-
-// --- Footer ------------------------------------------------------------------
-.site-footer, footer.site-footer { background: $pt-teal-deep; color: $pt-on-dark-muted; }
-.site-footer h2, .site-footer h3, .site-footer h4 { color: $pt-on-dark; }
-.site-footer a { color: $pt-on-dark-muted; &:hover { color: $pt-copper-light; } }
-
-// --- Series pills, tabs, pagination ------------------------------------------
-.series-pill {
-    border-radius: $pt-radius-pill;
-    background: rgba($pt-teal, 0.06);
-    color: $pt-teal;
-
-    &.is-active { background: $pt-teal; color: $pt-on-dark; }
-}
-
-.page-link { color: $pt-teal; }
-.page-item.active .page-link { background: $pt-copper; border-color: $pt-copper; color: $pt-teal-deep; }
-
-// --- Hero --------------------------------------------------------------------
-.hero-slide, .page-hero {
-    .hero-title, h1 { text-transform: uppercase; letter-spacing: -0.015em; }
-    .hero-title-accent { color: $pt-copper-light; font-style: normal; }
-    .hero-lead { color: $pt-on-dark; font-weight: 500; text-transform: none; }
-    .hero-copy { color: $pt-on-dark-muted; }
-}
-
-// --- Section heading component ----------------------------------------------
-.ub-section-header {
-    .ub-section-title { color: $pt-teal; }
-    .ub-section-lead { color: $pt-ink-muted; }
-
-    &.is-on-dark {
-        .ub-section-title { color: $pt-on-dark; }
-        .ub-section-lead { color: $pt-on-dark-muted; }
-    }
-}
-
-// --- Dark contexts: text must stay light -------------------------------------
-// The display rules above colour every heading teal, which is right on ivory
-// and invisible on a photograph. Anything sitting on the hero, a dark band or
-// a scrim gets the light end of the scale back.
-.hero-slide, .hero-editorial, .page-hero, .global-reach, .package-finder-section,
-.final-cta, .pt-band-dark, .bg-primary, .site-footer {
-    h1, h2, h3, h4, .h1, .h2, .h3, .h4,
-    .hero-title, .page-hero-title, .global-reach-title, .package-finder-title {
-        color: $pt-on-dark;
-    }
-
-    .hero-title-accent, .pt-accent, .global-reach-lead { color: $pt-copper-light; }
-    p, li { color: $pt-on-dark-muted; }
-    .hero-lead { color: $pt-on-dark; }
-}
-
-// The brand mark follows the same condensed treatment as the reference:
-// the first word light, the second in copper.
-.site-brand, .navbar-brand {
-    .brand-name, .site-brand-name {
-        font-family: $pt-display;
-        font-weight: 800;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        color: $pt-on-dark;
-    }
-
-    .brand-tagline, .site-brand-tagline {
-        font-family: $pt-display;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-        color: $pt-copper-light;
-        font-size: 0.62rem;
-    }
-}
-
-// Photo cards in the services row carry the reference's circular arrow in the
-// bottom corner rather than a text link under the card.
-.pt-photo-card {
-    position: relative;
-    display: block;
-    overflow: hidden;
-    border-radius: $pt-radius-card;
-    box-shadow: $pt-shadow-card;
-    aspect-ratio: 3 / 4;
-
-    img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
-
-    .pt-photo-card-label {
-        position: absolute;
-        top: 1.25rem;
-        left: 1.35rem;
-        color: #fff;
-        font-weight: 700;
-        font-size: 1.1rem;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    }
-
-    .pt-photo-card-go {
-        position: absolute;
-        right: 1.1rem;
-        bottom: 1.1rem;
-        width: 3.25rem;
-        height: 3.25rem;
-        border-radius: 50%;
-        background: $pt-copper;
-        color: $pt-teal-deep;
+    .icon-pillar-icon {
+        flex: 0 0 auto;
+        width: 2.75rem;
+        height: 2.75rem;
+        margin: 0;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.15rem;
-        box-shadow: $pt-shadow-soft;
-        transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.25s;
+        border-radius: 50%;
+        background: rgba($pt-copper, 0.14);
+        border: 1px solid rgba($pt-copper, 0.35);
     }
 
-    &:hover .pt-photo-card-go, &:focus-visible .pt-photo-card-go { background: $pt-copper-light; transform: translate(2px, -2px); }
-    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 3px; }
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-    .pt-photo-card:hover img { transform: scale(1.04); }
+    h3 { margin-bottom: 0.2rem; font-size: 1.02rem; }
+    p { font-size: 0.92rem; }
 }
 
 // --- Service panels ----------------------------------------------------------
-// The reference presents a service as a tall photograph with its name over the
-// image and a copper arrow in the corner. Ours keeps the sentence underneath,
-// because our three services genuinely differ and the line earns its place.
 .service-panel {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-    border-radius: $pt-radius-card;
-    background: #fff;
-    box-shadow: $pt-shadow-card;
     position: relative;
+    overflow: hidden;
 
-    .photo-media { aspect-ratio: 4 / 3; }
+    .service-panel-title { text-transform: uppercase; font-size: clamp(1.4rem, 1.9vw, 1.9rem); }
 
-    .service-panel-body { padding: 1.5rem 1.5rem 1.75rem; }
-    .service-panel-eyebrow { color: $pt-copper-ink; letter-spacing: 0.18em; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
-    .service-panel-title { font-size: clamp(1.5rem, 2vw, 2rem); text-transform: uppercase; letter-spacing: -0.01em; margin-top: 0.35rem; }
-    .service-panel-copy { color: $pt-ink-muted; }
-
-    // The arrow becomes the reference's circular badge, sitting on the corner
-    // of the photograph.
     .service-panel-cta {
         position: absolute;
-        top: calc(4 / 3 * 100% / 3);
+        top: 50%;
         right: 1.1rem;
-        transform: translateY(-50%);
-        width: 3.1rem;
-        height: 3.1rem;
+        transform: translateY(-140%);
+        width: 3rem;
+        height: 3rem;
         padding: 0;
         border-radius: 50%;
         background: $pt-copper;
@@ -443,182 +180,65 @@ a:hover, a:focus { color: $pt-teal; }
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 0;
         box-shadow: $pt-shadow-soft;
-        transition: background-color 0.25s, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+        font-size: 0;
 
-        i { font-size: 1.15rem; margin: 0; }
+        i { font-size: 1.1rem; margin: 0; }
     }
 
-    &:hover .service-panel-cta, &:focus-visible .service-panel-cta {
-        background: $pt-copper-light;
-        transform: translateY(-50%) translateX(3px);
-    }
-
-    &:focus-visible { outline: 3px solid $pt-copper; outline-offset: 3px; }
+    &:hover .service-panel-cta { background: $pt-copper-light; }
 }
 
-// --- Small corrections to earlier partials -----------------------------------
-// Gold survived in a few icon rules that are more specific than the theme's.
-.ub-trust-strip .ub-trust-item i,
-.trust-ticker span i,
-.icon-pillar .icon-pillar-icon i,
-.reach-pillar i,
-.hero-credentials-foot i { color: $pt-copper-light !important; }
-
-.icon-pillar .icon-pillar-icon {
-    background: rgba($pt-copper, 0.14);
-    border-color: rgba($pt-copper, 0.4);
-}
-
-.icon-pillar i, .stat-photo-caption .photo-caption-eyebrow { color: $pt-copper-ink; }
-
-// The eyebrow's old rule/divider is replaced by the star marker.
-.section-eyebrow::after, .hero-eyebrow::after { display: none !important; }
-.section-eyebrow::before { content: '\2726' !important; width: auto !important; height: auto !important; background: none !important; margin: 0 !important; }
-
-// --- Generated visuals, stat panels and card overlays ------------------------
-// The motif backgrounds, statistic panels and the caption band on a package
-// card were all built from the navy/gold pair. They follow the theme now.
-.ub-visual {
-    background-color: $pt-teal-deep;
-    --ubv-from: #{$pt-teal};
-    --ubv-to: #{$pt-teal-deep};
-    --ubv-accent: #{$pt-copper};
-}
-
-.stat-panel {
-    background: $pt-teal;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: $pt-radius-card;
-
-    .stat-panel-body, .stat-panel-label, .stat-panel-note { color: $pt-on-dark-muted; }
-    .stat-number, .stat-panel-figure { color: $pt-copper-light; font-family: $pt-display; }
-    .stat-panel-label { letter-spacing: 0.18em; text-transform: uppercase; font-size: 0.74rem; }
-}
-
-.package-card {
-    .package-card-img-wrap { border-radius: 0; }
-
-    .package-card-figure, .package-card-days, .package-card-caption-figure {
-        font-family: $pt-display;
-        color: $pt-on-dark;
-        font-weight: 700;
-    }
-
-    .package-card-caption, .package-card-overlay, .package-card-caption-label {
-        font-family: $pt-display;
-        color: $pt-copper-light;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-    }
-}
-
-// Award plates and affiliation tiles kept a gold edge.
-.award-badge-card, .affiliation-card, .affiliation-card-mark {
-    border-color: rgba($pt-copper, 0.28);
-}
-
-.award-badge-card i, .award-citation-title, .affiliation-card h2, .affiliation-card h3 { color: $pt-teal; }
-
-// Anything still drawing the old brand gold as a decorative rule.
-.section-heading-block hr, .hero-divider, .ub-divider { background: $pt-copper !important; border-color: $pt-copper !important; }
-
-// Photo captions (package cards, statistic photographs) still used the gold
-// eyebrow and the serif figure.
-.photo-caption {
-    .photo-caption-eyebrow { color: $pt-copper-light; font-family: $pt-display; letter-spacing: 0.18em; }
-    .photo-caption-title, .photo-caption-figure, .stat-photo-figure {
-        font-family: $pt-display;
-        font-weight: 700;
-        color: $pt-on-dark;
-        text-transform: none;
-    }
-    .photo-caption-meta { color: $pt-on-dark-muted; font-family: $pt-display; }
-}
-
-.pkg-badge-code { background: rgba(8, 24, 33, 0.78); color: $pt-on-dark; font-family: $pt-display; letter-spacing: 0.08em; }
-
-// The hero eyebrow drew its own rules either side of the label; the star
-// marker replaces them at every width.
-.hero-eyebrow {
-    &::after { content: none !important; display: none !important; }
-
-    &::before {
-        content: '\2726' !important;
-        display: inline-block !important;
-        width: auto !important;
-        height: auto !important;
-        background: none !important;
-        margin: 0 !important;
-        color: $pt-copper-light;
-    }
-}
-
-@media (max-width: 991.98px) {
-    .hero-eyebrow::before { display: inline-block !important; }
-}
-
-// --- Hajj detail page --------------------------------------------------------
-.package-hero-price {
-    font-family: $pt-display;
-    color: $pt-on-dark;
-
-    small, .package-hero-price-label { color: $pt-on-dark-muted; letter-spacing: 0.16em; }
-}
-
-.hajj-chip {
+// --- Chips, badges, pills ----------------------------------------------------
+.ub-chip, .package-card-meta span, .pkg-badge, .hajj-chip, .series-pill {
     font-family: $pt-display;
     border-radius: $pt-radius-pill;
-    letter-spacing: 0.08em;
-
-    &.is-code, &.hajj-chip-code { background: $pt-copper; color: $pt-teal-deep; border-color: $pt-copper; }
+    letter-spacing: 0.06em;
 }
 
-.hajj-jump-nav a { font-family: $pt-display; color: $pt-ink; &:hover, &.is-active { color: $pt-copper-ink; } }
-.hajj-summary-bar .hajj-summary-label { letter-spacing: 0.14em; color: $pt-ink-muted; }
-.hajj-summary-bar .hajj-summary-value, .hajj-summary-bar i { color: $pt-teal; }
-.hajj-summary-bar i { color: $pt-copper-ink; }
-.hajj-section-title, .hajj-aside-title { color: $pt-teal; }
-.hajj-price-table thead th { background: $pt-sand; color: $pt-teal; }
+.pkg-badge-featured { background: $pt-copper; color: $pt-teal-deep; }
+.pkg-badge-code { background: rgba(8, 24, 33, 0.8); color: $pt-on-dark; }
 
-// --- Remaining brand-colour holdouts -----------------------------------------
-// Icons, ratings, name labels and the brand mark were each coloured directly in
-// their own rules, so they survived the theme. Swept here rather than editing
-// six partials that still have to work if the theme is ever removed.
-i.bi, .bi { color: inherit; }
-
-.section i.bi, .card i.bi, .icon-pillar i.bi, .reach-pillar i.bi,
-.contact-method-card i.bi, .award-badge-card i.bi, .hajj-summary-bar i.bi { color: $pt-copper-ink; }
-
-.pt-band-dark i.bi, .bg-primary i.bi, .site-footer i.bi, .topbar i.bi,
-.hero-slide i.bi, .page-hero i.bi, .ub-trust-strip i.bi { color: $pt-copper-light; }
-
-.testimonial-rating, .star-rating, .rating-stars { color: $pt-copper !important; }
-
-.affiliation-name, .award-photo-card-name, .testimonial-author-name,
-.award-citation-title, dl dd, .stat-tile .small { color: $pt-teal !important; }
-
-// The monogram is drawn with `stroke="currentColor"` and no fill, so it only
-// needs the colour — forcing a fill turned it into a solid blob.
-.site-brand-mark { color: $pt-copper !important; }
-.site-brand-initials { color: $pt-on-dark; font-family: $pt-display; font-weight: 700; }
-
-.photo-media, .photo-figure { background-color: rgba($pt-teal, 0.06); }
-
-// The assistant launcher and its suggestion chips follow the theme too.
-.ai-chip { background: rgba($pt-teal, 0.06) !important; color: $pt-teal !important; border-color: rgba($pt-teal, 0.14) !important; }
-.ai-launcher, .ai-fab { background: $pt-teal !important; color: $pt-on-dark !important; }
-.ai-launcher i, .ai-fab i { color: $pt-copper-light !important; }
-
-// Small round marks that carried the old navy: avatars, plates, the skip link
-// and the photographic scrim.
-.affiliation-plate, .testimonial-avatar, .ai-avatar, .award-plate {
-    background: $pt-teal !important;
-    color: $pt-on-dark !important;
+// --- Statistics --------------------------------------------------------------
+.stat-number, .stat-photo-figure, .hero-credential-figure, .package-hero-price {
+    font-family: $pt-display;
+    font-weight: 800;
 }
 
-.accordion-button, .accordion-button:not(.collapsed) { color: $pt-teal; }
-.faq-accordion .accordion-button:not(.collapsed) { background: rgba($pt-copper, 0.1); }
-.skip-link { background: $pt-teal-deep; color: $pt-on-dark; }
-.skip-link:focus-visible { outline-color: $pt-copper; }
+.stat-tile {
+    border: 1px solid rgba($pt-copper, 0.45);
+    border-radius: $pt-radius-pill;
+    padding: 0.8rem 1.8rem;
+    background: rgba(255, 255, 255, 0.65);
+}
+
+// --- Footer ------------------------------------------------------------------
+.site-footer {
+    border-top: 3px solid $pt-copper;
+
+    .footer-brand-name, .footer-brand-tagline { font-family: $pt-display; }
+    .footer-brand-name { text-transform: uppercase; letter-spacing: 0.03em; font-weight: 800; }
+    .footer-brand-tagline { font-style: normal; letter-spacing: 0.04em; }
+    h2, h3, h4 { letter-spacing: 0.16em; }
+}
+
+// --- Brand mark --------------------------------------------------------------
+.site-brand-name, .brand-name { text-transform: uppercase; font-weight: 800; letter-spacing: 0.02em; }
+.site-brand-tagline, .brand-tagline { letter-spacing: 0.22em; font-size: 0.62rem; }
+.site-brand-mark { color: $pt-copper; }
+
+// --- Award and affiliation plates --------------------------------------------
+.award-citation-title, .award-photo-card-name, .affiliation-name, .testimonial-author-name {
+    font-family: $pt-display;
+    font-weight: 700;
+}
+
+// --- Long headings -----------------------------------------------------------
+// Several of our section headings are full sentences, which in an uppercase
+// display face fill three lines and shout. They keep the face and the size,
+// but not the capitals.
+.final-cta h2, .global-reach-title, .package-finder-title,
+.section-heading-block h2, .ub-section-title {
+    text-transform: none;
+    letter-spacing: -0.01em;
+}

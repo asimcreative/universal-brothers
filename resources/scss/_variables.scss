@@ -2,20 +2,27 @@
 // Colors are taken from the actual Hajj 2027 brochure branding (deep navy +
 // gold "Crown Packages" seal), not invented — see UI_DESIGN_SYSTEM.md.
 
-$ub-navy: #101b45;
-$ub-navy-dark: #0a1230;
-$ub-gold: #c9a227;
-$ub-gold-light: #e8c766;
-$ub-gold-dark: #7a5f14; // ~6:1 contrast on white — for gold text/links on light backgrounds ($ub-gold itself is only ~2.4:1, safe on dark backgrounds only)
-$ub-cream: #f7f3e8;
+// 2026-09-17: the brand tokens move to the approved premium direction — deep
+// teal surfaces with a copper accent, on ivory and sand. The names are kept so
+// every existing rule inherits the new palette instead of being rewritten or
+// fought with overrides; only the values changed.
+$ub-navy: #0b202a;       // deep teal — primary surface and text
+$ub-navy-dark: #081821;  // the darkest band: header, footer, hero scrim
+$ub-gold: #b9865a;       // copper accent
+$ub-gold-light: #d2a077;
+$ub-gold-dark: #7e5939;  // copper as text on a light surface (~4.8:1)
+$ub-cream: #efe9e6;      // ivory section background
 
 $primary: $ub-navy;
 $secondary: $ub-gold;
 $dark: $ub-navy-dark;
 $light: $ub-cream;
 
-$font-family-sans-serif: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-$headings-font-family: 'Playfair Display', Georgia, serif;
+// One condensed family for headings and interface text, as the approved
+// direction uses. Poppins stays as the fallback until the old faces are
+// removed from the bundle.
+$font-family-sans-serif: 'Fira Sans Condensed', 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+$headings-font-family: 'Fira Sans Condensed', 'Poppins', system-ui, sans-serif;
 $headings-font-weight: 700;
 
 $border-radius: 0.5rem;

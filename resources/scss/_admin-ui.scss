@@ -80,7 +80,7 @@ $option-colors: (
         border: none;
         border-left: 4px solid currentColor;
         border-radius: $border-radius;
-        box-shadow: 0 1px 2px rgba(16, 27, 69, 0.06);
+        box-shadow: 0 1px 2px rgba($ub-navy, 0.06);
 
         > .bi {
             font-size: 1.15rem;
@@ -247,7 +247,7 @@ $option-colors: (
         transition: box-shadow 0.15s ease, transform 0.15s ease;
 
         &:hover, &:focus-visible {
-            box-shadow: 0 4px 14px rgba(16, 27, 69, 0.12);
+            box-shadow: 0 4px 14px rgba($ub-navy, 0.12);
             transform: translateY(-1px);
         }
     }
@@ -455,7 +455,7 @@ $option-colors: (
         top: 5.25rem;
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         padding: 0.75rem;
         max-height: calc(100vh - 11rem);
         overflow-y: auto;
@@ -600,7 +600,7 @@ $option-colors: (
     .builder-card {
         background-color: #fff;
         border-radius: $border-radius-lg;
-        box-shadow: 0 1px 3px rgba(16, 27, 69, 0.08);
+        box-shadow: 0 1px 3px rgba($ub-navy, 0.08);
         margin-bottom: 1.25rem;
 
         > header {
