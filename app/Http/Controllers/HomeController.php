@@ -14,6 +14,20 @@ use Illuminate\View\View;
 
 class HomeController extends Controller
 {
+    /**
+     * The same homepage data, rendered on the designer's template.
+     *
+     * Temporary, and deliberately a second action rather than a flag on
+     * `index()`: the live homepage must keep rendering exactly as it does while
+     * the port is in progress, and the two need to be openable side by side.
+     */
+    public function templatePreview(): View
+    {
+        $view = $this->index();
+
+        return view('template.home', $view->getData());
+    }
+
     public function index(): View
     {
         $hajjCategory = PackageCategory::where('slug', 'hajj')->where('is_active', true)->first();

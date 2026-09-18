@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
 
         // 'contact' added for the frontend visual redesign's quick-action
         // Call/WhatsApp/Email cards — reuses the same singleton, no extra query.
-        View::composer(['layouts.partials.*', 'layouts.app', 'contact'], function ($view) {
+        View::composer(['layouts.partials.*', 'layouts.app', 'layouts.template', 'template.*', 'contact'], function ($view) {
             $view->with('navCategories', app('nav-categories'));
             $view->with('primaryOffice', app('primary-office'));
             $view->with('ubAnnouncements', app('header-announcements'));

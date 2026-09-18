@@ -49,6 +49,93 @@ function prefersReducedMotion() {
 // Tagging happens here rather than in forty places in the templates so that
 // inner pages and anything an admin builds in the page builder get the same
 // staging without a single markup change.
+// The designer's template drives its header, drawer and hero carousel with
+// React. These are the same three behaviours, written against the markup the
+// Blade partials emit, so nothing on the page needs a framework.
+function initTemplateHeader() {
+    const header = document.querySelector('.ub-site-header');
+    const hero = document.querySelector('[data-ub-hero]');
+
+    // Pin the bar once the hero has scrolled by. A sentinel at the foot of the
+    // hero costs nothing per frame; reading getBoundingClientRect() on every
+    // scroll event would run layout each time.
+    if (header && hero && 'IntersectionObserver' in window) {
+        const sentinel = document.createElement('div');
+        sentinel.style.cssText = 'position:absolute;bottom:0;left:0;width:1px;height:1px;pointer-events:none';
+        sentinel.setAttribute('aria-hidden', 'true');
+        hero.appendChild(sentinel);
+        new IntersectionObserver(
+            ([entry]) => header.classList.toggle('is-stuck', !entry.isIntersecting && entry.boundingClientRect.top < 0),
+            { threshold: 0 }
+        ).observe(sentinel);
+    }
+
+    // Drawer.
+    const drawer = document.getElementById('ub-mobile-nav');
+    if (drawer) {
+        const opener = document.querySelector('[data-ub-menu-open]');
+        let lastFocused = null;
+
+        const setOpen = (open) => {
+            drawer.hidden = !open;
+            document.body.style.overflow = open ? 'hidden' : '';
+            if (opener) opener.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) {
+                lastFocused = document.activeElement;
+                drawer.querySelector('a, button')?.focus();
+            } else if (lastFocused) {
+                lastFocused.focus();
+            }
+        };
+
+        opener?.addEventListener('click', () => setOpen(true));
+        drawer.querySelectorAll('[data-ub-menu-close]').forEach((el) => el.addEventListener('click', () => setOpen(false)));
+        // Following a link should close it too, or the drawer stays over the
+        // page it just navigated to when the target is an in-page anchor.
+        drawer.querySelectorAll('nav a').forEach((el) => el.addEventListener('click', () => setOpen(false)));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !drawer.hidden) setOpen(false);
+        });
+    }
+
+    // Hero carousel. Only ever runs when the CMS holds more than one slide —
+    // with a single slide there are no dots and nothing to advance.
+    const slides = hero ? Array.from(hero.querySelectorAll('[data-ub-slide]')) : [];
+    const dots = hero ? Array.from(hero.querySelectorAll('[data-ub-dot]')) : [];
+    if (slides.length > 1) {
+        let current = 0;
+        let timer = null;
+
+        const show = (next) => {
+            slides.forEach((el, i) => {
+                el.style.opacity = i === next ? '1' : '0';
+                el.setAttribute('aria-hidden', i === next ? 'false' : 'true');
+            });
+            dots.forEach((dot, i) => {
+                dot.setAttribute('aria-selected', i === next ? 'true' : 'false');
+                const bar = dot.firstElementChild;
+                if (bar) bar.className = 'block h-2.5 rounded-full transition-all duration-300 '
+                    + (i === next ? 'w-7 bg-accent-500' : 'w-2.5 bg-ivory/45 group-hover:bg-ivory/70');
+            });
+            current = next;
+        };
+
+        const start = () => {
+            if (prefersReducedMotion()) return;
+            stop();
+            timer = window.setInterval(() => show((current + 1) % slides.length), 6000);
+        };
+        const stop = () => { if (timer) window.clearInterval(timer); timer = null; };
+
+        dots.forEach((dot, i) => dot.addEventListener('click', () => { show(i); start(); }));
+        hero.addEventListener('mouseenter', stop);
+        hero.addEventListener('mouseleave', start);
+        // Advancing a carousel behind a hidden tab burns battery for nobody.
+        document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+        start();
+    }
+}
+
 function initAutoReveal() {
     // Reduced motion: leave every element untouched and visible. Nothing below
     // may add a class that starts something at opacity 0.
@@ -432,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initOverlayHeader, initAutoReveal, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
+    [initHeaderOffset, initOverlayHeader, initTemplateHeader, initAutoReveal, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {
