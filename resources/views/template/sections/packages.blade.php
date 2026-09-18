@@ -48,9 +48,7 @@
 <section id="featured-packages" class="bg-sand-100 py-16 sm:py-20 lg:py-24"><div class="mx-auto w-full max-w-[var(--container-site)] px-5 sm:px-8 lg:px-10"><header class="mx-auto max-w-2xl text-center"><div class="reveal-on-scroll"><p class="mb-4 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-accent-800"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkle fill-accent-800 text-accent-800" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>Our Packages</p></div><div class="reveal-on-scroll reveal-delay-1"><h2 class="font-display text-3xl font-bold uppercase leading-tight sm:text-4xl lg:text-5xl"><span class="text-inverse">One Company,</span> <span class="text-accent-700">Every Journey</span></h2></div><div class="reveal-on-scroll reveal-delay-2"><p class="mt-4 text-sm leading-relaxed text-ink-600 sm:text-base">Hajj, Umrah and tours — the same team, the same standard.@if($ubPackageTabs->count() > 1) Pick a tab to see what is running now.@endif</p></div>
 
 @if($ubShowHajjCount)
-{{-- A div, not a p: `x-stat-number` renders a div, and the parser closes a p
      before one — which would drop the counter out of the line it belongs to. --}}
-<div class="reveal-on-scroll reveal-delay-3 mt-6 flex items-center justify-center gap-2.5"><x-stat-number :display="(string) $ubHajjCount" :target="$ubHajjCount" class="font-display text-3xl font-extrabold leading-none text-accent-700" /><span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-500">Hajj packages published</span></div>
 @endif
 
 </header>

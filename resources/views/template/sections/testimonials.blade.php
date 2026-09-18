@@ -20,7 +20,7 @@
 
 @php
     // Video first, then text — the same order the homepage has always used.
-    $ubTestimonials = $videoTestimonials->concat($textTestimonials)->take(6);
+    $ubTestimonials = $videoTestimonials->concat($textTestimonials)->take(3);
 @endphp
 
 @if($ubTestimonials->isNotEmpty())

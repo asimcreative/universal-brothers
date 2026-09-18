@@ -22,6 +22,7 @@
     @includeIf('template.sections.marquee')
     @includeIf('template.sections.about')
     @includeIf('template.sections.packages')
+    @includeIf('template.sections.company-video')
     @includeIf('template.sections.impact')
     @includeIf('template.sections.why-us')
     @includeIf('template.sections.testimonials')
