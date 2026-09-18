@@ -37,6 +37,66 @@ function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
+// Staging.
+//
+// Measured against the reference: it starts 86 below-the-fold elements at
+// opacity 0 with a 28px downward offset and lifts each one in as it arrives —
+// the eyebrow, then the heading, then the sentence under it, then every card
+// in the row one after another. We were doing that for 30 elements, almost all
+// of them whole columns, so our page arrived all at once and sat still. That
+// difference is most of what "the page feels alive" actually is.
+//
+// Tagging happens here rather than in forty places in the templates so that
+// inner pages and anything an admin builds in the page builder get the same
+// staging without a single markup change.
+function initAutoReveal() {
+    // Reduced motion: leave every element untouched and visible. Nothing below
+    // may add a class that starts something at opacity 0.
+    if (prefersReducedMotion()) return;
+
+    const main = document.getElementById('main-content');
+    if (!main) return;
+
+    // The hero animates itself on load; a marquee, a ticker, a modal or the
+    // assistant must never start invisible.
+    const FORBIDDEN = '.hero-slide, .news-ticker, .pt-strip, .topbar-ticker, .modal, .offcanvas, .ai-assistant, .carousel';
+
+    const tag = (el, index) => {
+        if (!el || el.classList.contains('reveal-on-scroll') || el.classList.contains('reveal-scale')) return;
+        if (el.closest(FORBIDDEN)) return;
+        // Don't wrap a reveal around something that already reveals itself —
+        // the two would compound into a double fade.
+        if (el.querySelector('.reveal-on-scroll, .reveal-scale')) return;
+        el.classList.add('reveal-on-scroll');
+        const step = Math.min(index, 6);
+        if (step > 0) el.classList.add(`reveal-delay-${step}`);
+    };
+
+    main.querySelectorAll('section, .section').forEach((section) => {
+        if (section.closest(FORBIDDEN)) return;
+
+        // 1. The furniture of the section, in the order it is read. A heading
+        //    inside a column counts: the reference stages the eyebrow, the
+        //    heading and the sentence separately even in its off-centre bands,
+        //    and tagging them individually is what makes the column itself get
+        //    skipped below — which is the behaviour we want, not a fallback.
+        let i = 0;
+        section.querySelectorAll(
+            '.section-eyebrow, h2, .pt-lead, .pt-rule, .pt-pane-note, .pt-stat-pill, '
+            + '.pt-tabs, .pt-finder-bar, .pt-services-note, .pt-affiliations, .pt-collage, '
+            + '.text-center.mt-5, .text-center.mt-4, .text-center.mt-2'
+        ).forEach((el) => {
+            if (el.closest('.card')) return;
+            tag(el, i++);
+        });
+
+        // 2. Every column of every row, staggered across the row.
+        section.querySelectorAll('.row').forEach((row) => {
+            Array.from(row.children).forEach((col, index) => tag(col, index));
+        });
+    });
+}
+
 function initScrollReveal() {
     const targets = document.querySelectorAll('.reveal-on-scroll');
     if (!targets.length) return;
@@ -54,7 +114,16 @@ function initScrollReveal() {
     // meaningfully on screen, independent of how tall it is.
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
-            if (entry.isIntersecting) {
+            // `isIntersecting` alone is not enough. The browser coalesces
+            // intersection records and delivers them at the end of a frame, so
+            // during a fast flick — or an anchor jump, or a restored scroll
+            // position — an element can enter and leave between two deliveries
+            // and be reported only as "not intersecting". It would then stay at
+            // opacity 0 with the reader already past it. Measured on the
+            // homepage: scrolling to the bottom and back left 61 of 74 staged
+            // elements invisible. Anything whose top edge is above the viewport
+            // has been passed, so it is shown regardless.
+            if (entry.isIntersecting || entry.boundingClientRect.top < 0) {
                 entry.target.classList.add('is-visible');
                 observer.unobserve(entry.target);
             }
@@ -72,6 +141,26 @@ function initScrollReveal() {
             if (rect.top < window.innerHeight) el.classList.add('is-visible');
         });
     }, 2500);
+
+    // Second net, for the coalescing case above: whenever scrolling settles,
+    // reveal anything the reader has already passed. Cheap — it runs once per
+    // idle moment, not per scroll event, and stops once nothing is left.
+    let settle;
+    const sweep = () => {
+        const remaining = document.querySelectorAll('.reveal-on-scroll:not(.is-visible)');
+        if (!remaining.length) {
+            window.removeEventListener('scroll', onScroll);
+            return;
+        }
+        remaining.forEach((el) => {
+            if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('is-visible');
+        });
+    };
+    const onScroll = () => {
+        window.clearTimeout(settle);
+        settle = window.setTimeout(sweep, 150);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
 }
 
 // The counters are server-rendered with their real, approved value already in
@@ -343,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initOverlayHeader, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
+    [initHeaderOffset, initOverlayHeader, initAutoReveal, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {
