@@ -54,6 +54,23 @@
     @php $ubTemplateCss = public_path('template/css/template.css'); @endphp
     <link rel="stylesheet" href="{{ asset('template/css/template.css') }}?v={{ is_file($ubTemplateCss) ? filemtime($ubTemplateCss) : '1' }}">
 
+    {{-- The template's stylesheet is the designer's compiled Tailwind build, so
+         it contains ONLY the utilities the designer's own markup used. Anything
+         we need that they did not use is simply absent and silently does
+         nothing — which is how a `xl:hidden` on the menu button left the
+         hamburger showing on a 1440px desktop. Rather than invent utilities
+         that look like theirs but are ours, the few rules we need carry their
+         own `ub-` names. --}}
+    <style>
+        /* Ten items need more room than the template's five. Below 1280 the
+           bar collapses to the drawer; above it the drawer button goes. */
+        .ub-primary-nav { display: none; }
+        @media (min-width: 1280px) {
+            .ub-primary-nav { display: block; }
+            .ub-menu-toggle { display: none; }
+        }
+    </style>
+
     {{-- The template animates with Framer Motion, which we do not ship. These
          are the same reveal hooks the rest of the site uses, declared here
          because they live in `app.scss`, which this layout does not load.

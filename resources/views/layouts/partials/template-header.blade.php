@@ -112,19 +112,19 @@
          past, pins itself as a solid bar (see `initTemplateHeader` in app.js). --}}
     <header class="ub-site-header z-50 transition-[colors,transform] duration-300 relative bg-transparent translate-y-0">
         <div class="mx-auto w-full max-w-[var(--container-site)] px-5 sm:px-8 lg:px-10 flex h-20 items-center justify-between gap-6 lg:h-24">
-            <a class="flex items-center gap-3" aria-label="Universal Brothers" href="{{ route('home') }}">
+            <a class="flex shrink-0 items-center gap-3" aria-label="Universal Brothers" href="{{ route('home') }}">
                 <svg viewBox="0 0 44 48" class="h-10 w-auto shrink-0" aria-hidden="true"><path d="M22 1.5 41.5 12.75v22.5L22 46.5 2.5 35.25v-22.5L22 1.5Z" class="fill-none stroke-sand-300" stroke-width="2"></path><text x="22" y="30" text-anchor="middle" class="font-display font-bold fill-ivory" style="font-size:17px;letter-spacing:-0.02em">UB</text></svg>
                 <span class="flex flex-col leading-none">
-                    <span class="font-display text-[19px] font-bold uppercase tracking-[0.06em] text-ivory">Universal <span class="text-accent-500">Brothers</span></span>
-                    <span class="mt-1 text-[10px] uppercase tracking-[0.22em] text-sand-300/80">Hajj &middot; Umrah &middot; Tourism</span>
+                    <span class="font-display text-[19px] font-bold whitespace-nowrap uppercase tracking-[0.06em] text-ivory">Universal <span class="text-accent-500">Brothers</span></span>
+                    <span class="mt-1 whitespace-nowrap text-[10px] uppercase tracking-[0.22em] text-sand-300/80">Hajj &middot; Umrah &middot; Tourism</span>
                 </span>
             </a>
 
-            <nav class="hidden xl:block" aria-label="Primary">
-                <ul class="flex items-center gap-4 2xl:gap-6">
+            <nav class="ub-primary-nav" aria-label="Primary">
+                <ul class="flex items-center gap-5">
                     @foreach($ubNav as $ubItem)
                         <li class="relative">
-                            <a class="group flex items-center gap-1.5 py-8 text-[13px] font-medium text-ivory transition-colors hover:text-accent-400 2xl:text-[15px]" href="{{ $ubItem['url'] }}">
+                            <a class="group flex items-center gap-1.5 py-8 text-sm font-medium text-ivory transition-colors hover:text-accent-400" href="{{ $ubItem['url'] }}">
                                 <span class="relative whitespace-nowrap">{!! $ubItem['label'] !!}<span class="absolute -bottom-1 left-0 h-px bg-accent-500 transition-all duration-300 w-0 group-hover:w-full"></span></span>
                             </a>
                         </li>
@@ -132,15 +132,15 @@
                 </ul>
             </nav>
 
-            <div class="flex items-center gap-3">
+            <div class="flex shrink-0 items-center gap-3">
                 <a class="group relative isolate items-center gap-3 overflow-hidden rounded-pill font-semibold tracking-wide will-change-transform bg-[length:200%_100%] bg-right bg-no-repeat hover:bg-left focus-visible:bg-left transition-[background-position,color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent text-inverse shadow-lg shadow-accent-900/25 hover:text-ivory h-10 pl-5 pr-1.5 text-xs sm:h-12 sm:pl-6 sm:pr-2 sm:text-sm hidden sm:inline-flex" style="background-image:linear-gradient(to right, var(--color-brand-700) 0 50%, var(--color-accent-500) 50% 100%)" href="{{ $ubRegisterUrl }}" target="_blank" rel="noopener">
-                    <span class="relative">Register Now</span>
+                    <span class="relative whitespace-nowrap">Register Now</span>
                     <span class="relative grid shrink-0 place-items-center overflow-hidden rounded-full transition-colors duration-300 bg-ivory text-accent-700 group-hover:text-inverse size-7 sm:size-8">
                         <span class="col-start-1 row-start-1 flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
                     </span>
                 </a>
 
-                <button type="button" aria-label="Open menu" aria-expanded="false" aria-controls="ub-mobile-nav" data-ub-menu-open class="flex size-11 items-center justify-center rounded-full border border-ivory/25 text-ivory transition-colors hover:bg-ivory/10 xl:hidden">
+                <button type="button" aria-label="Open menu" aria-expanded="false" aria-controls="ub-mobile-nav" data-ub-menu-open class="ub-menu-toggle flex size-11 items-center justify-center rounded-full border border-ivory/25 text-ivory transition-colors hover:bg-ivory/10">
                     <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
                 </button>
             </div>
@@ -150,7 +150,7 @@
 
 {{-- Mobile drawer. The template's own is rendered by React; this is the same
      surface built as a plain dialog so it works without a framework. --}}
-<div id="ub-mobile-nav" hidden class="fixed inset-0 z-[60] xl:hidden">
+<div id="ub-mobile-nav" hidden class="fixed inset-0 z-[60]">
     <div class="absolute inset-0 bg-brand-900/70" data-ub-menu-close></div>
     <div role="dialog" aria-modal="true" aria-label="Menu" class="absolute inset-y-0 right-0 flex w-[min(20rem,88vw)] flex-col bg-brand-800 shadow-2xl">
         <div class="flex h-20 shrink-0 items-center justify-between border-b border-ivory/10 px-6">
