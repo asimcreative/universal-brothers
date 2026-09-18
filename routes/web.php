@@ -44,11 +44,6 @@ use App\Support\Library\LibraryRegistry;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// The designer's template, being ported section by section. Served on its own
-// address so the live homepage keeps working — and so the two can be compared
-// side by side — until the port is signed off and this becomes '/'.
-Route::get('/template-preview', [HomeController::class, 'templatePreview']);
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
