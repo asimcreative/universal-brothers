@@ -90,7 +90,10 @@
         }
     </style>
 
-    @vite(['resources/js/app.js'])
+    {{-- The assistant's own styles. They live in `app.scss`, which this layout
+         does not load, so without this it renders unstyled — an invisible,
+         unpositioned element over the page that swallows clicks. --}}
+    @vite(['resources/scss/assistant-widget.scss', 'resources/js/app.js'])
 
     <script type="application/ld+json">
     {

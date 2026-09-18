@@ -1,0 +1,13 @@
+// The assistant, compiled on its own.
+//
+// `layouts.template` deliberately does not load `app.scss` — Bootstrap's reset
+// and card/button rules would fight the template's utility classes. But the
+// assistant is a live feature of the site and its styles lived only in that
+// bundle, so on the template it rendered with no styling at all: the launcher
+// was not a fixed pill and its panel was not hidden, which left an invisible
+// element over the page swallowing clicks.
+//
+// It needs nothing from Bootstrap — only this project's own tokens — so it
+// compiles to a few kilobytes and can be loaded beside either layout.
+@import 'variables';
+@import 'ai-assistant';
