@@ -26,7 +26,9 @@
    --------------------------------------------------------------------------- */
 [data-ub-slide] > .bg-cover {
     animation: ub-drift 24s ease-in-out infinite alternate;
-    will-change: transform;
+    /* No `will-change` here on purpose. A running animation already promotes
+       the element to its own layer; a permanent hint on top of that just keeps
+       a compositor layer alive for the life of the page. */
 }
 
 @keyframes ub-drift {

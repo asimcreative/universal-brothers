@@ -2,9 +2,6 @@
     $ubHajj = $navCategories->firstWhere('slug', 'hajj');
     $ubUmrah = $navCategories->firstWhere('slug', 'umrah');
     $ubTourism = $navCategories->firstWhere('slug', 'tourism');
-    $ubFacebook = \App\Models\SiteSetting::get('social_facebook');
-    $ubInstagram = \App\Models\SiteSetting::get('social_instagram');
-    $ubYoutube = \App\Models\SiteSetting::get('social_youtube');
     $ubWhatsapp = $primaryOffice?->whatsapp;
     $ubYears = \App\Models\SiteSetting::get('years_in_operation', '20+');
 
@@ -57,22 +54,20 @@
 
                 <p class="mt-6 max-w-sm text-sm leading-relaxed text-ivory/65">Universal Brothers (Pvt) Ltd is a company of {{ \App\Models\SiteSetting::get('parent_group', "Maxim's Group") }}, operating as an Umrah &amp; Hajj Organizer and Travel &amp; Tours Operator under the brand &ldquo;Crown Packages&rdquo; &mdash; {{ $ubYears }} years of serving pilgrims.</p>
 
-                @if($ubFacebook || $ubInstagram || $ubYoutube || $ubWhatsapp)
-                    <ul class="-mx-2.5 mt-7 flex items-center">
-                        @if($ubFacebook)
-                            <li><a href="{{ $ubFacebook }}" target="_blank" rel="noopener" aria-label="Universal Brothers on Facebook" class="flex size-10 items-center justify-center rounded-full text-ivory/80 transition-all duration-300 hover:-translate-y-0.5 hover:text-accent-500 focus-visible:text-accent-500 focus-visible:outline-none"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a></li>
-                        @endif
-                        @if($ubInstagram)
-                            <li><a href="{{ $ubInstagram }}" target="_blank" rel="noopener" aria-label="Universal Brothers on Instagram" class="flex size-10 items-center justify-center rounded-full text-ivory/80 transition-all duration-300 hover:-translate-y-0.5 hover:text-accent-500 focus-visible:text-accent-500 focus-visible:outline-none"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg></a></li>
-                        @endif
-                        @if($ubYoutube)
-                            <li><a href="{{ $ubYoutube }}" target="_blank" rel="noopener" aria-label="Universal Brothers on YouTube" class="flex size-10 items-center justify-center rounded-full text-ivory/80 transition-all duration-300 hover:-translate-y-0.5 hover:text-accent-500 focus-visible:text-accent-500 focus-visible:outline-none"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-youtube"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"></path><path d="m10 15 5-3-5-3z"></path></svg></a></li>
-                        @endif
-                        @if($ubWhatsapp)
-                            <li><a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $ubWhatsapp) }}" target="_blank" rel="noopener" aria-label="Universal Brothers on WhatsApp" class="flex size-10 items-center justify-center rounded-full text-ivory/80 transition-all duration-300 hover:-translate-y-0.5 hover:text-accent-500 focus-visible:text-accent-500 focus-visible:outline-none"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.38-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2"></path></svg></a></li>
-                        @endif
-                    </ul>
-                @endif
+                {{-- Every platform an admin has saved a link for, plus
+                     WhatsApp, which comes from the office record rather than
+                     from Settings. --}}
+                @php $ubWhatsappHref = $ubWhatsapp ? 'https://wa.me/' . preg_replace('/[^\d]/', '', $ubWhatsapp) : null; @endphp
+                <ul class="-mx-2.5 mt-7 flex items-center">
+                    <x-social-links
+                        :size="18"
+                        class="contents"
+                        link-class="flex size-10 items-center justify-center rounded-full text-ivory/80 transition-all duration-300 hover:-translate-y-0.5 hover:text-accent-500 focus-visible:text-accent-500 focus-visible:outline-none" />
+
+                    @if($ubWhatsappHref)
+                        <li><a href="{{ $ubWhatsappHref }}" target="_blank" rel="noopener" aria-label="Universal Brothers on WhatsApp" class="flex size-10 items-center justify-center rounded-full text-ivory/80 transition-all duration-300 hover:-translate-y-0.5 hover:text-accent-500 focus-visible:text-accent-500 focus-visible:outline-none"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.38-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2"></path></svg></a></li>
+                    @endif
+                </ul>
             </div>
 
             <div class="reveal-on-scroll reveal-delay-1">
