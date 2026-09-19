@@ -136,6 +136,54 @@ function initTemplateHeader() {
     }
 }
 
+// Motion, applied from one place.
+//
+// The styles live in `public/template/css/motion.css`; this decides what wears
+// them. Doing it here rather than in fourteen partials means a section an admin
+// builds in the page builder gets the same treatment, and there is one file to
+// read when something moves that should not.
+function initMotion() {
+    const main = document.getElementById('main-content');
+    if (!main) return;
+
+    // The hero arrives a line at a time. Ordered by how the hero reads, not by
+    // position in the DOM, so the eyebrow leads and the buttons land last.
+    const hero = document.querySelector('[data-ub-hero]');
+    if (hero) {
+        const sequence = [
+            hero.querySelector('p.uppercase'),
+            hero.querySelector('h1'),
+            hero.querySelector('h1 + p'),
+            hero.querySelector('h1 ~ div'),
+            hero.querySelector('.font-hand'),
+        ].filter(Boolean);
+        sequence.forEach((el, i) => el.classList.add('ub-enter', `ub-enter-${i + 1}`));
+    }
+
+    // Anything with a photograph in it answers the pointer.
+    main.querySelectorAll('article, .rounded-card, [class*="rounded-card"]').forEach((card) => {
+        if (card.querySelector('img, .bg-cover')) card.classList.add('ub-zoom');
+    });
+    main.querySelectorAll('article').forEach((card) => card.classList.add('ub-lift'));
+
+    // The two off-centre bands come in from their own side rather than both
+    // lifting straight up, which is what makes them read as two columns.
+    ['#introduction', '#why-us'].forEach((id) => {
+        const section = document.querySelector(id);
+        if (!section) return;
+        const columns = section.querySelectorAll(':scope > div > div > [class*="lg:"], :scope > div > .grid > div');
+        columns.forEach((col, i) => col.classList.add(i % 2 ? 'ub-from-right' : 'ub-from-left'));
+    });
+
+    // The page's one loud figure gets a little more than a lift.
+    document.querySelectorAll('#impact h2, #impact [class*="rounded-pill"]').forEach((el) => el.classList.add('ub-pop'));
+
+    // Mark the marquees so hovering one pauses it — a reader should be able to
+    // stop a moving line to finish reading it.
+    document.querySelectorAll('.ub-marquee-track').forEach((t) => t.parentElement?.classList.add('ub-marquee'));
+    document.querySelectorAll('.ub-ticker-track').forEach((t) => t.closest('div')?.classList.add('ub-ticker'));
+}
+
 function initAutoReveal() {
     // Reduced motion: leave every element untouched and visible. Nothing below
     // may add a class that starts something at opacity 0.
@@ -519,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // un-caught handler, so a throw in any of them silently prevented
     // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initOverlayHeader, initTemplateHeader, initAutoReveal, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
+    [initHeaderOffset, initOverlayHeader, initTemplateHeader, initMotion, initAutoReveal, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {

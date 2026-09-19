@@ -18,8 +18,8 @@ $pt-copper-light: $ub-gold-light;
 $pt-copper-ink: $ub-gold-dark;
 $pt-ivory: $ub-cream;
 $pt-sand: #e2d9d3;          // the alternating light band, one step warmer than ivory
-$pt-ink: #12262f;
-$pt-ink-muted: #5f6b70;     // warm grey — a cold blue-grey looked dirty on ivory
+$pt-ink: #0b202a;           // --color-inverse
+$pt-ink-muted: #4a5c65;     // --color-ink-400, the template's own muted ink
 $pt-on-dark: #f2ece9;
 $pt-on-dark-muted: #c9cfd2;
 $pt-display: 'Fira Sans Condensed', 'Poppins', system-ui, sans-serif;

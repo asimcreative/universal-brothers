@@ -52,6 +52,57 @@
             </div>
         </div>
 
+        @php
+            // The countries Universal Brothers' pilgrims travel from, confirmed
+            // by the client. An earlier pass left this row out precisely
+            // because it is a claim about our reach and could not be invented.
+            $ubCountries = [
+                ['ae', 'United Arab Emirates'],
+                ['sa', 'Saudi Arabia'],
+                ['tr', 'Turkey'],
+                ['eg', 'Egypt'],
+                ['my', 'Malaysia'],
+                ['gb', 'United Kingdom'],
+                ['us', 'United States'],
+                ['ca', 'Canada'],
+                ['au', 'Australia'],
+                ['bh', 'Bahrain'],
+            ];
+
+            // The track animates by exactly -50%, so it needs two identical
+            // halves; the second is hidden from assistive technology.
+            $ubFlagStyle = 'width:100%;height:100%;background-size:cover;background-position:center center;background-repeat:no-repeat;filter:saturate(0.78) sepia(0.05) contrast(0.95) brightness(0.96)';
+            $ubFlagReflect = 'width:100%;height:66px;background-size:cover;background-position:center center;background-repeat:no-repeat;transform:scaleY(-1);filter:saturate(0.78) sepia(0.05) contrast(0.95) brightness(0.96) blur(2.5px)';
+        @endphp
+
+        <div class="mt-6 sm:mt-8 lg:mt-10">
+            <div class="ub-marquee relative overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)]">
+                <div class="ub-marquee-track flex w-max flex-nowrap items-start" style="--ub-marquee-duration: 46s">
+                    @foreach([false, true] as $ubCopy)
+                        <div class="flex shrink-0 flex-nowrap items-center" @if($ubCopy) aria-hidden="true" @endif>
+                            @foreach($ubCountries as [$ubCode, $ubName])
+                                <div class="mr-[18px] w-[82px] shrink-0 sm:mr-7 sm:w-[108px]">
+                                    <div class="relative aspect-[27/22] overflow-hidden rounded-[15px] border border-accent-700/50 bg-sand-50 leading-[0] shadow-[0_10px_24px_-8px_rgba(6,18,25,0.35)] sm:rounded-[20px]">
+                                        <span role="img" @if(! $ubCopy) aria-label="{{ $ubName }}" @endif class="fi fi-{{ $ubCode }} !absolute !inset-0 !block !h-full !w-full !bg-cover !bg-center !bg-no-repeat" style="{{ $ubFlagStyle }}"></span>
+                                        <span aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgb(255_255_255/0.12),transparent_38%)]"></span>
+                                    </div>
+                                    <div aria-hidden="true" class="mt-2 h-[26px] overflow-hidden leading-[0] opacity-[0.1] [mask-image:linear-gradient(to_bottom,#000,transparent)] sm:h-9 sm:rounded-[20px]">
+                                        <span class="fi fi-{{ $ubCode }} !block !h-full !w-full !bg-cover !bg-center !bg-no-repeat" style="{{ $ubFlagReflect }}"></span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="reveal-on-scroll mt-8 flex items-center justify-center gap-3 px-5 sm:mt-10 sm:gap-7">
+            <span aria-hidden="true" class="h-px w-10 shrink-0 bg-accent-700/75 sm:w-32"></span>
+            <p class="text-center font-display text-[10px] font-semibold uppercase leading-relaxed tracking-[0.2em] text-accent-700 sm:whitespace-nowrap sm:text-sm sm:tracking-[0.32em]">Different Places. One Faith. A Stronger Ummah.</p>
+            <span aria-hidden="true" class="h-px w-10 shrink-0 bg-accent-700/75 sm:w-32"></span>
+        </div>
+
         <div class="reveal-on-scroll reveal-delay-4">
             <p class="mx-auto mt-10 max-w-2xl px-5 text-center text-sm leading-relaxed text-ink-600 sm:mt-12 sm:text-base">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
         </div>

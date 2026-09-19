@@ -54,6 +54,16 @@
     @php $ubTemplateCss = public_path('template/css/template.css'); @endphp
     <link rel="stylesheet" href="{{ asset('template/css/template.css') }}?v={{ is_file($ubTemplateCss) ? filemtime($ubTemplateCss) : '1' }}">
 
+    {{-- The motion the template drove with Framer Motion, written as CSS so the
+         browser can run it on the compositor. Everything in it is off under
+         `prefers-reduced-motion`. --}}
+    {{-- flag-icons, cut to the ten countries the impact band names. --}}
+    @php $ubFlagsCss = public_path('template/css/flags.css'); @endphp
+    <link rel="stylesheet" href="{{ asset('template/css/flags.css') }}?v={{ is_file($ubFlagsCss) ? filemtime($ubFlagsCss) : '1' }}">
+
+    @php $ubMotionCss = public_path('template/css/motion.css'); @endphp
+    <link rel="stylesheet" href="{{ asset('template/css/motion.css') }}?v={{ is_file($ubMotionCss) ? filemtime($ubMotionCss) : '1' }}">
+
     {{-- The template's stylesheet is the designer's compiled Tailwind build, so
          it contains ONLY the utilities the designer's own markup used. Anything
          we need that they did not use is simply absent and silently does

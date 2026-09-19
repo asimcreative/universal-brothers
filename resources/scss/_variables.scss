@@ -7,9 +7,9 @@
 // every existing rule inherits the new palette instead of being rewritten or
 // fought with overrides; only the values changed.
 $ub-navy: #0b202a;       // deep teal — primary surface and text
-$ub-navy-dark: #081821;  // the darkest band: header, footer, hero scrim
+$ub-navy-dark: #061219;  // the darkest band: header, footer, hero scrim (--color-brand-950)
 $ub-gold: #b9865a;       // copper accent
-$ub-gold-light: #d2a077;
+$ub-gold-light: #d0aa81;  // --color-accent-300
 $ub-gold-dark: #7e5939;  // copper as text on a light surface (~4.8:1)
 $ub-cream: #efe9e6;      // ivory section background
 
@@ -91,17 +91,22 @@ $ub-duration-slow: 0.9s;
 // section had to choose between plain white, cream or a dark band, and
 // body text was written as one-off rgba() values per component.
 
+// 2026-09-19: these values are no longer chosen — they are read out of the
+// designer template's own compiled stylesheet (its `--color-*` custom
+// properties), so the pages still on this layout sit in exactly the palette the
+// homepage uses. Two systems, one set of colours, until the rest are ported.
+
 // Surfaces. No more than two dark bands per page, never two adjacent.
 $ub-surface: #ffffff;
-$ub-surface-warm: #f5f1ee; // half a step warmer than white, for long reading sections
-$ub-surface-sand: #e5dcd7; // quiet panels, table headers, chips
-$ub-surface-navy: #081821; // feature bands (Hajj 2027, final CTA)
+$ub-surface-warm: #faf8f7; // long reading sections (--color-sand-50)
+$ub-surface-sand: #d0c5c0; // the warm alternating band (--color-sand-300)
+$ub-surface-navy: #0b202a; // feature bands (--color-surface)
 
 // Ink. Contrast measured on white unless stated.
 $ub-ink: #0b202a;          // 15.4:1 — headings, primary text
-$ub-ink-body: #2b3a41;     // 11.2:1 — paragraphs
-$ub-ink-muted: #5f6b70;    //  6.0:1 — captions, meta, helper text
-$ub-on-dark: #f2ece9;      // 14.4:1 on teal
+$ub-ink-body: #23343c;     // 12.4:1 — paragraphs (--color-ink-600)
+$ub-ink-muted: #4a5c65;    //  8.2:1 — captions, meta, helper text (--color-ink-400)
+$ub-on-dark: #efe9e6;      // 14.3:1 on teal (--color-heading)
 $ub-on-dark-muted: #d0c5c0; //  9.0:1 on teal
 
 // Borders.

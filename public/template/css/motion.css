@@ -1,0 +1,220 @@
+/* Motion.
+ *
+ * The designer's template animates with Framer Motion, which runs in
+ * JavaScript and which we do not ship. Its compiled stylesheet therefore
+ * carries almost no motion of its own — three keyframes and a handful of
+ * transitions. This file is the rest of it, written as CSS so the browser
+ * can run it on the compositor instead of on the main thread.
+ *
+ * Two rules held throughout:
+ *
+ *   1. Everything here animates `transform` or `opacity` and nothing else.
+ *      Animating width, top or box-shadow forces layout or paint on every
+ *      frame, which is how a page full of animation turns into a page that
+ *      stutters on a phone.
+ *   2. All of it is off under `prefers-reduced-motion: reduce`. That is not
+ *      a nicety — for some readers this kind of movement causes nausea, and
+ *      the setting is how they say so.
+ */
+
+/* ---------------------------------------------------------------------------
+   1. The hero photograph drifts.
+
+   A very slow, very small push in. Held to 6% over 24 seconds and alternating,
+   so it never reaches a scale where the photograph softens, and never snaps
+   back to where it started.
+   --------------------------------------------------------------------------- */
+[data-ub-slide] > .bg-cover {
+    animation: ub-drift 24s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes ub-drift {
+    from { transform: scale(1) translate3d(0, 0, 0); }
+    to   { transform: scale(1.06) translate3d(0, -1%, 0); }
+}
+
+/* ---------------------------------------------------------------------------
+   2. The hero arrives a line at a time.
+
+   On load, not on scroll — the hero is on screen immediately, so there is
+   nothing to wait for. The whole sequence resolves inside 0.9s: a visitor must
+   never be watching an empty hero, which is the failure mode that makes
+   staggered entrances a bad idea when they are set too slow.
+   --------------------------------------------------------------------------- */
+.js [data-ub-hero] .ub-enter {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: ub-enter 0.62s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.js [data-ub-hero] .ub-enter-1 { animation-delay: 0.06s }
+.js [data-ub-hero] .ub-enter-2 { animation-delay: 0.16s }
+.js [data-ub-hero] .ub-enter-3 { animation-delay: 0.26s }
+.js [data-ub-hero] .ub-enter-4 { animation-delay: 0.36s }
+.js [data-ub-hero] .ub-enter-5 { animation-delay: 0.44s }
+
+@keyframes ub-enter {
+    to { opacity: 1; transform: none; }
+}
+
+/* The handwritten line sits at an angle, so its entrance has to end at that
+   angle rather than at zero. */
+.js [data-ub-hero] .font-hand.ub-enter {
+    transform: translateY(18px) rotate(-5deg);
+    animation-name: ub-enter-tilted;
+}
+
+@keyframes ub-enter-tilted {
+    to { opacity: 1; transform: rotate(-5deg); }
+}
+
+/* ---------------------------------------------------------------------------
+   3. Sections arrive from the side when the section itself is off-centre.
+
+   The two asymmetric bands read as two columns, so lifting both halves
+   straight up says nothing about them. Coming in from opposite edges does.
+   --------------------------------------------------------------------------- */
+.js .reveal-on-scroll.ub-from-left  { transform: translate3d(-34px, 14px, 0); }
+.js .reveal-on-scroll.ub-from-right { transform: translate3d(34px, 14px, 0); }
+.js .reveal-on-scroll.ub-from-left.is-visible,
+.js .reveal-on-scroll.ub-from-right.is-visible { transform: none; }
+
+/* A figure that is the point of its section earns a little more than a lift. */
+.js .reveal-on-scroll.ub-pop { transform: scale(0.94); }
+.js .reveal-on-scroll.ub-pop.is-visible { transform: none; }
+
+/* ---------------------------------------------------------------------------
+   4. Photographs answer the pointer.
+
+   Only on devices that actually have a pointer — on a touchscreen there is no
+   hover, and the styles would stick after a tap.
+   --------------------------------------------------------------------------- */
+@media (hover: hover) {
+    .ub-zoom { overflow: hidden; }
+
+    .ub-zoom img,
+    .ub-zoom .bg-cover {
+        transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ub-zoom:hover img,
+    .ub-zoom:hover .bg-cover,
+    .group:hover .ub-zoom img {
+        transform: scale(1.06);
+    }
+
+    /* Cards lift. `transform` only — a box-shadow transition repaints the
+       whole card on every frame. */
+    .ub-lift { transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+    .ub-lift:hover { transform: translateY(-5px); }
+
+    /* The circular arrow badge on every call to action. */
+    .group:hover .lucide-arrow-up-right { transform: translate(1.5px, -1.5px); }
+    .lucide-arrow-up-right { transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    .group:hover .lucide-arrow-right { transform: translateX(3px); }
+    .lucide-arrow-right { transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+}
+
+/* ---------------------------------------------------------------------------
+   5. A marquee stops when you try to read it.
+
+   WCAG 2.2.2: anything that moves for more than five seconds needs a way to
+   pause it. Hover and keyboard focus both do here.
+   --------------------------------------------------------------------------- */
+.ub-marquee:hover .ub-marquee-track,
+.ub-marquee:focus-within .ub-marquee-track,
+.ub-ticker:hover .ub-ticker-track,
+.ub-ticker:focus-within .ub-ticker-track {
+    animation-play-state: paused;
+}
+
+/* ---------------------------------------------------------------------------
+   6. The header settles rather than appearing.
+   --------------------------------------------------------------------------- */
+.ub-site-header.is-stuck {
+    animation: ub-settle 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ub-settle {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(0); }
+}
+
+/* ---------------------------------------------------------------------------
+   7. Off for anyone who has asked for less movement.
+
+   Deliberately blunt, and deliberately last.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    [data-ub-slide] > .bg-cover,
+    .js [data-ub-hero] .ub-enter,
+    .ub-site-header.is-stuck,
+    .ub-marquee-track,
+    .ub-ticker-track,
+    .ub-plate-track,
+    .ub-video-ring,
+    /* The scroll cue's bounce is the template's own utility, and its build
+       carries no reduced-motion variant for it. */
+    .animate-bounce-slow {
+        animation: none !important;
+    }
+
+    .js [data-ub-hero] .ub-enter { opacity: 1 !important; transform: none !important; }
+
+    .ub-zoom img,
+    .ub-zoom .bg-cover,
+    .ub-lift,
+    .lucide-arrow-up-right,
+    .lucide-arrow-right {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   8. The routes draw themselves.
+
+   Ten flight paths leave Karachi for the countries named below the map. They
+   start undrawn and are traced outward when the map comes into view, one after
+   another, so the eye follows a journey rather than arriving at a finished
+   diagram.
+
+   `pathLength="1"` on each path is what makes this possible: it normalises
+   every curve to a length of 1 regardless of how long it really is, so one set
+   of dash values works for all ten and they all take the same time.
+   --------------------------------------------------------------------------- */
+.js .ub-route {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+}
+
+.js .is-visible .ub-route {
+    animation: ub-draw 1.5s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.js .is-visible .ub-route-1  { animation-delay: 0.10s }
+.js .is-visible .ub-route-2  { animation-delay: 0.22s }
+.js .is-visible .ub-route-3  { animation-delay: 0.34s }
+.js .is-visible .ub-route-4  { animation-delay: 0.46s }
+.js .is-visible .ub-route-5  { animation-delay: 0.58s }
+.js .is-visible .ub-route-6  { animation-delay: 0.70s }
+.js .is-visible .ub-route-7  { animation-delay: 0.82s }
+.js .is-visible .ub-route-8  { animation-delay: 0.94s }
+.js .is-visible .ub-route-9  { animation-delay: 1.06s }
+.js .is-visible .ub-route-10 { animation-delay: 1.18s }
+
+@keyframes ub-draw {
+    to { stroke-dashoffset: 0; }
+}
+
+/* Reduced motion: the routes are information, not decoration, so they are
+   drawn rather than withheld — they simply do not animate into place. */
+@media (prefers-reduced-motion: reduce) {
+    .js .ub-route {
+        stroke-dasharray: none !important;
+        stroke-dashoffset: 0 !important;
+        animation: none !important;
+    }
+}
