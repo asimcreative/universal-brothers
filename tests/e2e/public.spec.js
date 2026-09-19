@@ -29,33 +29,38 @@ test.describe('Public website', () => {
         await expect(page).toHaveTitle(/Universal Brothers/);
     });
 
-    test('2. header navigation links to Hajj & Umrah mega-menu/Tourism/Contact', async ({ page, isMobile }) => {
-        // On mobile, the desktop nav is intentionally collapsed behind the
-        // hamburger — its links live in the offcanvas instead, already
-        // covered by test 13. Nothing to check here for that viewport.
-        test.skip(isMobile, 'Desktop nav links are hidden on mobile by design — see test 13 for the offcanvas equivalent.');
+    test('2. header navigation reaches every top-level destination', async ({ page, isMobile }) => {
+        // On mobile the header collapses to the drawer — its links live there
+        // instead, covered by test 13. Nothing to check here for that viewport.
+        test.skip(isMobile, 'The header links are inside the drawer at this width — see test 13.');
 
+        await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto('/');
-        const nav = page.locator('nav.navbar');
-        // The Hajj & Umrah / Tourism triggers are dropdown-openers, not real
-        // navigation, so they're marked role="button" (WAI-ARIA authoring
-        // practice for a menu trigger) rather than the implicit link role.
-        await expect(nav.getByRole('button', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
-        await expect(nav.getByRole('button', { name: 'Tourism', exact: true })).toBeVisible();
-        await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toBeVisible();
-        await expect(nav.getByRole('link', { name: 'About Us', exact: true })).toBeVisible();
 
-        // The Hajj & Umrah mega-menu itself carries the real Hajj/Umrah
-        // package links — Bootstrap's dropdown reveals it on click.
-        await nav.getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
-        const megaMenu = page.locator('.mega-menu');
-        await expect(megaMenu.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeVisible();
-        await expect(megaMenu.getByRole('link', { name: 'Umrah Packages', exact: true })).toBeVisible();
+        // The homepage is on the designer's template: ten plain links, with no
+        // dropdown and no mega-menu, so every destination is one click away
+        // rather than hidden behind a trigger.
+        const nav = page.locator('nav.ub-primary-nav');
+        for (const label of ['Home', 'About Us', 'Hajj & Umrah', 'Tourism', 'Awards & Recognition',
+            'Affiliations', 'Media', 'Testimonials', 'FAQs', 'Contact']) {
+            await expect(nav.getByRole('link', { name: label, exact: true })).toBeVisible();
+        }
+
+        // The Hajj and Umrah listings are still reachable from the homepage —
+        // from the packages section and the footer rather than from a menu.
+        await expect(page.locator('#featured-packages').getByRole('link', { name: /View all Hajj Packages/i })).toBeVisible();
+        await expect(page.locator('footer').getByRole('link', { name: 'Umrah Packages', exact: true })).toBeVisible();
+
+        // And the nav actually navigates.
+        await nav.getByRole('link', { name: 'Contact', exact: true }).click();
+        await expect(page).toHaveURL(/\/contact$/);
     });
 
     test('3. hero renders (fallback hero when no slider is configured)', async ({ page }) => {
         await page.goto('/');
-        await expect(page.locator('.hero-slide')).toBeVisible();
+        // `.hero-slide` belonged to the Bootstrap layout; the template's hero
+        // carries `data-ub-hero`, which is also what its carousel script binds.
+        await expect(page.locator('[data-ub-hero]')).toBeVisible();
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     });
 
@@ -268,17 +273,24 @@ test.describe('Public website', () => {
         await expect(footer.getByRole('link', { name: 'Hajj Packages', exact: true })).toHaveAttribute('href', /\/hajj$/);
     });
 
-    test('13. mobile navigation opens via offcanvas toggle', async ({ page }) => {
+    test('13. mobile navigation opens via the drawer toggle', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await page.goto('/');
-        await page.locator('.navbar-toggler').click();
-        const offcanvas = page.locator('#mobileNav');
-        await expect(offcanvas).toBeVisible();
-        // "Hajj Services" is the collapsible group trigger (role="button" —
-        // it toggles a collapse, it isn't real in-page navigation); expanding
-        // it reveals the real "Hajj Packages" link underneath.
-        await offcanvas.getByRole('button', { name: 'Hajj Services', exact: true }).click();
-        await expect(offcanvas.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeVisible();
+
+        const toggle = page.locator('[data-ub-menu-open]');
+        const drawer = page.locator('#ub-mobile-nav');
+
+        await expect(drawer).toBeHidden();
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+        await toggle.click();
+        await expect(drawer).toBeVisible();
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+        // The drawer is a flat list on this layout — every destination is a
+        // real link, with no group to expand first.
+        await expect(drawer.getByRole('link', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
+        await expect(drawer.getByRole('link', { name: 'Contact', exact: true })).toBeVisible();
     });
 
     test('14. no obvious horizontal overflow at mobile width', async ({ page }) => {
@@ -320,7 +332,7 @@ test.describe('Public website', () => {
         // buttons live inside the closed offcanvas menu, and WebKit does not
         // move keyboard focus to links at all unless Safari's "Tab to links"
         // setting is on, so tabbing can never reach them there.
-        test.skip(isMobile, 'The header buttons are inside the mobile menu at this width.');
+        test.skip(isMobile, 'The header buttons are inside the drawer at this width.');
         test.skip(browserName === 'webkit', 'WebKit does not tab to links by default.');
 
         // Tabbing, not el.focus(): only real keyboard focus triggers
@@ -346,27 +358,55 @@ test.describe('Public website', () => {
             return { reached, before, after };
         };
 
+        // A focus ring is either a real outline, or a box-shadow drawn as a ring.
+        //
+        // The shadow half used to be a regex over the whole `box-shadow` string,
+        // which no longer works: the template draws its ring with Tailwind, and
+        // Tailwind always emits several zero-size fully transparent layers
+        // alongside the real one, so "does the string contain a transparent
+        // layer" was answering yes for a button whose ring was plainly visible.
+        //
+        // This looks at each layer instead, and is stricter than what it
+        // replaces: a layer only counts as a ring if it has a visible colour AND
+        // no offset AND no blur AND at least 2px of spread. A drop shadow —
+        // which has an offset — can no longer be mistaken for a focus ring.
+        const isRingLayer = (layer) => {
+            const transparent = /rgba?\([^)]*,\s*0\s*\)/.test(layer) || /\/\s*0\s*\)/.test(layer);
+            if (transparent) return false;
+            const lengths = (layer.match(/-?\d*\.?\d+px/g) || []).map(parseFloat);
+            if (lengths.length < 4) return false;
+            const [offsetX, offsetY, blur, spread] = lengths;
+            return offsetX === 0 && offsetY === 0 && blur === 0 && Math.abs(spread) >= 2;
+        };
+
         const visible = (ring) => {
             const width = parseFloat(ring.after.outlineWidth) || 0;
             const solid = ring.after.outlineStyle !== 'none' && !ring.after.outlineColor.includes('rgba(0, 0, 0, 0)');
-            const shadowRing = /\d+px \d+px|0px 0px 0px [1-9]/.test(ring.after.boxShadow) && !ring.after.boxShadow.includes('rgba(0, 0, 0, 0) 0px 0px 0px 0px');
-            return (width >= 2 && solid) || shadowRing;
+            if (width >= 2 && solid) return true;
+            // Split on commas that are not inside a colour function.
+            return ring.after.boxShadow.split(/,(?![^(]*\))/).some(isRingLayer);
         };
 
-        const register = await focusRing('/', '.btn-register-now');
+        // `[data-ub-register]` rather than a class: the template styles this
+        // button entirely with utilities, and a test should not break the day
+        // one of them changes.
+        const register = await focusRing('/', '[data-ub-register]');
         expect(register.reached, 'never reached Register Now by tabbing').toBe(true);
         expect(visible(register), `Register Now shows no focus ring: ${JSON.stringify(register.after)}`).toBe(true);
 
+        const faq = await focusRing('/faqs', '.faq-accordion .accordion-button');
+        expect(faq.reached, 'never reached an FAQ question by tabbing').toBe(true);
+        expect(visible(faq), `FAQ question shows no focus ring: ${JSON.stringify(faq.after)}`).toBe(true);
+
         // The WhatsApp button only renders inside the mobile menu, so its rule
-        // is checked in the stylesheet rather than by tabbing to it.
+        // is checked in the stylesheet rather than by tabbing to it. It is read
+        // here, on /faqs, because that rule lives in `app.scss` and the
+        // homepage's template layout deliberately does not load it — the
+        // template's own drawer gets its ring from a focus-visible utility.
         const whatsappRule = await page.evaluate(() => [...document.styleSheets]
             .flatMap((sheet) => { try { return [...sheet.cssRules]; } catch { return []; } })
             .filter((r) => r.selectorText === '.btn-whatsapp:focus-visible')
             .map((r) => r.style.outline || r.style.boxShadow));
         expect(whatsappRule.join(' '), 'the WhatsApp button has no focus-visible rule').toMatch(/3px|0 0 0/);
-
-        const faq = await focusRing('/faqs', '.faq-accordion .accordion-button');
-        expect(faq.reached, 'never reached an FAQ question by tabbing').toBe(true);
-        expect(visible(faq), `FAQ question shows no focus ring: ${JSON.stringify(faq.after)}`).toBe(true);
     });
 });

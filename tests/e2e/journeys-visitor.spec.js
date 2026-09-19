@@ -12,15 +12,20 @@ function deleteTestInquiriesByEmail(email) {
     execFileSync(PHP_BIN, ['artisan', 'tinker', '--env=testing', '--execute', `App\\Models\\Inquiry::where('email', '${email}')->delete();`], { stdio: 'ignore' });
 }
 
+// The homepage is on the designer's template: its header is a flat list of ten
+// links inside `nav.ub-primary-nav`, with no mega-menu and no dropdowns. Every
+// OTHER page is still on the Bootstrap layout and still has `nav.navbar`, so a
+// journey that has left the homepage keeps using the old selector — which is
+// why both appear in this file.
+const HOME_NAV = 'nav.ub-primary-nav';
+
 test.describe('Full business journeys — visitor', () => {
     test('Journey A: Homepage -> Hajj -> Package Listing -> Package Detail -> Inquiry CTA -> Submit -> Confirmation', async ({ page }) => {
         try {
             await page.goto('/');
-            // "Hajj & Umrah" is a mega-menu trigger (role="button" — it opens a
-            // panel, it isn't real navigation); the real "Hajj Packages" link
-            // lives inside that panel.
-            await page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
-            await page.locator('.mega-menu').getByRole('link', { name: 'Hajj Packages', exact: true }).click();
+            // The packages section carries the route to the listing now. The
+            // mega-menu that used to hold it does not exist on this layout.
+            await page.locator('#featured-packages').getByRole('link', { name: /View all Hajj Packages/i }).click();
             await expect(page).toHaveURL(/\/hajj$/);
 
             await expect(page.locator('.package-card').first()).toBeVisible();
@@ -42,8 +47,10 @@ test.describe('Full business journeys — visitor', () => {
     test('Journey B: Homepage -> Umrah -> (no packages yet) -> Contact instead', async ({ page }) => {
         try {
             await page.goto('/');
-            await page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true }).click();
-            await page.locator('.mega-menu').getByRole('link', { name: 'Umrah Packages', exact: true }).click();
+            // Umrah has no published packages, so it has no tab in the
+            // packages section; the footer's service list is how a visitor
+            // reaches that listing from the homepage.
+            await page.locator('footer').getByRole('link', { name: 'Umrah Packages', exact: true }).click();
             await expect(page).toHaveURL(/\/umrah$/);
 
             // Real content gap: Umrah has no packages yet (source data doesn't exist).
@@ -67,10 +74,15 @@ test.describe('Full business journeys — visitor', () => {
     test('Journey C: Homepage -> Tourism -> Package -> Inquiry', async ({ page }) => {
         try {
             await page.goto('/');
-            // "Tourism" is a dropdown trigger (role="button"); it reveals
-            // Domestic/International sub-links rather than navigating itself.
+            // "Tourism" is a real link on this header, not a dropdown trigger.
+            await page.locator(HOME_NAV).getByRole('link', { name: 'Tourism', exact: true }).click();
+            await expect(page.url()).toMatch(/\/tourism/);
+
+            // The domestic/international split is still reached the old way —
+            // the listing page is on the Bootstrap layout and keeps its
+            // dropdown — so that filter stays covered.
             await page.locator('nav.navbar').getByRole('button', { name: 'Tourism', exact: true }).click();
-            await page.getByRole('link', { name: 'Domestic Tourism', exact: true }).click();
+            await page.locator('nav.navbar').getByRole('link', { name: 'Domestic Tourism', exact: true }).click();
             await expect(page.url()).toMatch(/\/tourism/);
 
             await page.getByRole('link', { name: 'View Details' }).first().click();
@@ -90,7 +102,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey D: Homepage -> Awards -> real award content displays', async ({ page }) => {
         await page.goto('/');
-        await page.getByRole('link', { name: 'Awards & Recognition', exact: true }).click();
+        await page.locator(HOME_NAV).getByRole('link', { name: 'Awards & Recognition', exact: true }).click();
         await expect(page).toHaveURL(/\/awards$/);
 
         await expect(page.getByRole('heading', { name: 'Excellence Recognized. Trust Earned.' })).toBeVisible();
@@ -101,7 +113,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey E: Homepage -> Affiliations -> real affiliation content displays', async ({ page }) => {
         await page.goto('/');
-        await page.locator('nav.navbar').getByRole('link', { name: 'Affiliations', exact: true }).click();
+        await page.locator(HOME_NAV).getByRole('link', { name: 'Affiliations', exact: true }).click();
         await expect(page).toHaveURL(/\/affiliations$/);
 
         await expect(page.getByRole('heading', { name: 'Strong Relationships. Trusted Connections.' })).toBeVisible();
@@ -110,7 +122,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey F: Homepage -> Media -> honest empty state (no real news/gallery/video content yet)', async ({ page }) => {
         await page.goto('/');
-        await page.locator('nav.navbar').getByRole('link', { name: 'Media', exact: true }).click();
+        await page.locator(HOME_NAV).getByRole('link', { name: 'Media', exact: true }).click();
         await expect(page).toHaveURL(/\/media$/);
 
         // Real content gap: no NewsArticle/MediaItem rows exist yet in this
@@ -121,7 +133,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey G: Homepage -> Testimonials -> real testimonial content displays', async ({ page }) => {
         await page.goto('/');
-        await page.locator('nav.navbar').getByRole('link', { name: 'Testimonials', exact: true }).click();
+        await page.locator(HOME_NAV).getByRole('link', { name: 'Testimonials', exact: true }).click();
         await expect(page).toHaveURL(/\/testimonials$/);
 
         await expect(page.getByRole('heading', { name: 'Their Journeys. Their Words.' })).toBeVisible();
@@ -131,7 +143,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey H: Homepage -> FAQs -> Contact', async ({ page }) => {
         await page.goto('/');
-        await page.locator('nav.navbar').getByRole('link', { name: 'FAQs', exact: true }).click();
+        await page.locator(HOME_NAV).getByRole('link', { name: 'FAQs', exact: true }).click();
         await expect(page).toHaveURL(/\/faqs$/);
 
         await expect(page.getByText('What is the Hajj 2027 payment plan?')).toBeVisible();

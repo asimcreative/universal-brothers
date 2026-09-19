@@ -94,31 +94,41 @@ test.describe('Mobile navigation QA', () => {
             await page.setViewportSize({ width: bp.width, height: bp.height });
             await page.goto('/');
 
-            const toggler = page.locator('.navbar-toggler');
+            // The homepage is on the designer's template: a drawer of its own
+            // rather than Bootstrap's offcanvas, and a flat list of links with
+            // no group to expand. Everything this test guarded still holds —
+            // it opens, it closes, it does not overflow, and it does not leave
+            // the page behind it scrollable.
+            const toggler = page.locator('[data-ub-menu-open]');
             await expect(toggler).toBeVisible();
-            const offcanvas = page.locator('#mobileNav');
-            await expect(offcanvas).toBeHidden();
+            const drawer = page.locator('#ub-mobile-nav');
+            await expect(drawer).toBeHidden();
+            await expect(toggler).toHaveAttribute('aria-expanded', 'false');
 
             await toggler.click();
-            await expect(offcanvas).toBeVisible();
+            await expect(drawer).toBeVisible();
+            await expect(toggler).toHaveAttribute('aria-expanded', 'true');
 
-            // Nested/mega menu items reachable and no overflow while open.
-            await offcanvas.getByRole('button', { name: 'Hajj Services', exact: true }).click();
-            await expect(offcanvas.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeVisible();
+            // Every destination reachable, and no overflow while open.
+            await expect(drawer.getByRole('link', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
             const { scrollWidth, clientWidth } = await page.evaluate(checkOverflow);
             expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
-            // Closes cleanly, not stuck open.
-            await page.locator('#mobileNav .btn-close').click();
-            await expect(offcanvas).toBeHidden();
+            // The page behind the drawer must not scroll while it is open.
+            expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
 
-            // Real nav links (Hajj/Umrah/Tourism/About/Contact/Register Now)
-            // are all present and tappable-sized once reopened.
+            // Closes cleanly, not stuck open, and gives the page back.
+            await drawer.locator('[data-ub-menu-close]').first().click();
+            await expect(drawer).toBeHidden();
+            await expect(toggler).toHaveAttribute('aria-expanded', 'false');
+            expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
+
+            // Real nav links are all present and tappable-sized once reopened.
             await toggler.click();
             for (const label of ['About Us', 'Awards & Recognition', 'Affiliations', 'Media', 'Testimonials', 'FAQs', 'Contact']) {
-                await expect(offcanvas.getByRole('link', { name: label, exact: true })).toBeVisible();
+                await expect(drawer.getByRole('link', { name: label, exact: true })).toBeVisible();
             }
-            const registerLink = offcanvas.getByRole('link', { name: 'Register Now', exact: true });
+            const registerLink = drawer.getByRole('link', { name: 'Register Now', exact: true });
             await expect(registerLink).toBeVisible();
             await expect(registerLink).toHaveAttribute('href', 'https://hums.akhg.com.pk/HajiReg/HajiLead');
         });
@@ -131,7 +141,9 @@ test.describe('Hero video/slider responsive QA', () => {
             await page.setViewportSize({ width: bp.width, height: bp.height });
             await page.goto('/');
 
-            await expect(page.locator('.hero-slide, #heroCarousel')).toBeVisible();
+            // The template's hero carries `data-ub-hero`; `.hero-slide` and
+            // `#heroCarousel` belonged to the Bootstrap layout.
+            await expect(page.locator('[data-ub-hero]')).toBeVisible();
             await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
             const { scrollWidth, clientWidth } = await page.evaluate(checkOverflow);
@@ -313,14 +325,21 @@ test.describe('Package filter bar responsive QA', () => {
 });
 
 test.describe('Desktop/tablet nav QA', () => {
-    test('nav collapses to hamburger below the lg breakpoint, mega-menu visible above it', async ({ page }) => {
+    test('nav collapses to the drawer below 1280px and is a full bar above it', async ({ page }) => {
+        // The boundary moved from Bootstrap's lg (992px) to 1280px, because
+        // this header carries ten items rather than the template's five and
+        // ten do not fit a narrower bar. Both sides of the boundary are still
+        // asserted, and so is the pairing: exactly one of the two is ever on.
         await page.setViewportSize({ width: 1280, height: 800 });
         await page.goto('/');
-        await expect(page.locator('.navbar-toggler')).toBeHidden();
-        await expect(page.locator('nav.navbar').getByRole('button', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
+        await expect(page.locator('[data-ub-menu-open]')).toBeHidden();
+        const nav = page.locator('nav.ub-primary-nav');
+        await expect(nav).toBeVisible();
+        await expect(nav.getByRole('link', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
 
         await page.setViewportSize({ width: 768, height: 1024 });
         await page.goto('/');
-        await expect(page.locator('.navbar-toggler')).toBeVisible();
+        await expect(page.locator('[data-ub-menu-open]')).toBeVisible();
+        await expect(page.locator('nav.ub-primary-nav')).toBeHidden();
     });
 });

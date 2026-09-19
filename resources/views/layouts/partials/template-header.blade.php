@@ -133,7 +133,7 @@
             </nav>
 
             <div class="flex shrink-0 items-center gap-3">
-                <a class="group relative isolate items-center gap-3 overflow-hidden rounded-pill font-semibold tracking-wide will-change-transform bg-[length:200%_100%] bg-right bg-no-repeat hover:bg-left focus-visible:bg-left transition-[background-position,color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent text-inverse shadow-lg shadow-accent-900/25 hover:text-ivory h-10 pl-5 pr-1.5 text-xs sm:h-12 sm:pl-6 sm:pr-2 sm:text-sm hidden sm:inline-flex" style="background-image:linear-gradient(to right, var(--color-brand-700) 0 50%, var(--color-accent-500) 50% 100%)" href="{{ $ubRegisterUrl }}" target="_blank" rel="noopener">
+                <a class="group relative isolate items-center gap-3 overflow-hidden rounded-pill font-semibold tracking-wide will-change-transform bg-[length:200%_100%] bg-right bg-no-repeat hover:bg-left focus-visible:bg-left transition-[background-position,color,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:duration-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent text-inverse shadow-lg shadow-accent-900/25 hover:text-ivory h-10 pl-5 pr-1.5 text-xs sm:h-12 sm:pl-6 sm:pr-2 sm:text-sm hidden sm:inline-flex" style="background-image:linear-gradient(to right, var(--color-brand-700) 0 50%, var(--color-accent-500) 50% 100%)" data-ub-register href="{{ $ubRegisterUrl }}" target="_blank" rel="noopener">
                     <span class="relative whitespace-nowrap">Register Now</span>
                     <span class="relative grid shrink-0 place-items-center overflow-hidden rounded-full transition-colors duration-300 bg-ivory text-accent-700 group-hover:text-inverse size-7 sm:size-8">
                         <span class="col-start-1 row-start-1 flex"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
@@ -167,7 +167,7 @@
             </ul>
         </nav>
         <div class="shrink-0 space-y-3 border-t border-ivory/10 px-6 py-6">
-            <a href="{{ $ubRegisterUrl }}" target="_blank" rel="noopener" class="flex h-12 w-full items-center justify-center rounded-pill bg-accent-500 text-sm font-semibold text-inverse">Register Now</a>
+            <a data-ub-register href="{{ $ubRegisterUrl }}" target="_blank" rel="noopener" class="flex h-12 w-full items-center justify-center rounded-pill bg-accent-500 text-sm font-semibold text-inverse">Register Now</a>
             @if($ubWhatsapp)
                 <a href="https://wa.me/{{ preg_replace('/[^\d]/', '', $ubWhatsapp) }}" target="_blank" rel="noopener" class="flex h-12 w-full items-center justify-center rounded-pill border border-ivory/25 text-sm font-semibold text-ivory">WhatsApp Us</a>
             @endif
