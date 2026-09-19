@@ -118,7 +118,10 @@ test.describe('Mobile navigation QA', () => {
             expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
 
             // Closes cleanly, not stuck open, and gives the page back.
-            await drawer.locator('[data-ub-menu-close]').first().click();
+            // The close BUTTON, not `[data-ub-menu-close]`: the backdrop carries
+            // that attribute too and it spans the whole screen, so its centre
+            // point sits under the drawer panel and the click never lands.
+            await drawer.getByRole('button', { name: 'Close menu' }).click();
             await expect(drawer).toBeHidden();
             await expect(toggler).toHaveAttribute('aria-expanded', 'false');
             expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden');
