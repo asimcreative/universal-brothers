@@ -132,8 +132,12 @@ class PackageReview
                 $add('pricing', "{$room['label']}{$room['for']} is marked available but has no price.");
             }
         }
-        // Visitors switch currency on the package page; a room without an
-        // amount in the chosen currency shows "N/A".
+        // A visitor reads the whole site in one currency, chosen when they
+        // arrive. A room with no amount in that currency shows "N/A" — but a
+        // package with NO room priced in it is left out of the listing
+        // altogether (Package::scopePricedIn), which is the case worth
+        // spelling out: publishing it looks like it worked and the package is
+        // nowhere to be found.
         $priced = array_filter($rooms, fn ($r) => $r['available'] && ($r['usd'] !== null || $r['sar'] !== null || $r['pkr'] !== null));
         foreach (['usd' => 'USD', 'sar' => 'SAR', 'pkr' => 'PKR'] as $key => $currency) {
             $missing = count(array_filter($priced, fn ($r) => $r[$key] === null));
@@ -141,9 +145,9 @@ class PackageReview
                 continue;
             }
             $add('pricing', match (true) {
-                $missing === count($priced) => "No room has a {$currency} price. Visitors who choose {$currency} will see N/A.",
-                $missing === 1 => "1 room price has no {$currency} amount. Visitors who choose {$currency} will see N/A for it.",
-                default => "{$missing} room prices have no {$currency} amount. Visitors who choose {$currency} will see N/A for them.",
+                $missing === count($priced) => "No room has a {$currency} price, so this package will not be listed at all for visitors reading in {$currency}.",
+                $missing === 1 => "1 room price has no {$currency} amount. Visitors reading in {$currency} will see N/A for it.",
+                default => "{$missing} room prices have no {$currency} amount. Visitors reading in {$currency} will see N/A for them.",
             });
         }
 

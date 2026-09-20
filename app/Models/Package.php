@@ -162,6 +162,73 @@ class Package extends Model
         return $query->where('status', 'published');
     }
 
+    /**
+     * Only the packages that carry a price in this currency.
+     *
+     * The three brochures are separate price lists, not conversions: every
+     * package has a rupee and a riyal price, and only twelve also have a
+     * dollar one. Listing all of them in dollars and showing "N/A" on
+     * fourteen makes the site look broken; showing twelve is the truth.
+     *
+     * A package with no room options at all — one being built in the admin,
+     * or a tourism package priced a different way — is left in, because its
+     * price does not come from this table and filtering it out would empty
+     * the tourism listing.
+     */
+    public function scopePricedIn(Builder $query, string $currency): Builder
+    {
+        $column = \App\Support\Currency::column($currency);
+
+        return $query->where(
+            fn (Builder $q) => $q
+                ->whereDoesntHave('roomOptions')
+                ->orWhereHas('roomOptions', fn (Builder $r) => $r->whereNotNull($column)->where('is_available', true)),
+        );
+    }
+
+    /**
+     * The lowest published per-person price in this currency, or null.
+     *
+     * Read from the room options rather than the `starting_price` column,
+     * which holds one number in one currency and cannot answer this.
+     */
+    public function startingPriceIn(string $currency): ?float
+    {
+        $column = \App\Support\Currency::column($currency);
+
+        $lowest = $this->relationLoaded('roomOptions')
+            ? $this->roomOptions->where('is_available', true)->whereNotNull($column)->min($column)
+            : $this->roomOptions()->where('is_available', true)->whereNotNull($column)->min($column);
+
+        // A package priced outside the room-option table (tourism, mostly)
+        // falls back to its own column, but only when that column is in the
+        // currency being asked for — otherwise it would quote rupees as
+        // dollars.
+        if ($lowest === null && strtoupper($currency) === strtoupper((string) $this->currency)) {
+            return $this->starting_price !== null ? (float) $this->starting_price : null;
+        }
+
+        return $lowest !== null ? (float) $lowest : null;
+    }
+
+    /**
+     * The highest published per-person price in this currency, or null.
+     *
+     * The pair of these is what a listing needs: a package with two hotel
+     * options and three room types spans a real range, and quoting only the
+     * bottom of it makes every package look like its cheapest room.
+     */
+    public function endingPriceIn(string $currency): ?float
+    {
+        $column = \App\Support\Currency::column($currency);
+
+        $highest = $this->relationLoaded('roomOptions')
+            ? $this->roomOptions->where('is_available', true)->whereNotNull($column)->max($column)
+            : $this->roomOptions()->where('is_available', true)->whereNotNull($column)->max($column);
+
+        return $highest !== null ? (float) $highest : null;
+    }
+
     public function scopeNotArchived(Builder $query): Builder
     {
         return $query->whereNull('archived_at');

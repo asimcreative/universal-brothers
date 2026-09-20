@@ -106,6 +106,7 @@
 
     @include('layouts.partials.template-footer')
 
+    @include('layouts.partials.currency-choice')
 
     @include('layouts.partials.back-to-top')
 

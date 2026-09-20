@@ -34,7 +34,12 @@
         title="Room Type Pricing"
         :lead="$ubLead">
 
-        <x-hajj.currency-switcher :hajj="$hajj" />
+        {{-- The currency is chosen once for the whole site, in the header,
+             because it decides which packages are listed as well as how they
+             are priced. A second switcher here could disagree with it. What
+             is still worth saying is when THIS package has no price in the
+             currency being read. --}}
+        <x-hajj.currency-note :hajj="$hajj" />
 
         @if($hajj->hasChoice())
             <h3 class="hajj-choice-title">{{ $hajj->choiceHeading() }}</h3>

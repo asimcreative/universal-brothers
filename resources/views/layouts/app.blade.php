@@ -95,6 +95,8 @@
 
     <x-lightbox-modal />
 
+    @include('layouts.partials.currency-choice')
+
     @include('layouts.partials.back-to-top')
 
     {{-- Renders nothing at all unless the assistant is enabled, has public

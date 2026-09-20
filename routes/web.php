@@ -49,6 +49,10 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:contact-form')->name('contact.store');
 Route::post('/inquiries', [InquiryController::class, 'store'])->middleware('throttle:inquiry-form')->name('inquiries.store');
+
+// Which of the three price lists the visitor is reading. POST because it
+// changes the session, and therefore what every page shows.
+Route::post('/currency', [\App\Http\Controllers\CurrencyController::class, 'store'])->name('currency.store');
 Route::get('/news/{slug}', [NewsController::class, 'show'])->name('news.show');
 
 Route::get('/hajj-services', [HajjServicesController::class, 'index'])->name('hajj-services');

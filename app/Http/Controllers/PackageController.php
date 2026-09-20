@@ -6,6 +6,7 @@ use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Models\PackageRoomOption;
 use App\Models\PackageVariant;
+use App\Support\Currency;
 use App\Support\HajjPackagePage;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,9 +17,16 @@ class PackageController extends Controller
     {
         $category = PackageCategory::where('slug', $categorySlug)->where('is_active', true)->firstOrFail();
 
+        // Only the packages carrying a price in the currency the visitor chose.
+        // The three brochures are separate price lists rather than conversions
+        // of one another, so listing a package with no price in the chosen
+        // currency would mean a card that cannot say what it costs.
+        $currency = Currency::current();
+
         $query = $category->packages()
             ->published()
-            ->with('series')
+            ->pricedIn($currency)
+            ->with(['series', 'roomOptions'])
             ->when($request->filled('series'), fn ($q) => $q->whereHas('series', fn ($s) => $s->where('slug', $request->string('series'))));
 
         $hajjFilters = null;
@@ -38,7 +46,7 @@ class PackageController extends Controller
             $package->setRelation('category', $category);
         }
 
-        return view('packages.category', compact('category', 'packages', 'series', 'hajjFilters'));
+        return view('packages.category', compact('category', 'packages', 'series', 'hajjFilters', 'currency'));
     }
 
     public function show(string $categorySlug, Package $package): View
@@ -99,11 +107,20 @@ class PackageController extends Controller
         $priceMin = $request->filled('price_min') && is_numeric($request->input('price_min')) ? (float) $request->input('price_min') : null;
         $priceMax = $request->filled('price_max') && is_numeric($request->input('price_max')) ? (float) $request->input('price_max') : null;
 
+        // The column for the currency the visitor is reading in. This was
+        // hard-coded to dollars, so a price typed while reading in rupees was
+        // compared against the dollar column and matched nothing — the filter
+        // looked broken for two readers in three.
+        $priceColumn = Currency::column();
+
         return $query
             ->when($request->filled('days') && is_numeric($request->input('days')), fn ($q) => $q->where('duration_days', (int) $request->input('days')))
             ->when($request->filled('variant'), fn ($q) => $q->whereHas('variants', fn ($v) => $v->where('code', $request->string('variant'))))
             ->when($request->filled('arrival'), function ($q) use ($request) {
                 $q->where('medinah_first', $request->input('arrival') === 'madina');
+            })
+            ->when($request->filled('shifting') && $request->input('shifting') !== 'any', function ($q) use ($request) {
+                $q->where('is_shifting', $request->input('shifting') === 'shifting');
             })
             ->when($request->filled('aziziya') && $request->input('aziziya') !== 'any', function ($q) use ($request) {
                 $q->whereHas('aziziya', fn ($a) => $a->where('status', $request->string('aziziya')));
@@ -119,13 +136,13 @@ class PackageController extends Controller
             // EXISTS subquery, so a package with one $800 room and one $3,000
             // room would satisfy a $1,000-$2,000 filter even though no single
             // room is actually in that range.
-            ->when($priceMin !== null || $priceMax !== null, function ($q) use ($priceMin, $priceMax) {
-                $q->whereHas('roomOptions', function ($r) use ($priceMin, $priceMax) {
+            ->when($priceMin !== null || $priceMax !== null, function ($q) use ($priceMin, $priceMax, $priceColumn) {
+                $q->whereHas('roomOptions', function ($r) use ($priceMin, $priceMax, $priceColumn) {
                     if ($priceMin !== null) {
-                        $r->where('price_usd', '>=', $priceMin);
+                        $r->where($priceColumn, '>=', $priceMin);
                     }
                     if ($priceMax !== null) {
-                        $r->where('price_usd', '<=', $priceMax);
+                        $r->where($priceColumn, '<=', $priceMax);
                     }
                 });
             });
