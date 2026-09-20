@@ -80,14 +80,18 @@
 
     @stack('before_header')
 
-    @include('layouts.partials.header')
+    {{-- The same header the homepage uses. `ubOverlay` is false because
+         these pages have no photographic hero behind the bar for it to sit
+         over, so here it is a solid band in the normal flow. --}}
+    @include('layouts.partials.template-header', ['ubOverlay' => false])
 
     <main id="main-content" tabindex="-1">
         @include('layouts.partials.flash')
         @yield('content')
     </main>
 
-    @include('layouts.partials.footer')
+    {{-- The same footer the homepage uses, for the same reason as the header. --}}
+    @include('layouts.partials.template-footer')
 
     <x-lightbox-modal />
 
