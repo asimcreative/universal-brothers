@@ -146,13 +146,18 @@
 }
 
 .hajj-jump-link {
-    display: inline-block;
+    // A flex box with a minimum height rather than inline padding: these are
+    // the main way around a package page on a phone, and at 35px tall they
+    // were below the size a thumb reliably hits.
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     white-space: nowrap;
-    padding: 0.45rem 0.85rem;
+    padding: 0.45rem 0.95rem;
     border-radius: 999px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: rgba(33, 37, 41, 0.8);
+    color: $ub-ink-muted;
     text-decoration: none;
     transition: background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
 
