@@ -24,6 +24,12 @@ class DatabaseSeeder extends Seeder
             LegalPageSeeder::class,
             AdminUserSeeder::class,
 
+            // The header's top strip: the announcements its ticker reads, and
+            // a link for each social platform so its icon appears. Both had
+            // only ever existed as hand-made rows, so a fresh database showed
+            // a silent ticker and one lonely icon.
+            SiteChromeSeeder::class,
+
             // These two run AFTER the content seeders above, because they
             // enrich rows those seeders create rather than creating their own.
             // Both are idempotent and both leave anything the client has
