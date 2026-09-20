@@ -154,9 +154,15 @@ class HajjBrochureCorrectionTest extends TestCase
         // UB024's Medinah hotel also contains the words "Dallah Taibah" but is
         // a different, unchanged label. A rename done with a loose match would
         // have rewritten it.
+        //
+        // Asked of UB024 itself rather than by counting the label across the
+        // catalogue: three packages print it now, and a count would have to
+        // be revised every time another one does — which says nothing about
+        // whether the rename stayed where it belonged.
+        $ub024 = Package::where('code', 'UB024')->firstOrFail();
         $this->assertSame(
-            1,
-            PackageAccommodation::where('hotel_name', 'Al Aqeeq / Dallah Taibah / Similar')->count()
+            ['Al Aqeeq / Dallah Taibah / Similar'],
+            $ub024->accommodations()->where('location', 'medinah')->pluck('hotel_name')->unique()->values()->all()
         );
     }
 

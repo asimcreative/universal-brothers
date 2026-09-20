@@ -14,6 +14,7 @@ use App\Models\PackageCategory;
 use App\Models\PackageRoomOption;
 use App\Models\PackageVariant;
 use App\Models\Testimonial;
+use App\Support\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -249,8 +250,11 @@ class FrontendRedesignTest extends TestCase
         $hajj = PackageCategory::factory()->create(['slug' => 'hajj', 'is_active' => true]);
         $quad = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'Quad Sharing Package', 'status' => 'published']);
         $double = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'Double Sharing Package', 'status' => 'published']);
-        PackageRoomOption::create(['package_id' => $quad->id, 'sharing_type' => 'quad', 'display_label' => 'Quad Sharing', 'sort_order' => 0]);
-        PackageRoomOption::create(['package_id' => $double->id, 'sharing_type' => 'double', 'display_label' => 'Double Sharing', 'sort_order' => 0]);
+        // Priced, because the listing now leaves out a package it cannot
+        // price in the currency the visitor is reading — and these rooms
+        // carried no price in any currency at all.
+        PackageRoomOption::create(['package_id' => $quad->id, 'sharing_type' => 'quad', 'display_label' => 'Quad Sharing', 'price_pkr' => 1_200_000, 'sort_order' => 0]);
+        PackageRoomOption::create(['package_id' => $double->id, 'sharing_type' => 'double', 'display_label' => 'Double Sharing', 'price_pkr' => 2_400_000, 'sort_order' => 0]);
 
         $response = $this->get('/hajj?sharing=quad');
 
@@ -264,8 +268,8 @@ class FrontendRedesignTest extends TestCase
         $hajj = PackageCategory::factory()->create(['slug' => 'hajj', 'is_active' => true]);
         $cheap = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'Cheap Package', 'status' => 'published']);
         $expensive = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'Expensive Package', 'status' => 'published']);
-        PackageRoomOption::create(['package_id' => $cheap->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_usd' => 5000, 'sort_order' => 0]);
-        PackageRoomOption::create(['package_id' => $expensive->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_usd' => 50000, 'sort_order' => 0]);
+        PackageRoomOption::create(['package_id' => $cheap->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_pkr' => 5000, 'sort_order' => 0]);
+        PackageRoomOption::create(['package_id' => $expensive->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_pkr' => 50000, 'sort_order' => 0]);
 
         $response = $this->get('/hajj?price_min=1000&price_max=10000');
 
@@ -287,15 +291,49 @@ class FrontendRedesignTest extends TestCase
         $noRoomInRange = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'No Room In Range Package', 'status' => 'published']);
         $roomInRange = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'Room In Range Package', 'status' => 'published']);
 
-        PackageRoomOption::create(['package_id' => $noRoomInRange->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_usd' => 800, 'sort_order' => 0]);
-        PackageRoomOption::create(['package_id' => $noRoomInRange->id, 'sharing_type' => 'double', 'display_label' => 'Double', 'price_usd' => 3000, 'sort_order' => 1]);
-        PackageRoomOption::create(['package_id' => $roomInRange->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_usd' => 1500, 'sort_order' => 0]);
+        PackageRoomOption::create(['package_id' => $noRoomInRange->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_pkr' => 800, 'sort_order' => 0]);
+        PackageRoomOption::create(['package_id' => $noRoomInRange->id, 'sharing_type' => 'double', 'display_label' => 'Double', 'price_pkr' => 3000, 'sort_order' => 1]);
+        PackageRoomOption::create(['package_id' => $roomInRange->id, 'sharing_type' => 'quad', 'display_label' => 'Quad', 'price_pkr' => 1500, 'sort_order' => 0]);
 
         $response = $this->get('/hajj?price_min=1000&price_max=2000');
 
         $response->assertOk();
         $response->assertSee('Room In Range Package');
         $response->assertDontSee('No Room In Range Package');
+    }
+
+    /**
+     * The filter compared the figure typed into it against `price_usd`
+     * whichever currency was on screen. A range entered while reading in
+     * rupees was therefore measured against dollars and matched nothing, so
+     * for two readers in three the filter simply looked broken.
+     */
+    public function test_the_price_filter_measures_against_the_currency_the_visitor_is_reading(): void
+    {
+        $hajj = PackageCategory::factory()->create(['slug' => 'hajj', 'is_active' => true]);
+        $package = Package::factory()->create(['package_category_id' => $hajj->id, 'name' => 'Both Currencies Package', 'status' => 'published']);
+        PackageRoomOption::create([
+            'package_id' => $package->id, 'sharing_type' => 'quad', 'display_label' => 'Quad',
+            'price_pkr' => 1_500_000, 'price_usd' => 5_000, 'sort_order' => 0,
+        ]);
+
+        // A rupee range, read in rupees: found.
+        $this->withSession([Currency::SESSION_KEY => 'PKR'])
+            ->get('/hajj?price_min=1000000&price_max=2000000')
+            ->assertOk()->assertSee('Both Currencies Package');
+
+        // The same figures read in dollars mean something else entirely, and
+        // must not match. This is the assertion that failed before the fix:
+        // the room's $5,000 was compared against a 1,000,000-2,000,000 range
+        // in every currency alike.
+        $this->withSession([Currency::SESSION_KEY => 'USD'])
+            ->get('/hajj?price_min=1000000&price_max=2000000')
+            ->assertOk()->assertDontSee('Both Currencies Package');
+
+        // And a dollar range does find it, read in dollars.
+        $this->withSession([Currency::SESSION_KEY => 'USD'])
+            ->get('/hajj?price_min=4000&price_max=6000')
+            ->assertOk()->assertSee('Both Currencies Package');
     }
 
     public function test_hajj_listing_filter_options_are_derived_from_real_data_not_hardcoded(): void

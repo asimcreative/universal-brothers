@@ -12,19 +12,19 @@ function deleteTestInquiriesByEmail(email) {
     execFileSync(PHP_BIN, ['artisan', 'tinker', '--env=testing', '--execute', `App\\Models\\Inquiry::where('email', '${email}')->delete();`], { stdio: 'ignore' });
 }
 
-// The homepage is on the designer's template: its header is a flat list of ten
-// links inside `nav.ub-primary-nav`, with no mega-menu and no dropdowns. Every
-// OTHER page is still on the Bootstrap layout and still has `nav.navbar`, so a
-// journey that has left the homepage keeps using the old selector — which is
-// why both appear in this file.
-const HOME_NAV = 'nav.ub-primary-nav';
+// One header now serves every page, homepage included, so a journey uses the
+// same selector wherever it has got to. It carries the full menu: ten
+// top-level items, the Hajj & Umrah mega panel and the Tourism dropdown.
+// The panels open on hover and on focus and need no click.
+const NAV = 'nav.ub-primary-nav';
 
 test.describe('Full business journeys — visitor', () => {
     test('Journey A: Homepage -> Hajj -> Package Listing -> Package Detail -> Inquiry CTA -> Submit -> Confirmation', async ({ page }) => {
         try {
             await page.goto('/');
-            // The packages section carries the route to the listing now. The
-            // mega-menu that used to hold it does not exist on this layout.
+            // Taken from the packages section rather than the menu: this
+            // journey is about the route a reader actually follows down the
+            // homepage, and the mega panel is covered by its own test.
             await page.locator('#featured-packages').getByRole('link', { name: /View all Hajj Packages/i }).click();
             await expect(page).toHaveURL(/\/hajj$/);
 
@@ -74,16 +74,17 @@ test.describe('Full business journeys — visitor', () => {
     test('Journey C: Homepage -> Tourism -> Package -> Inquiry', async ({ page }) => {
         try {
             await page.goto('/');
-            // "Tourism" is a real link on this header, not a dropdown trigger.
-            await page.locator(HOME_NAV).getByRole('link', { name: 'Tourism', exact: true }).click();
+            // Tourism is a link that also owns a dropdown. Both routes into
+            // the section are covered: the item itself, then the domestic
+            // filter from the panel, which opens on hover with nothing to
+            // click first.
+            const tourism = page.locator(`${NAV} .ub-nav-item`).filter({ hasText: 'Tourism' });
+            await tourism.locator('> a').click();
             await expect(page.url()).toMatch(/\/tourism/);
 
-            // The domestic/international split is still reached the old way —
-            // the listing page is on the Bootstrap layout and keeps its
-            // dropdown — so that filter stays covered.
-            await page.locator('nav.navbar').getByRole('button', { name: 'Tourism', exact: true }).click();
-            await page.locator('nav.navbar').getByRole('link', { name: 'Domestic Tourism', exact: true }).click();
-            await expect(page.url()).toMatch(/\/tourism/);
+            await tourism.hover();
+            await tourism.getByRole('link', { name: 'Domestic Tourism', exact: true }).click();
+            await expect(page.url()).toMatch(/series=domestic/);
 
             await page.getByRole('link', { name: 'View Details' }).first().click();
             await expect(page.url()).toMatch(/\/tourism\//);
@@ -102,7 +103,7 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey D: Homepage -> Awards -> real award content displays', async ({ page }) => {
         await page.goto('/');
-        await page.locator(HOME_NAV).getByRole('link', { name: 'Awards & Recognition', exact: true }).click();
+        await page.locator(`${NAV} > ul > li > a`).filter({ hasText: /^\s*Awards & Recognition\s*$/ }).click();
         await expect(page).toHaveURL(/\/awards$/);
 
         await expect(page.getByRole('heading', { name: 'Excellence Recognized. Trust Earned.' })).toBeVisible();
@@ -113,27 +114,34 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey E: Homepage -> Affiliations -> real affiliation content displays', async ({ page }) => {
         await page.goto('/');
-        await page.locator(HOME_NAV).getByRole('link', { name: 'Affiliations', exact: true }).click();
+        await page.locator(`${NAV} > ul > li > a`).filter({ hasText: /^\s*Affiliations\s*$/ }).click();
         await expect(page).toHaveURL(/\/affiliations$/);
 
         await expect(page.getByRole('heading', { name: 'Strong Relationships. Trusted Connections.' })).toBeVisible();
         await expect(page.getByText('IATA', { exact: true })).toBeVisible();
     });
 
-    test('Journey F: Homepage -> Media -> honest empty state (no real news/gallery/video content yet)', async ({ page }) => {
+    test('Journey F: Homepage -> Media -> the published announcements are listed', async ({ page }) => {
         await page.goto('/');
-        await page.locator(HOME_NAV).getByRole('link', { name: 'Media', exact: true }).click();
+        await page.locator(`${NAV} > ul > li > a`).filter({ hasText: /^\s*Media\s*$/ }).click();
         await expect(page).toHaveURL(/\/media$/);
 
-        // Real content gap: no NewsArticle/MediaItem rows exist yet in this
-        // environment — the News tab (shown by default) must say so honestly
-        // rather than render a broken/empty-looking grid with no explanation.
-        await expect(page.getByText(/No news articles have been published yet/i)).toBeVisible();
+        // This used to assert the empty state, which was the truth when no
+        // NewsArticle rows existed anywhere. `SiteChromeSeeder` now publishes
+        // the announcements the header ticker reads, so a seeded environment
+        // has real rows and the honest thing to show is the list.
+        //
+        // The empty state is still guaranteed, by MediaPageTest, which runs
+        // against a database with nothing in it — the right place for it,
+        // since no visitor to a seeded site will ever see it.
+        const news = page.getByRole('heading', { name: /Hajj 2027 \(1448 AH\) programme is published/i });
+        await expect(news).toBeVisible();
+        await expect(page.getByText(/No news articles have been published yet/i)).toHaveCount(0);
     });
 
     test('Journey G: Homepage -> Testimonials -> real testimonial content displays', async ({ page }) => {
         await page.goto('/');
-        await page.locator(HOME_NAV).getByRole('link', { name: 'Testimonials', exact: true }).click();
+        await page.locator(`${NAV} > ul > li > a`).filter({ hasText: /^\s*Testimonials\s*$/ }).click();
         await expect(page).toHaveURL(/\/testimonials$/);
 
         await expect(page.getByRole('heading', { name: 'Their Journeys. Their Words.' })).toBeVisible();
@@ -143,12 +151,12 @@ test.describe('Full business journeys — visitor', () => {
 
     test('Journey H: Homepage -> FAQs -> Contact', async ({ page }) => {
         await page.goto('/');
-        await page.locator(HOME_NAV).getByRole('link', { name: 'FAQs', exact: true }).click();
+        await page.locator(`${NAV} > ul > li > a`).filter({ hasText: /^\s*FAQs\s*$/ }).click();
         await expect(page).toHaveURL(/\/faqs$/);
 
         await expect(page.getByText('What is the Hajj 2027 payment plan?')).toBeVisible();
 
-        await page.locator('nav.navbar').getByRole('link', { name: 'Contact', exact: true }).click();
+        await page.locator(`${NAV} > ul > li > a`).filter({ hasText: /^\s*Contact\s*$/ }).click();
         await expect(page).toHaveURL(/\/contact$/);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     });

@@ -38,6 +38,14 @@ async function deletePackageByName(page, name) {
 
 test.describe('Hajj package builder', () => {
     test('an admin builds a package with two hotel options, saves a draft, publishes it and sees it on the website', async ({ page }) => {
+        // This journey walks the whole fourteen-step wizard, publishes, and
+        // then checks the package on the public site — thirty-odd navigations.
+        // It also waits up to 30s on its own for the publish confirmation at
+        // the end, which is the entire default test budget, so on any machine
+        // where publishing is not instant the test could never finish. The
+        // assertions are unchanged; only the wall-clock allowance is.
+        test.setTimeout(150_000);
+
         const stamp = Date.now();
         const title = `E2E Builder Package ${stamp}`;
         const code = `E2E${String(stamp).slice(-6)}`;

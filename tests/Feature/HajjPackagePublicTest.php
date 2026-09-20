@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Office;
 use App\Models\Package;
 use App\Models\PackageCategory;
+use App\Support\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -80,19 +81,31 @@ class HajjPackagePublicTest extends TestCase
         $response->assertSeeInOrder(['Quad Sharing', 'N/A', 'Triple Sharing', '22450']);
     }
 
-    public function test_currencies_pkr_sar_usd_are_all_supported_display_targets(): void
+    public function test_the_page_quotes_whichever_currency_the_visitor_is_reading(): void
     {
         $package = $this->buildPackage();
         $package->roomOptions()->where('sharing_type', 'triple')->update(['price_pkr' => 6300000, 'price_sar' => 84000]);
 
-        $response = $this->get("/hajj/{$package->slug}");
-
+        // Every currency's real figure still ships in the markup: the three
+        // brochures are separate price lists and nothing is ever converted,
+        // so the admin preview and these tests can read all three.
+        $response = $this->withSession([Currency::SESSION_KEY => 'PKR'])->get("/hajj/{$package->slug}");
         $response->assertOk();
         $response->assertSee('data-pkr="6300000.00"', false);
         $response->assertSee('data-sar="84000.00"', false);
-        $response->assertSee('data-currency="USD"', false);
-        $response->assertSee('data-currency="SAR"', false);
-        $response->assertSee('data-currency="PKR"', false);
+
+        // What is SHOWN is the one chosen, written the way that currency
+        // writes it. This used to assert three `data-currency` buttons,
+        // because the page carried its own switcher and rewrote the numbers
+        // in JavaScript; the choice is made once for the whole site now, so
+        // the thing worth asserting is the figure on the page.
+        $response->assertSee('PKR 6,300,000');
+
+        $this->withSession([Currency::SESSION_KEY => 'SAR'])->get("/hajj/{$package->slug}")
+            ->assertOk()->assertSee('SAR 84,000');
+
+        $this->withSession([Currency::SESSION_KEY => 'USD'])->get("/hajj/{$package->slug}")
+            ->assertOk()->assertSee('US$22,450');
     }
 
     public function test_aziziya_included_status_renders(): void

@@ -126,10 +126,17 @@ class PackageLibraryTest extends TestCase
         $library = LibraryRegistry::find('transport');
         $transport = TransportOption::where('transport_type', 'mashaer')->firstOrFail();
 
-        $this->actingAs($this->admin)->get(route('admin.library.index', 'transport'))->assertSee('12 packages');
+        // Counted from the data rather than written down. This read "12
+        // packages" while twelve were seeded, and broke the day the other
+        // fourteen arrived — a test that fails when the catalogue grows is
+        // testing the size of the seed, not the feature.
+        $inUse = $library->packagesUsing($transport)->count();
+        $this->assertGreaterThan(1, $inUse, 'this record is only interesting while packages use it');
+
+        $this->actingAs($this->admin)->get(route('admin.library.index', 'transport'))->assertSee("{$inUse} packages");
 
         $usage = $this->actingAs($this->admin)->get(route('admin.library.usage', ['transport', $transport->id]));
-        $usage->assertOk()->assertSee('UB001')->assertSee('Update 12 packages');
+        $usage->assertOk()->assertSee('UB001')->assertSee("Update {$inUse} packages");
 
         $this->actingAs($this->admin)
             ->from(route('admin.library.index', 'transport'))
@@ -141,7 +148,7 @@ class PackageLibraryTest extends TestCase
         $this->actingAs($this->admin)->patch(route('admin.library.archive', ['transport', $transport->id]));
         $builderIds = collect(PackageBuilderData::for(new Package)['transport'])->pluck('id');
         $this->assertFalse($builderIds->contains($transport->id));
-        $this->assertSame(12, $library->packagesUsing($transport)->count());
+        $this->assertSame($inUse, $library->packagesUsing($transport)->count(), 'archiving must take it out of the builder without touching a package that uses it');
     }
 
     public function test_editing_a_library_record_does_not_change_packages_until_the_admin_updates_them(): void
@@ -149,7 +156,10 @@ class PackageLibraryTest extends TestCase
         Artisan::call('db:seed');
         $hotel = Hotel::where('name', 'Swissotel Makkah')->firstOrFail();
         $linkedRows = fn () => PackageAccommodation::where('hotel_id', $hotel->id);
-        $this->assertSame(2, $linkedRows()->count());
+        // However many packages the seed links to this hotel — what matters
+        // is that there is at least one, so "saving the record leaves live
+        // packages alone" has something to be true of.
+        $this->assertGreaterThan(0, $linkedRows()->count());
 
         $this->actingAs($this->admin)->put(route('admin.library.update', ['hotels', $hotel->id]), [
             'name' => 'Swissotel Al Maqam Makkah', 'location' => 'makkah', 'star_rating' => '5', 'is_active' => '1',

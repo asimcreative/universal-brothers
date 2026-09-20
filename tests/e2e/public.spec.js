@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { execFileSync } from 'child_process';
+import { chooseCurrency } from './helpers/currency.js';
 
 const PHP_BIN = process.env.PHP_BIN || 'C:/laragon/bin/php/php-8.3.16-Win32-vs16-x64/php.exe';
 
@@ -37,14 +38,23 @@ test.describe('Public website', () => {
         await page.setViewportSize({ width: 1440, height: 900 });
         await page.goto('/');
 
-        // The homepage is on the designer's template: ten plain links, with no
-        // dropdown and no mega-menu, so every destination is one click away
-        // rather than hidden behind a trigger.
+        // One header serves the whole site. Its ten top-level items are
+        // matched inside the top-level list, because several of the same
+        // labels also appear as deep links inside the mega panel.
         const nav = page.locator('nav.ub-primary-nav');
         for (const label of ['Home', 'About Us', 'Hajj & Umrah', 'Tourism', 'Awards & Recognition',
             'Affiliations', 'Media', 'Testimonials', 'FAQs', 'Contact']) {
-            await expect(nav.getByRole('link', { name: label, exact: true })).toBeVisible();
+            await expect(nav.locator('> ul > li > a').filter({ hasText: new RegExp(`^\\s*${label}\\s*$`) })).toBeVisible();
         }
+
+        // And the mega panel the inner pages have always had is here too: it
+        // stays shut until the item is hovered, then offers the deep links.
+        const hajjItem = nav.locator('.ub-nav-item').filter({ hasText: 'Hajj & Umrah' });
+        const panel = hajjItem.locator('.ub-nav-panel');
+        await expect(panel).toBeHidden();
+        await hajjItem.hover();
+        await expect(panel).toBeVisible();
+        await expect(panel.getByRole('link', { name: 'How to Apply', exact: true }).first()).toBeVisible();
 
         // The Hajj and Umrah listings are still reachable from the homepage —
         // from the packages section and the footer rather than from a menu.
@@ -124,43 +134,42 @@ test.describe('Public website', () => {
         await expect(page.getByRole('heading', { name: 'Room Type Pricing' })).toBeVisible();
     });
 
-    test('6b. Hajj package detail currency switcher changes displayed price without a page reload', async ({ page }) => {
+    test('6b. the currency chosen in the header decides every price, on every page', async ({ page }) => {
         await page.goto('/hajj');
         await Promise.all([
             page.waitForURL(/\/hajj\/ub001-/),
             page.getByText('UB001').first().locator('xpath=ancestor::div[contains(@class,"package-card")]').getByRole('link', { name: 'View Details' }).click(),
         ]);
 
-        // UB001 Package B Quad. This assertion used to read "USD, then N/A on
-        // SAR", because the brochure supplied to this project was USD-only.
-        // The client has since supplied the PKR and Riyal brochures and the
-        // backfill landed (issue #5), so all three currencies are now real
-        // seeded values — and asserting all three is a stronger test of the
-        // switcher than USD-and-a-blank ever was.
+        // UB001 Package B Quad, which the brochures price in all three
+        // currencies. The page opens in rupees because that is what the
+        // currency gate was answered with (see auth.setup.js) — the choice
+        // belongs to the site, not to this page, which is the whole change:
+        // it used to be a per-page switcher that rewrote the numbers in
+        // JavaScript, and it is now a server-side choice that also decides
+        // which packages are listed at all.
         const priceCell = page.locator('.currency-price[data-usd="16300.00"]').first();
-        await expect(priceCell).toHaveText('US$16,300');
-
-        await page.locator('#currency-switcher [data-currency="SAR"]').click();
-        await expect(priceCell).toHaveText('SAR 59,500');
-
-        await page.locator('#currency-switcher [data-currency="PKR"]').click();
         await expect(priceCell).toHaveText('PKR 4,640,000');
 
-        await page.locator('#currency-switcher [data-currency="USD"]').click();
+        await chooseCurrency(page, 'SAR');
+        await expect(priceCell).toHaveText('SAR 59,500');
+
+        await chooseCurrency(page, 'USD');
         await expect(priceCell).toHaveText('US$16,300');
 
-        // No N/A assertion here any more, and deliberately so. A room with no
-        // price in any currency (UB001 Package A Quad — the brochure prints
-        // "NA") is not rendered as an empty row at all, and every room that IS
-        // rendered now has all three currencies. The N/A branch in the
-        // switcher still exists for a partially-priced room, but no such room
-        // is currently published, so asserting it here would mean asserting
-        // against markup the page does not produce.
-        await expect(page.locator('.currency-price[data-usd=""]')).toHaveCount(0);
-
-        // Switching currency must not touch anything else on the page.
+        // Nothing else on the page moved.
         await expect(page.getByRole('heading', { name: 'Day-by-Day Itinerary' })).toBeVisible();
         await expect(page.getByText('Dar Al Tawhid Intercontinental').first()).toBeVisible();
+
+        // Every room that is rendered carries a real price in the chosen
+        // currency. A room the brochure prints "NA" against (UB001 Package A
+        // Quad) is not rendered at all, rather than rendered blank.
+        await expect(page.locator('.currency-price[data-usd=""]')).toHaveCount(0);
+
+        // And it is still dollars on the next page: the answer is remembered
+        // for the site rather than asked again.
+        await page.goto('/hajj');
+        await expect(page.locator('.package-card').first()).toContainText('US$');
     });
 
     test('7. Umrah page loads and shows the honest empty state (no invented packages)', async ({ page }) => {
@@ -287,9 +296,14 @@ test.describe('Public website', () => {
         await expect(drawer).toBeVisible();
         await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
-        // The drawer is a flat list on this layout — every destination is a
-        // real link, with no group to expand first.
-        await expect(drawer.getByRole('link', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
+        // Items that own a panel become a group the reader expands; the rest
+        // stay plain links. Both kinds must be reachable.
+        const group = drawer.locator('.ub-drawer-group').filter({ hasText: 'Hajj & Umrah' });
+        await expect(group).toBeVisible();
+        await expect(group.getByRole('link', { name: 'How to Apply' }).first()).toBeHidden();
+        await group.locator('summary').click();
+        await expect(group.getByRole('link', { name: 'How to Apply' }).first()).toBeVisible();
+
         await expect(drawer.getByRole('link', { name: 'Contact', exact: true })).toBeVisible();
     });
 
@@ -408,5 +422,57 @@ test.describe('Public website', () => {
             .filter((r) => r.selectorText === '.btn-whatsapp:focus-visible')
             .map((r) => r.style.outline || r.style.boxShadow));
         expect(whatsappRule.join(' '), 'the WhatsApp button has no focus-visible rule').toMatch(/3px|0 0 0/);
+    });
+});
+
+/**
+ * The currency gate, from the one state every other test deliberately avoids:
+ * a visitor who has never answered it.
+ *
+ * `storageState` is emptied here on purpose. Every other public test starts
+ * with the answer already in a cookie, because the dialog is modal and its
+ * backdrop takes the pointer events — correctly, for a real visitor, but it
+ * would otherwise be in front of every click in the suite.
+ */
+test.describe('Currency gate', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test('asks once, then never again, and decides what prices the site quotes', async ({ page }) => {
+        await page.goto('/');
+
+        const gate = page.locator('[data-ub-currency-gate]');
+        await expect(gate).toBeVisible();
+
+        // Three real choices and no way past without making one. A dismiss
+        // would leave the question hanging and re-ask on the next page.
+        await expect(gate.locator('button[name="currency"]')).toHaveCount(3);
+
+        await gate.locator('button[value="SAR"]').click();
+        await expect(page.locator('[data-ub-currency-gate]')).toHaveCount(0);
+
+        // The answer decides the prices...
+        await page.goto('/hajj');
+        await expect(page.locator('.package-card').first()).toContainText('SAR');
+
+        // ...and it is not asked again, on this page or any other.
+        await page.goto('/');
+        await expect(page.locator('[data-ub-currency-gate]')).toHaveCount(0);
+    });
+
+    test('is remembered past the end of the session, not just within it', async ({ page, context }) => {
+        await page.goto('/');
+        await page.locator('[data-ub-currency-gate] button[value="USD"]').click();
+        await expect(page.locator('[data-ub-currency-gate]')).toHaveCount(0);
+
+        // Everything the session was carried in, thrown away. What is left is
+        // the year-long preference cookie, which is the point: a visitor who
+        // comes back next week is not interrogated again.
+        const kept = (await context.cookies()).filter((c) => c.name === 'ub_currency');
+        await context.clearCookies();
+        await context.addCookies(kept);
+
+        await page.goto('/hajj');
+        await expect(page.locator('[data-ub-currency-gate]')).toHaveCount(0);
+        await expect(page.locator('.package-card').first()).toContainText('US$');
     });
 });

@@ -111,10 +111,18 @@ class PackageBuilderTest extends TestCase
             $before = PackageFormState::fromPackage($package->fresh());
             $submitted = collect($before)->except(['media'])->all() + ['_intent' => 'save'];
 
-            $this->actingAs($this->admin)
-                ->put(route('admin.hajj-packages.update', $package), $submitted)
-                ->assertSessionHasNoErrors()
-                ->assertRedirect(route('admin.hajj-packages.edit', $package));
+            $response = $this->actingAs($this->admin)
+                ->put(route('admin.hajj-packages.update', $package), $submitted);
+
+            // Named, not just counted. "Failed asserting that true is false"
+            // is what `assertSessionHasNoErrors` says when one of twenty-six
+            // packages is rejected, and it tells you neither which one nor
+            // why — which is an hour of bisecting for something the session
+            // is already holding.
+            $errors = session('errors') ? session('errors')->getBag('default')->all() : [];
+            $this->assertSame([], $errors, "{$package->code} was rejected on a save that changed nothing");
+
+            $response->assertRedirect(route('admin.hajj-packages.edit', $package));
 
             $after = PackageFormState::fromPackage($package->fresh());
             $this->assertEquals(collect($before)->except('media')->all(), collect($after)->except('media')->all(), "{$package->code} changed on a no-op save");

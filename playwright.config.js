@@ -3,6 +3,10 @@ import { defineConfig, devices } from '@playwright/test';
 const PHP_BIN = process.env.PHP_BIN || 'C:/laragon/bin/php/php-8.3.16-Win32-vs16-x64/php.exe';
 const PORT = 8129;
 
+// Written by the `setup` project, not checked in: `playwright/.auth` is
+// ignored, and the cookie it holds is tied to this host.
+const PUBLIC_STATE = 'playwright/.auth/public.json';
+
 export default defineConfig({
     testDir: './tests/e2e',
     fullyParallel: false,
@@ -56,10 +60,17 @@ export default defineConfig({
     projects: [
         { name: 'setup', testMatch: /auth\.setup\.js/ },
 
+        // `PUBLIC_STATE` on every project that drives the public site: it
+        // carries nothing but the answer to the currency question the site
+        // asks on a first visit. The dialog is modal and its backdrop takes
+        // the pointer events — correctly, for a real visitor — so a context
+        // that has never answered it cannot click anything on the page
+        // behind. See auth.setup.js for why it holds no session.
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: { ...devices['Desktop Chrome'], storageState: PUBLIC_STATE },
             testMatch: /(public|admin-auth|journeys-visitor|responsive|ai-assistant)\.spec\.js/,
+            dependencies: ['setup'],
         },
         {
             name: 'admin-chromium',
@@ -70,11 +81,12 @@ export default defineConfig({
         },
         {
             name: 'mobile-chrome',
-            use: { ...devices['Pixel 7'] },
+            use: { ...devices['Pixel 7'], storageState: PUBLIC_STATE },
             // The assistant is a bottom sheet on phones — a different layout,
             // not a narrower version of the desktop panel — so it is worth a
             // real mobile project rather than a viewport resize alone.
             testMatch: /(public|ai-assistant)\.spec\.js/,
+            dependencies: ['setup'],
         },
         // Cross-browser QA (release-gate Phase 13) — scoped to the public
         // site's own interactive surfaces (nav/mega-menu, hero slider,
@@ -83,13 +95,15 @@ export default defineConfig({
         // without re-running the full admin suite 3x for marginal benefit.
         {
             name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
+            use: { ...devices['Desktop Firefox'], storageState: PUBLIC_STATE },
             testMatch: /(public|responsive)\.spec\.js/,
+            dependencies: ['setup'],
         },
         {
             name: 'webkit',
-            use: { ...devices['Desktop Safari'] },
+            use: { ...devices['Desktop Safari'], storageState: PUBLIC_STATE },
             testMatch: /(public|responsive)\.spec\.js/,
+            dependencies: ['setup'],
         },
     ],
     webServer: {

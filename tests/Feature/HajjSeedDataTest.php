@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Package;
+use App\Models\PackageAccommodation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -17,17 +18,49 @@ class HajjSeedDataTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_all_twelve_real_hajj_packages_are_seeded(): void
+    public function test_all_twenty_six_real_hajj_packages_are_seeded(): void
     {
         Artisan::call('db:seed');
 
         $hajjPackages = Package::whereHas('category', fn ($q) => $q->where('slug', 'hajj'))->get();
 
-        $this->assertCount(12, $hajjPackages);
-        $this->assertEqualsCanonicalizing(
-            ['UB001', 'UB003', 'UB004', 'UB006', 'UB008', 'UB010', 'UB011', 'UB013', 'UB015', 'UB016', 'UB023', 'UB024'],
-            $hajjPackages->pluck('code')->all()
-        );
+        // The brochure index, in full. Twelve of these were seeded from the
+        // first extraction; the other fourteen came out of the September
+        // PKR/Riyal/US$ brochures. Spelling the list out rather than counting
+        // is deliberate: a missing code is a package the client has and their
+        // website does not, which is the failure this whole exercise began
+        // with, and a count would not name it.
+        $this->assertEqualsCanonicalizing([
+            'UB001', 'UB002', 'UB003', 'UB004', 'UB005', 'UB006', 'UB007', 'UB008', 'UB009',
+            'UB010', 'UB011', 'UB012', 'UB013', 'UB014', 'UB015', 'UB016', 'UB017', 'UB018',
+            'UB019', 'UB020', 'UB021', 'UB022', 'UB023', 'UB024', 'UB025', 'UB026',
+        ], $hajjPackages->pluck('code')->all());
+
+        // And each one in the tier its own title names.
+        $tiers = $hajjPackages->groupBy(fn ($p) => $p->series?->slug)->map->count()
+            ->only(['platinum', 'flex', 'comfort', 'value'])->sortKeys()->all();
+        $this->assertSame(['comfort' => 4, 'flex' => 4, 'platinum' => 13, 'value' => 5], $tiers);
+    }
+
+    /**
+     * A star rating the admin form would refuse is a package the client
+     * cannot open and save without an error, which is how this was found:
+     * UB007 and UB017 print "Al Aqeeq ★★★★ / Dallah Taibah ★★★★ / Similar",
+     * two four-star hotels offered as alternatives, and the extraction
+     * counted every star in the line and called it an eight-star hotel.
+     */
+    public function test_no_seeded_accommodation_carries_a_rating_the_admin_would_reject(): void
+    {
+        Artisan::call('db:seed');
+
+        $outOfRange = PackageAccommodation::whereNotNull('star_rating')
+            ->where(fn ($q) => $q->where('star_rating', '<', 1)->orWhere('star_rating', '>', 5))
+            ->with('package:id,code')
+            ->get()
+            ->map(fn ($a) => "{$a->package?->code} {$a->hotel_name} = {$a->star_rating}")
+            ->all();
+
+        $this->assertSame([], $outOfRange);
     }
 
     public function test_ub001_detail_page_shows_real_brochure_data(): void

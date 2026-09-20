@@ -38,6 +38,31 @@ async function sectionNames(page) {
     return sections(page).locator('.pb-section-name').allTextContents();
 }
 
+/**
+ * The edit URL, found rather than inherited.
+ *
+ * `editUrl` is assigned by the first test and read by the eight after it.
+ * When that first test is retried, Playwright runs the retry in a fresh
+ * worker, and the tests that follow can find the variable still `null` —
+ * which reaches `page.goto` as "expected string, got object", because
+ * `typeof null` is `"object"`. That is what took this spec down in a full
+ * run while it passed on its own.
+ *
+ * Looking the page up by its slug costs one navigation and makes each test
+ * able to stand by itself.
+ */
+async function ensureEditUrl(page) {
+    if (editUrl) return editUrl;
+
+    await page.goto(`/admin/pages?q=${encodeURIComponent(title)}`);
+    await page.getByRole('row', { name: new RegExp(`Builder Page ${stamp}`) })
+        .first().getByRole('link', { name: 'Edit' }).click();
+    await expect(page).toHaveURL(/\/admin\/pages\/\d+\/edit$/);
+    editUrl = page.url();
+
+    return editUrl;
+}
+
 test.afterAll(async ({ browser }) => {
     const context = await browser.newContext({ storageState: 'playwright/.auth/admin.json' });
     const page = await context.newPage();
@@ -77,7 +102,7 @@ test('an admin creates a page from a starting layout', async ({ page }) => {
 });
 
 test('formatted text is written with the editor toolbar, and bad links are explained', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
 
     const text = sectionNamed(page, 'Text');
     await openSection(text);
@@ -119,7 +144,7 @@ test('formatted text is written with the editor toolbar, and bad links are expla
 });
 
 test('an image is uploaded with its description through the media picker', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
     const section = sectionNamed(page, 'Text with image on the right');
     await openSection(section);
 
@@ -141,7 +166,7 @@ test('an image is uploaded with its description through the media picker', async
 });
 
 test('sections are added, reordered by button, keyboard and dragging, duplicated, hidden, deleted and restored', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
 
     // Add from the library.
     await page.getByRole('button', { name: 'Add a section' }).last().click();
@@ -214,7 +239,7 @@ test('sections are added, reordered by button, keyboard and dragging, duplicated
 });
 
 test('publishing stops on a problem, links to it, then publishes the page', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
 
     const banner = sectionNamed(page, 'Page banner');
     await openSection(banner);
@@ -251,7 +276,7 @@ test('publishing stops on a problem, links to it, then publishes the page', asyn
 });
 
 test('the preview shows the saved draft at desktop, tablet and phone widths', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
     await page.getByRole('button', { name: 'Save & preview' }).click();
 
     const preview = page.locator('#pbPreviewModal');
@@ -266,7 +291,7 @@ test('the preview shows the saved draft at desktop, tablet and phone widths', as
 });
 
 test('a section is saved for reuse and inserted into a page as a copy', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
 
     const cta = sectionNamed(page, 'Call-to-action banner').first();
     await cta.getByRole('button', { name: 'More actions for Call-to-action banner' }).click();
@@ -281,7 +306,7 @@ test('a section is saved for reuse and inserted into a page as a copy', async ({
     await page.goto('/admin/content-blocks');
     await expect(page.getByRole('link', { name: blockName, exact: true })).toBeVisible();
 
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
     const before = await sections(page).count();
     await page.getByRole('button', { name: 'Add a section' }).last().click();
     const library = page.locator('#pbLibraryModal');
@@ -299,7 +324,7 @@ test('the builder and the AI settings fit a phone screen', async ({ page }) => {
         expect(overflow, `${url} scrolls sideways`).toBeLessThanOrEqual(1);
     }
 
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
     const first = sections(page).first();
     await expect(first.getByRole('button', { name: /^Move .* down$/ })).toBeVisible();
     const box = await first.locator('[data-drag-handle]').boundingBox();
@@ -320,7 +345,7 @@ test('the AI pages share the admin design and never show the key', async ({ page
 });
 
 test('keyboard users reach the editor toolbar and every builder control has a name', async ({ page }) => {
-    await page.goto(editUrl);
+    await page.goto(await ensureEditUrl(page));
     const text = sectionNamed(page, 'Text');
     await openSection(text);
     const editor = await editorIn(text);

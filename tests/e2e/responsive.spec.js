@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { chooseCurrency } from './helpers/currency.js';
 
 // Exact breakpoints required by the release-gate responsive QA directive.
 const DESKTOP = [
@@ -94,11 +95,10 @@ test.describe('Mobile navigation QA', () => {
             await page.setViewportSize({ width: bp.width, height: bp.height });
             await page.goto('/');
 
-            // The homepage is on the designer's template: a drawer of its own
-            // rather than Bootstrap's offcanvas, and a flat list of links with
-            // no group to expand. Everything this test guarded still holds —
-            // it opens, it closes, it does not overflow, and it does not leave
-            // the page behind it scrollable.
+            // One drawer now serves the whole site. Everything this test
+            // guarded still holds — it opens, it closes, it does not overflow,
+            // and it does not leave the page behind it scrollable — and it
+            // also carries the groups the mega menu used to hold.
             const toggler = page.locator('[data-ub-menu-open]');
             await expect(toggler).toBeVisible();
             const drawer = page.locator('#ub-mobile-nav');
@@ -109,8 +109,16 @@ test.describe('Mobile navigation QA', () => {
             await expect(drawer).toBeVisible();
             await expect(toggler).toHaveAttribute('aria-expanded', 'true');
 
-            // Every destination reachable, and no overflow while open.
-            await expect(drawer.getByRole('link', { name: 'Hajj & Umrah', exact: true })).toBeVisible();
+            // Every destination reachable, and no overflow while open. The
+            // items that own a panel are groups here: shut to begin with, and
+            // opening one reveals the deep links the desktop panel holds.
+            const hajj = drawer.locator('.ub-drawer-group').filter({ hasText: 'Hajj & Umrah' });
+            await expect(hajj).toBeVisible();
+            await expect(hajj.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeHidden();
+            await hajj.locator('summary').click();
+            await expect(hajj.getByRole('link', { name: 'Hajj Packages', exact: true })).toBeVisible();
+            await hajj.locator('summary').click();
+
             const { scrollWidth, clientWidth } = await page.evaluate(checkOverflow);
             expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
@@ -131,7 +139,9 @@ test.describe('Mobile navigation QA', () => {
             for (const label of ['About Us', 'Awards & Recognition', 'Affiliations', 'Media', 'Testimonials', 'FAQs', 'Contact']) {
                 await expect(drawer.getByRole('link', { name: label, exact: true })).toBeVisible();
             }
-            const registerLink = drawer.getByRole('link', { name: 'Register Now', exact: true });
+            // `[data-ub-register]`, not the label: "Register Now" is also one
+            // of the Hajj group's deep links, so the name alone is ambiguous.
+            const registerLink = drawer.locator('[data-ub-register]');
             await expect(registerLink).toBeVisible();
             await expect(registerLink).toHaveAttribute('href', 'https://hums.akhg.com.pk/HajiReg/HajiLead');
         });
@@ -156,22 +166,33 @@ test.describe('Hero video/slider responsive QA', () => {
 });
 
 test.describe('Currency switcher responsive QA', () => {
+    // One control, two homes: the top bar above 1024px, the drawer below it.
+    // Both are tested, because below 1024px the drawer's copy is the only way
+    // a visitor can ever change their answer — the gate asks once and then
+    // remembers it for a year.
     for (const [group, bp] of [['desktop', DESKTOP[2]], ['mobile', MOBILE[2]]]) {
         test(`currency switcher (PKR/SAR/USD) is usable at ${group} (${bp.name}) with no layout break`, async ({ page }) => {
             await page.setViewportSize({ width: bp.width, height: bp.height });
             await page.goto(`/hajj/${HAJJ_SLUG}`);
 
-            const switcher = page.locator('#currency-switcher');
-            await expect(switcher).toBeVisible();
-
             for (const currency of ['SAR', 'PKR', 'USD']) {
-                await switcher.locator(`[data-currency="${currency}"]`).click();
-                await expect(switcher.locator(`[data-currency="${currency}"]`)).toHaveClass(/active/);
+                await chooseCurrency(page, currency);
+
                 const { scrollWidth, clientWidth } = await page.evaluate(checkOverflow);
                 expect(scrollWidth, `overflow after switching to ${currency} at ${bp.name}`).toBeLessThanOrEqual(clientWidth + 1);
             }
         });
     }
+
+    test('a visitor on a phone can still reach the switcher, because the bar hides it', async ({ page }) => {
+        await page.setViewportSize({ width: MOBILE[2].width, height: MOBILE[2].height });
+        await page.goto(`/hajj/${HAJJ_SLUG}`);
+
+        await expect(page.locator('.ub-currency-switch:not(.ub-currency-switch--drawer)')).toBeHidden();
+
+        await page.locator('[data-ub-menu-open]').click();
+        await expect(page.locator('#ub-mobile-nav .ub-currency-switch--drawer')).toBeVisible();
+    });
 });
 
 test.describe('Forms responsive QA', () => {
@@ -217,8 +238,12 @@ test.describe('Touch target QA', () => {
         const cardBtnBox = await page.locator('.package-card .btn').first().boundingBox();
         expect(cardBtnBox.height).toBeGreaterThanOrEqual(43.5);
 
+        // The drawer's copy, because at this width the bar's is hidden and
+        // the drawer's is the one a thumb has to hit.
         await page.goto(`/hajj/${HAJJ_SLUG}`);
-        const currencyBtnBoxes = await page.locator('#currency-switcher button').all();
+        await page.locator('[data-ub-menu-open]').click();
+        const currencyBtnBoxes = await page.locator('#ub-mobile-nav .ub-currency-switch--drawer button').all();
+        expect(currencyBtnBoxes.length).toBe(3);
         for (const btn of currencyBtnBoxes) {
             const box = await btn.boundingBox();
             expect(box.height).toBeGreaterThanOrEqual(43.5);
@@ -318,12 +343,34 @@ test.describe('Package filter bar responsive QA', () => {
         // always-visible inline form. Matches the release-gate directive's
         // explicit "use a filter button / drawer / accordion" requirement.
         await page.getByRole('button', { name: 'Filters' }).click();
-        await expect(page.getByLabel('Duration')).toBeVisible();
+        // `exact` because the day tabs above the grid are labelled "Filter by
+        // duration" and would otherwise match this too — they are the quick
+        // way to the same `days` parameter this select sets precisely, so the
+        // two can never disagree, but a test has to say which it means.
+        await expect(page.getByLabel('Duration', { exact: true })).toBeVisible();
         await expect(page.getByLabel('Sharing')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Apply Filters' })).toBeVisible();
 
         const { scrollWidth, clientWidth } = await page.evaluate(checkOverflow);
         expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
+    });
+
+    test('the day tabs and the duration select are two routes to the same filter', async ({ page }) => {
+        await page.setViewportSize({ width: 1440, height: 900 });
+        await page.goto('/hajj');
+
+        const tabs = page.locator('.day-tab-bar');
+        await expect(tabs).toBeVisible();
+
+        // Every tab is a duration some package actually has, so a tab can
+        // never lead to an empty grid.
+        await tabs.getByRole('link', { name: '9 Days', exact: true }).click();
+        await expect(page).toHaveURL(/[?&]days=9\b/);
+        await expect(page.locator('.package-card').first()).toBeVisible();
+
+        // And the select in the filter panel reflects it, rather than sitting
+        // on its own idea of what is being shown.
+        await expect(page.getByLabel('Duration', { exact: true })).toHaveValue('9');
     });
 });
 

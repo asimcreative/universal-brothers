@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { execFileSync } from 'child_process';
 
 /**
  * AI assistant widget.
@@ -42,6 +43,25 @@ async function openPanel(page) {
     await launcher.click();
     await expect(page.locator('#ai-assistant-panel')).toBeVisible();
 }
+
+const PHP_BIN = process.env.PHP_BIN || 'C:/laragon/bin/php/php-8.3.16-Win32-vs16-x64/php.exe';
+
+/**
+ * The widget renders only when the assistant is enabled AND public, and the
+ * migration that turns it on is production-only by design — local and CI keep
+ * their own settings, so that a test run does not put the widget on every page
+ * of every project.
+ *
+ * Which means these tests were relying on someone having flipped the flag by
+ * hand in the testing database at some point. `migrate:fresh --seed` wiped it
+ * and eighteen assistant tests started failing with nothing in the DOM to
+ * click. A spec that needs a piece of state should create it, not inherit it.
+ */
+test.beforeAll(() => {
+    execFileSync(PHP_BIN, ['artisan', 'tinker', '--env=testing', '--execute',
+        "$s = App\\Models\\AiSetting::current(); $s->forceFill(['is_enabled' => true, 'public_enabled' => true])->save(); App\\Support\\Ai\\AiConfig::flush();"],
+        { stdio: 'ignore' });
+});
 
 test.describe('AI assistant', () => {
     test('the launcher opens and closes the panel', async ({ page }) => {
