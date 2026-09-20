@@ -5,8 +5,8 @@
     Six attempts at rebuilding this design in our own Bootstrap/SCSS system were
     rejected, and rightly — a rebuild is a likeness, and what was asked for is
     the template itself. So this layout serves the designer's own compiled
-    stylesheet (`public/template/css/template.css`, with its self-hosted faces in
-    `public/template/media/`) and the views that extend it emit the designer's own
+    stylesheet (`resources/css/site.css`, with its self-hosted faces in
+    `@fontsource`) and the views that extend it emit the designer's own
     markup and class names. Our data, their design, no approximation in between.
 
     Our own `app.scss` is deliberately NOT loaded here: it carries Bootstrap's
@@ -48,39 +48,6 @@
     <meta property="og:site_name" content="Universal Brothers (Pvt) Ltd">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%230b202a'/%3E%3Cg fill='none' stroke='%23b9865a' stroke-width='2'%3E%3Crect x='11' y='11' width='22' height='22'/%3E%3Crect x='11' y='11' width='22' height='22' transform='rotate(45 22 22)'/%3E%3C/g%3E%3C/svg%3E">
 
-    {{-- Version-stamped off the file's own mtime so a deploy never serves a
-         stale copy out of a browser cache, without needing Vite to process
-         a stylesheet that is already compiled. --}}
-    @php $ubTemplateCss = public_path('template/css/template.css'); @endphp
-    <link rel="stylesheet" href="{{ asset('template/css/template.css') }}?v={{ is_file($ubTemplateCss) ? filemtime($ubTemplateCss) : '1' }}">
-
-    {{-- The motion the template drove with Framer Motion, written as CSS so the
-         browser can run it on the compositor. Everything in it is off under
-         `prefers-reduced-motion`. --}}
-    {{-- flag-icons, cut to the ten countries the impact band names. --}}
-    @php $ubFlagsCss = public_path('template/css/flags.css'); @endphp
-    <link rel="stylesheet" href="{{ asset('template/css/flags.css') }}?v={{ is_file($ubFlagsCss) ? filemtime($ubFlagsCss) : '1' }}">
-
-    @php $ubMotionCss = public_path('template/css/motion.css'); @endphp
-    <link rel="stylesheet" href="{{ asset('template/css/motion.css') }}?v={{ is_file($ubMotionCss) ? filemtime($ubMotionCss) : '1' }}">
-
-    {{-- The template's stylesheet is the designer's compiled Tailwind build, so
-         it contains ONLY the utilities the designer's own markup used. Anything
-         we need that they did not use is simply absent and silently does
-         nothing — which is how a `xl:hidden` on the menu button left the
-         hamburger showing on a 1440px desktop. Rather than invent utilities
-         that look like theirs but are ours, the few rules we need carry their
-         own `ub-` names. --}}
-    <style>
-        /* Ten items need more room than the template's five. Below 1280 the
-           bar collapses to the drawer; above it the drawer button goes. */
-        .ub-primary-nav { display: none; }
-        @media (min-width: 1280px) {
-            .ub-primary-nav { display: block; }
-            .ub-menu-toggle { display: none; }
-        }
-    </style>
-
     {{-- The template animates with Framer Motion, which we do not ship. These
          are the same reveal hooks the rest of the site uses, declared here
          because they live in `app.scss`, which this layout does not load.
@@ -103,7 +70,10 @@
     {{-- The assistant's own styles. They live in `app.scss`, which this layout
          does not load, so without this it renders unstyled — an invisible,
          unpositioned element over the page that swallows clicks. --}}
-    @vite(['resources/scss/assistant-widget.scss', 'resources/js/app.js'])
+    {{-- Our own stylesheet. Tailwind runs in this project's Vite build against
+         the theme in `resources/css/site.css` and scans these Blade files, so
+         what ships is generated here and can be changed here. --}}
+    @vite(['resources/css/motion.css', 'resources/css/site.css', 'resources/scss/assistant-widget.scss', 'resources/js/app.js'])
 
     <script type="application/ld+json">
     {
@@ -135,6 +105,8 @@
     </main>
 
     @include('layouts.partials.template-footer')
+
+
 
     <x-ai-assistant />
 

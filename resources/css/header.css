@@ -1,0 +1,115 @@
+/* The global header, for the pages that are still built on Bootstrap.
+ *
+ * One header serves the whole site. The homepage gets it from `site.css`,
+ * which is a full Tailwind build; every other page gets it from here.
+ *
+ * The one thing this file must not do is bring Tailwind's preflight with it.
+ * Preflight is a reset — it strips margins from headings, unstyles lists and
+ * buttons, and changes how borders are sized. Bootstrap has already reset the
+ * page its own way, and loading a second reset on top of the first would
+ * silently restyle fifteen pages of content that nobody asked to change.
+ *
+ * So the layers are imported by hand and `preflight.css` is simply left out.
+ * What arrives is the token set and the utility classes — nothing that
+ * touches an element the header does not own.
+ *
+ * The utilities are deliberately NOT put in a cascade layer. An unlayered
+ * declaration beats a layered one whatever its specificity, so with the
+ * utilities in `@layer utilities` Bootstrap's bare `a { color: … }` — one
+ * element selector, unlayered — silently beat `.text-ivory` and every link in
+ * the header rendered in the body's dark ink on a dark bar. Unlayered, the
+ * two compete on specificity, which the class wins. The tokens stay in a
+ * layer because variables do not collide.
+ *
+ * `source(none)` matters just as much. Tailwind otherwise walks up from this
+ * file and scans the whole project, and a scan of all the views emits
+ * ninety-odd utilities whose names Bootstrap already uses — `mb-3`, `p-4`,
+ * `container`, `col-6`, `w-100`. Those would load after Bootstrap and quietly
+ * resize the margins and padding on every page of the site. Detection is
+ * switched off and the two files the header is actually built from are named
+ * instead, so nothing is generated that the header does not use.
+ */
+
+@layer theme;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' source(none);
+
+@import './theme.css';
+@import './nav.css';
+
+@source '../views/layouts/partials/template-header.blade.php';
+@source '../views/layouts/partials/template-footer.blade.php';
+@source '../views/components/social-links.blade.php';
+
+/* ---------------------------------------------------------------------------
+   The handful of things preflight would have supplied
+
+   Only here, never in the shared `nav.css`. On the homepage preflight already
+   does all of this, and a shared copy would have *fought* it: `nav.css` is
+   unlayered while Tailwind's utilities sit in `@layer utilities`, and an
+   unlayered declaration beats a layered one whatever its specificity — so a
+   shared `button { border: 0 }` quietly removed the border the menu button
+   asks for by name, on the one page that was already correct.
+
+   Everything is wrapped in `:where()` so it contributes no specificity at
+   all: it has to beat the browser's defaults and Bootstrap's element rules,
+   and lose to every utility on the element itself.
+   --------------------------------------------------------------------------- */
+/* Bootstrap's reboot leaves a bottom margin on headings and paragraphs, which
+   preflight removes. Left in place the footer stood forty pixels taller on the
+   Bootstrap pages than on the homepage, and every gap in it was the spacing
+   utility plus a margin nobody asked for. */
+:where(.ub-chrome) h1,
+:where(.ub-chrome) h2,
+:where(.ub-chrome) h3,
+:where(.ub-chrome) h4,
+:where(.ub-chrome) p,
+:where(.ub-chrome) figure,
+:where(.ub-chrome) blockquote {
+    margin: 0;
+}
+
+:where(.ub-chrome) ul,
+:where(.ub-chrome) ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+:where(.ub-chrome) a {
+    text-decoration: none;
+    /* Bootstrap's bare `a { color: … }` beats the `text-ivory/80` sitting on
+       the link's parent, because that utility is on the parent and this rule
+       is on the link. The telephone number and the email address in the top
+       strip came out in the body's dark ink on a dark bar. Zero specificity,
+       so a colour utility on the link itself still wins. */
+    color: inherit;
+}
+
+/* Preflight lays media out as blocks. Without it an inline <svg> sits on a
+   text baseline and gains a couple of pixels of line box, so every icon in
+   the header was two pixels taller than the same icon on the homepage. */
+:where(.ub-chrome) svg,
+:where(.ub-chrome) img {
+    display: block;
+}
+
+/* Bootstrap sets a dark body colour on `p, li` for readable prose. That rule
+   reaches into the header too, and everything inside a menu item — the
+   panels, the editorial card's sentence — inherited ink on a dark bar. */
+:where(.ub-chrome),
+:where(.ub-chrome) li,
+:where(.ub-chrome) p {
+    color: var(--color-ivory);
+}
+
+:where(.ub-chrome) button {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}

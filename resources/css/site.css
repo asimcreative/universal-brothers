@@ -1,3 +1,97 @@
+/* Universal Brothers — the public site's stylesheet.
+ *
+ * This replaces a compiled stylesheet that was vendored from the design
+ * reference. The look is the same; the build is ours. Tailwind runs in our own
+ * Vite pipeline, against our own theme below, scanning our own Blade files — so
+ * the CSS that ships is generated from this project and can be changed here
+ * rather than being a file nobody can edit.
+ *
+ * The palette is the brand's: deep teal surfaces with a copper accent on ivory
+ * and sand, which is the Hajj 2027 brochure's own colouring.
+ *
+ * Adding a utility to a Blade file is all it takes — Tailwind finds it here and
+ * emits the rule. Nothing has to be registered by hand.
+ */
+
+@import 'tailwindcss';
+
+/* Blade templates are not scanned by default; these are where the markup is. */
+@source '../views/**/*.blade.php';
+@source '../js/**/*.js';
+
+@import './theme.css';
+@import './nav.css';
+
+@keyframes bounce-slow {
+    0%, 100% { transform: translateY(-12%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+    50% { transform: none; animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+}
+
+/* Utilities Tailwind has no equivalent for, kept here rather than as inline
+   styles scattered through the templates. */
+@utility bg-gradient-teal {
+    background-image: var(--gradient-teal);
+}
+
+@utility bg-gradient-premium {
+    background-image: var(--gradient-premium);
+}
+
+/* The warm band is darker than ivory, so the muted ink chosen against ivory
+   (4a5c65, comfortable at 7.5:1 there) drops to 4.13:1 on it — under the
+   minimum. Inside a sand band it steps one shade down, to 5.03:1. The same
+   rule exists for the Bootstrap pages' `.section.bg-light`; this is its half
+   of the site. Stated once here rather than remembered at every call site. */
+.bg-sand-300 .text-ink-400,
+.bg-sand-300 .text-ink-300,
+.bg-sand-200 .text-ink-400 {
+    color: #3f4f58;
+}
+
+@layer base {
+    /* The reveal system starts elements invisible. If the bundle fails to load,
+       `.js` is never set and everything renders normally — content must never
+       depend on JavaScript to be readable. */
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+        font-family: var(--font-sans);
+        background-color: var(--color-background);
+        color: var(--color-heading);
+    }
+
+    /* A focus ring that is visible on both the dark and the light bands. */
+    :focus-visible {
+        outline: 2px solid var(--color-accent-500);
+        outline-offset: 2px;
+    }
+}
+
+/* The ten countries the impact band names. Artwork is flag-icons (MIT),
+ * installed as a dependency and copied into `public/images/flags/` — ten files
+ * rather than the set's full 542, because ten is what we name.
+ */
+.fi {
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: contain;
+    display: inline-block;
+    line-height: 1em;
+    position: relative;
+    width: 1.33333em;
+}
+
+.fi::before { content: ' '; }
+.fi-ae { background-image: url('/images/flags/ae.svg'); }
+.fi-sa { background-image: url('/images/flags/sa.svg'); }
+.fi-tr { background-image: url('/images/flags/tr.svg'); }
+.fi-eg { background-image: url('/images/flags/eg.svg'); }
+.fi-my { background-image: url('/images/flags/my.svg'); }
+.fi-gb { background-image: url('/images/flags/gb.svg'); }
+.fi-us { background-image: url('/images/flags/us.svg'); }
+.fi-ca { background-image: url('/images/flags/ca.svg'); }
+.fi-au { background-image: url('/images/flags/au.svg'); }
+.fi-bh { background-image: url('/images/flags/bh.svg'); }
 /* Motion.
  *
  * The designer's template animates with Framer Motion, which runs in

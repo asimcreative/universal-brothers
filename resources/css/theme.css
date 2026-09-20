@@ -1,0 +1,97 @@
+/* The design tokens.
+ *
+ * Kept on their own because two stylesheets need them and they share nothing
+ * else: `site.css` is the whole Tailwind build the homepage loads, and
+ * `header.css` is the small build that puts the same header on the pages
+ * still running on Bootstrap. One copy, so a colour can never drift between
+ * the header and the page under it.
+ */
+
+@theme {
+    /* ---- Brand surfaces -------------------------------------------------- */
+    --color-brand-400: #55707d;
+    --color-brand-500: #344952;
+    --color-brand-600: #293d46;
+    --color-brand-700: #1d323c;
+    --color-brand-800: #142834;
+    --color-brand-900: #0b202a;
+    --color-brand-950: #061219;
+
+    /* ---- Copper accent --------------------------------------------------- */
+    --color-accent-300: #d0aa81;
+    --color-accent-400: #c59a6c;
+    --color-accent-500: #b9865a;
+    --color-accent-600: #9d6f48;
+    --color-accent-700: #7e5939;
+    --color-accent-800: #5f432b;
+    --color-accent-900: #402d1d;
+
+    /* ---- Warm light surfaces --------------------------------------------- */
+    --color-sand-50: #faf8f7;
+    --color-sand-100: #efe9e6;
+    --color-sand-200: #e0d7d3;
+    --color-sand-300: #d0c5c0;
+
+    /* ---- Semantic names, so a section says what it is rather than which
+            shade it happens to use ---------------------------------------- */
+    /* The page behind everything. It was a cold near-black, a fourth dark that
+       belongs to no other part of the palette; where it showed — overscroll,
+       any gap between bands — it read as a different colour from the teal-black
+       every dark section uses. Now it is that same teal-black. */
+    --color-background: #0b202a;
+    --color-surface: #0b202a;
+    --color-surface-2: #1d323c;
+    --color-inverse: #0b202a;
+    /* The light one, for text and small chips on a dark band.
+       It used to be `#d0c5c0` — byte for byte the same value as
+       `--color-sand-300`, which is a light BACKGROUND band. So every
+       paragraph written on a dark section was being painted in a colour
+       designed to be a surface, and read muddy and brown rather than light.
+       Fifty-six places use it as text. It is now a real light. */
+    --color-ivory: #e7e1dd;
+    --color-heading: #efe9e6;
+
+    /* Text on a dark band has exactly two roles, and they are named rather
+       than improvised. Before this the site wrote light-on-dark in seventeen
+       different colours — `text-ivory` at 70, 75, 80, 85 and 90 per cent,
+       `text-foreground` at 80 and 85, `text-sand-300` at 80, plus two more
+       from the Bootstrap stylesheet, one of them a cool blue-grey against a
+       warm palette. All of them meant one of these two things. */
+    --color-on-dark: #e7e1dd;
+    --color-on-dark-muted: #bdb7b3;
+    --color-border: #2b3b44;
+    --color-muted-foreground: #9c918c;
+
+    /* Ink: text on the light surfaces, darkest first. */
+    --color-ink-300: #6d7f87;
+    --color-ink-400: #4a5c65;
+    --color-ink-500: #33454e;
+    --color-ink-600: #23343c;
+
+    /* ---- Type ------------------------------------------------------------ */
+    /* Self-hosted through @fontsource in resources/js/app.js — no external
+       font service, so nothing here depends on a third party staying up. */
+    --font-sans: 'Fira Sans Condensed', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Fira Sans Condensed', ui-sans-serif, system-ui, sans-serif;
+    --font-hand: 'Caveat', 'Segoe Script', 'Bradley Hand', cursive;
+    --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
+
+    /* ---- Shape ----------------------------------------------------------- */
+    --radius-card: 1rem;
+    --radius-pill: 9999px;
+
+    /* One measure for every band on the site, so nothing is a few pixels
+       wider than the section above it. */
+    --container-site: 1280px;
+
+    /* ---- Gradients ------------------------------------------------------- */
+    /* The far end was `--color-brand-500`, three steps lighter than the
+       flat dark bands and noticeably bluer, so the ten sections built on this
+       gradient drifted out of the palette. `--color-brand-700` keeps the
+       depth without leaving the family. */
+    --gradient-teal: linear-gradient(135deg, #0b202a 0%, #1d323c 100%);
+    --gradient-premium: linear-gradient(120deg, #0b202a 0%, #0b202a 35%, #b9865a 100%);
+
+    /* ---- Motion ---------------------------------------------------------- */
+    --animate-bounce-slow: bounce-slow 2s ease-in-out infinite;
+}

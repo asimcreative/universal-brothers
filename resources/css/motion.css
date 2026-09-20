@@ -1,0 +1,131 @@
+/* The motion system.
+ *
+ * One vocabulary for the whole site. A section asks for motion by naming it:
+ *
+ *     <div data-reveal="up">
+ *     <div data-reveal="left" data-reveal-speed="slow">
+ *     <ul data-stagger>            each child follows the one before it
+ *
+ * Everything is driven by three custom properties, so a variant is a change of
+ * value rather than a new rule:
+ *
+ *     --reveal-duration   how long
+ *     --reveal-delay      when
+ *     --reveal-distance   how far
+ *
+ * Two rules hold everywhere and are not negotiable:
+ *
+ *   1. Only `transform`, `opacity`, `filter` and `clip-path` are animated.
+ *      Animating width, height, top or box-shadow forces the browser to lay out
+ *      or repaint on every frame, which is how a site full of motion becomes a
+ *      site that stutters on a phone.
+ *
+ *   2. Under `prefers-reduced-motion: reduce` it all stops and everything is
+ *      visible. For some readers this kind of movement causes nausea, and that
+ *      setting is how they say so. Content must never depend on an animation
+ *      having run.
+ *
+ * Gated on `.js`, which the layout sets before first paint. If the bundle never
+ * loads, nothing is ever hidden.
+ */
+
+:root {
+    /* Fast — buttons, hover, small interface parts. */
+    --reveal-fast: 300ms;
+    /* Normal — headings, text, cards, images. This is the default. */
+    --reveal-normal: 600ms;
+    /* Slow — hero imagery and large section reveals. */
+    --reveal-slow: 850ms;
+
+    --reveal-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+    --reveal-duration: var(--reveal-normal);
+    --reveal-delay: 0ms;
+    --reveal-distance: 28px;
+
+    /* The step between staggered siblings, and the ceiling. A long list must
+       never leave the reader waiting on the twentieth item. */
+    --stagger-step: 80ms;
+    --stagger-max: 480ms;
+}
+
+/* Phones get less travel and a tighter stagger: the same distance reads as a
+   longer journey on a small screen, and the whole list is on-screen at once. */
+@media (max-width: 767.98px) {
+    :root {
+        --reveal-distance: 16px;
+        --stagger-step: 55ms;
+        --stagger-max: 280ms;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   The base state
+   --------------------------------------------------------------------------- */
+.js [data-reveal] {
+    opacity: 0;
+    transition:
+        opacity var(--reveal-duration) var(--reveal-ease) var(--reveal-delay),
+        transform var(--reveal-duration) var(--reveal-ease) var(--reveal-delay),
+        filter var(--reveal-duration) var(--reveal-ease) var(--reveal-delay),
+        clip-path var(--reveal-duration) var(--reveal-ease) var(--reveal-delay);
+    will-change: opacity, transform;
+}
+
+.js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    clip-path: inset(0 0 0 0);
+    /* Released once the element has arrived: a permanent hint keeps a
+       compositor layer alive for the life of the page. */
+    will-change: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Variants
+   --------------------------------------------------------------------------- */
+.js [data-reveal='fade']  { transform: none; }
+.js [data-reveal='up']    { transform: translate3d(0, var(--reveal-distance), 0); }
+.js [data-reveal='down']  { transform: translate3d(0, calc(var(--reveal-distance) * -1), 0); }
+.js [data-reveal='left']  { transform: translate3d(calc(var(--reveal-distance) * -1.2), 0, 0); }
+.js [data-reveal='right'] { transform: translate3d(calc(var(--reveal-distance) * 1.2), 0, 0); }
+.js [data-reveal='scale'] { transform: scale(0.94); }
+.js [data-reveal='zoom']  { transform: scale(1.06); }
+.js [data-reveal='blur']  { filter: blur(10px); transform: translate3d(0, calc(var(--reveal-distance) * 0.5), 0); }
+
+/* A photograph revealed through its own frame rather than moved. */
+.js [data-reveal='clip'] {
+    clip-path: inset(0 0 100% 0);
+    --reveal-duration: var(--reveal-slow);
+}
+
+/* For a photograph: settles out of a slight push-in, so the frame stays filled
+   at every moment of the animation and no edge is ever exposed. */
+.js [data-reveal='image'] {
+    transform: scale(1.08);
+    --reveal-duration: var(--reveal-slow);
+}
+
+/* ---------------------------------------------------------------------------
+   Speed
+   --------------------------------------------------------------------------- */
+.js [data-reveal-speed='fast']   { --reveal-duration: var(--reveal-fast); }
+.js [data-reveal-speed='normal'] { --reveal-duration: var(--reveal-normal); }
+.js [data-reveal-speed='slow']   { --reveal-duration: var(--reveal-slow); }
+
+/* ---------------------------------------------------------------------------
+   Off, for anyone who has asked for less movement.
+   Last, and blunt on purpose.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .js [data-reveal],
+    .js [data-reveal].is-visible {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        clip-path: none !important;
+        transition: none !important;
+        will-change: auto !important;
+    }
+}

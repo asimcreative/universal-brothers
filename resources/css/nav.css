@@ -1,0 +1,538 @@
+/* The header's own structure.
+ *
+ * Plain CSS, deliberately. Everything here has to work identically on the
+ * homepage, which loads a full Tailwind build, and on the fifteen pages that
+ * load Bootstrap. Written as utilities it would have to exist in both
+ * stylesheets and could drift; written once as real rules with names nothing
+ * else uses, it cannot.
+ *
+ * Imported by `site.css` and by `header.css`, never both on one page.
+ */
+
+/* On the pages with no hero behind it the bar pins itself, with no script.
+   `sticky` on the wrapper rather than on the bar, because a sticky element
+   only sticks within its own parent and the bar's parent ends immediately
+   below it — the wrapper's parent is the body, so it sticks for the whole
+   page. `top` is minus the utility strip's height, so the strip scrolls away
+   and the menu lands against the top edge. And because the wrapper keeps its
+   place in the flow, nothing jumps at the moment it pins.
+
+   The homepage is excluded by construction: there the wrapper is positioned
+   over the hero, and `initTemplateHeader` pins it once the hero has gone. */
+.ub-chrome--flow {
+    position: sticky;
+    top: -41px;
+}
+
+/* The header's typeface is its own, not the page's. */
+.ub-chrome {
+    font-family: 'Fira Sans Condensed', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+   Where the bar switches between the full menu and the drawer.
+
+   Ten top-level items do not fit beside the wordmark and the button until
+   about 1280px, so that is the breakpoint rather than a framework default.
+   --------------------------------------------------------------------------- */
+.ub-primary-nav {
+    display: none;
+}
+
+.ub-menu-toggle {
+    display: flex;
+}
+
+@media (min-width: 1280px) {
+    .ub-primary-nav {
+        display: block;
+    }
+
+    .ub-menu-toggle {
+        display: none;
+    }
+}
+
+/* At exactly 1280 — the width where the full bar first appears — the wordmark,
+   ten items, the two chevrons and the Register button come to a little more
+   than the container holds. The gap closes up until there is room to spare. */
+@media (min-width: 1280px) and (max-width: 1439.98px) {
+    .ub-primary-nav > ul {
+        gap: 0.875rem;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   The announcement ticker
+
+   Rendered twice and moved by exactly half its width, so the loop has no seam.
+   --------------------------------------------------------------------------- */
+.ub-ticker-track {
+    animation: ub-ticker 55s linear infinite;
+}
+
+@keyframes ub-ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.ub-ticker-track:hover {
+    animation-play-state: paused;
+}
+
+/* ---------------------------------------------------------------------------
+   The pinned bar
+
+   Added by `initTemplateHeader` once the reader is past the hero. The design
+   drops the header entirely at that point; keeping it means the menu is still
+   reachable nine thousand pixels down the homepage.
+   --------------------------------------------------------------------------- */
+.ub-site-header.is-stuck {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    background: var(--color-brand-800);
+    box-shadow: 0 6px 24px rgb(6 11 30 / 0.28);
+}
+
+/* ---------------------------------------------------------------------------
+   Dropdowns and the mega panel
+
+   Opened by hover and by `:focus-within`, so the keyboard reaches them without
+   any JavaScript: tabbing to the parent link opens the panel, tabbing past the
+   last item inside it closes it again. `visibility` is animated alongside
+   opacity so a closed panel is not a transparent sheet over the page.
+   --------------------------------------------------------------------------- */
+.ub-nav-item > .ub-nav-panel {
+    color: var(--color-ivory);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    z-index: 60;
+    visibility: hidden;
+    opacity: 0;
+    transform: translate(-50%, 8px);
+    transition:
+        opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 220ms;
+    border-radius: 16px;
+    background: var(--color-surface, #fff);
+    box-shadow: 0 24px 60px rgb(6 11 30 / 0.22);
+    padding: 1.25rem;
+}
+
+.ub-nav-item:hover > .ub-nav-panel,
+.ub-nav-item:focus-within > .ub-nav-panel {
+    visibility: visible;
+    opacity: 1;
+    transform: translate(-50%, 0);
+    transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ub-nav-item > .ub-nav-panel {
+        transition: none;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* A short list of two or three destinations. */
+.ub-nav-panel--list {
+    min-width: 15rem;
+}
+
+/* The two service columns and the editorial panel beside them. */
+.ub-nav-panel--mega {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    width: max-content;
+    max-width: min(60rem, calc(100vw - 4rem));
+}
+
+.ub-nav-panel a {
+    text-decoration: none;
+}
+
+.ub-nav-col-title {
+    display: block;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.625rem;
+    border-bottom: 1px solid rgb(6 11 30 / 0.1);
+    color: var(--color-heading, #142834);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    letter-spacing: 0.01em;
+}
+
+.ub-nav-col-title:hover {
+    color: var(--color-accent-600, #8a6440);
+}
+
+.ub-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ub-nav-links a {
+    display: block;
+    border-radius: 8px;
+    padding: 0.375rem 0.5rem;
+    color: var(--color-muted-foreground, #55707d);
+    font-size: 0.875rem;
+    transition: background-color 180ms ease, color 180ms ease;
+}
+
+.ub-nav-links a:hover,
+.ub-nav-links a:focus-visible {
+    background: rgb(6 11 30 / 0.05);
+    color: var(--color-accent-700, #7e5939);
+}
+
+/* The editorial card that closes the mega panel. */
+.ub-nav-feature {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.625rem;
+    border-radius: 12px;
+    background: var(--color-brand-800, #142834);
+    padding: 1.25rem;
+    min-width: 15rem;
+    color: var(--color-ivory, #f7f4f1);
+}
+
+.ub-nav-feature-eyebrow {
+    color: var(--color-accent-300, #d6a878);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+}
+
+.ub-nav-feature-title {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.35;
+}
+
+.ub-nav-feature-cta {
+    align-self: flex-start;
+    margin-top: 0.25rem;
+    border-radius: 999px;
+    background: var(--color-accent-500, #a8763f);
+    padding: 0.5rem 1rem;
+    color: var(--color-inverse, #0b202a);
+    font-weight: 600;
+    font-size: 0.8125rem;
+}
+
+.ub-nav-feature-cta:hover {
+    background: var(--color-ivory, #f7f4f1);
+}
+
+/* The chevron on a parent item. */
+.ub-nav-chevron {
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ub-nav-item:hover > a .ub-nav-chevron,
+.ub-nav-item:focus-within > a .ub-nav-chevron {
+    transform: rotate(180deg);
+}
+
+/* ---------------------------------------------------------------------------
+   The drawer's groups
+
+   Built on <details>, so a group opens and closes with no script at all and
+   is announced correctly by a screen reader.
+   --------------------------------------------------------------------------- */
+.ub-drawer-group > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 8px;
+    padding: 0.75rem;
+    color: var(--color-ivory, #f7f4f1);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    list-style: none;
+    cursor: pointer;
+}
+
+.ub-drawer-group > summary::-webkit-details-marker {
+    display: none;
+}
+
+.ub-drawer-group > summary:hover {
+    background: rgb(247 244 241 / 0.1);
+}
+
+.ub-drawer-group[open] > summary .ub-nav-chevron {
+    transform: rotate(180deg);
+}
+
+.ub-drawer-group .ub-nav-links {
+    padding: 0 0 0.5rem 0.75rem;
+}
+
+.ub-drawer-group .ub-nav-links a {
+    color: rgb(247 244 241 / 0.75);
+}
+
+.ub-drawer-group .ub-nav-links a:hover,
+.ub-drawer-group .ub-nav-links a:focus-visible {
+    background: rgb(247 244 241 / 0.1);
+    color: var(--color-accent-300, #d6a878);
+}
+
+/* ---------------------------------------------------------------------------
+   Back to top
+
+   The assistant sits at `right: 1.25rem; bottom: 1.25rem` and its launcher is
+   3.25rem tall, so this clears it by 0.75rem. Stated as a sum rather than a
+   single number so the relationship survives either one being resized.
+   --------------------------------------------------------------------------- */
+.ub-to-top {
+    position: fixed;
+    right: 1.25rem;
+    bottom: calc(1.25rem + 3.25rem + 0.75rem);
+    /* Below the assistant (1040) — if they ever overlap, the assistant wins. */
+    z-index: 1035;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgb(231 225 221 / 0.25);
+    border-radius: 999px;
+    background: var(--color-brand-800, #142834);
+    color: var(--color-on-dark, #e7e1dd);
+    box-shadow: 0 8px 24px rgb(6 11 30 / 0.35);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(8px);
+    transition:
+        opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 200ms ease,
+        border-color 200ms ease;
+}
+
+.ub-to-top.is-shown {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ub-to-top:hover,
+.ub-to-top:focus-visible {
+    border-color: var(--color-accent-500, #b9865a);
+    background: var(--color-accent-500, #b9865a);
+    color: var(--color-inverse, #0b202a);
+}
+
+.ub-to-top:focus-visible {
+    outline: 2px solid var(--color-accent-500, #b9865a);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ub-to-top {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   The currency question
+
+   Asked once, on the first visit. It sits above everything, including the
+   assistant, because the page behind it is priced in a currency the visitor
+   has not chosen yet.
+   --------------------------------------------------------------------------- */
+.ub-currency-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+}
+
+.ub-currency-gate__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(6 11 30 / 0.72);
+    backdrop-filter: blur(3px);
+}
+
+.ub-currency-gate__panel {
+    position: relative;
+    width: min(34rem, 100%);
+    max-height: calc(100dvh - 2.5rem);
+    overflow-y: auto;
+    border: 1px solid rgb(231 225 221 / 0.12);
+    border-radius: 18px;
+    background: var(--color-brand-800, #142834);
+    padding: 1.75rem;
+    color: var(--color-on-dark, #e7e1dd);
+    box-shadow: 0 30px 80px rgb(6 11 30 / 0.55);
+    text-align: center;
+}
+
+.ub-currency-gate__eyebrow {
+    margin: 0 0 0.5rem;
+    color: var(--color-accent-300, #d6a878);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+}
+
+.ub-currency-gate__title {
+    margin: 0 0 0.6rem;
+    font-family: 'Fira Sans Condensed', ui-sans-serif, system-ui, sans-serif;
+    font-size: clamp(1.25rem, 1.05rem + 1vw, 1.6rem);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.ub-currency-gate__lead {
+    margin: 0 auto 1.4rem;
+    max-width: 30rem;
+    color: var(--color-on-dark-muted, #bdb7b3);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.ub-currency-gate__options {
+    display: grid;
+    gap: 0.6rem;
+}
+
+@media (min-width: 30rem) {
+    .ub-currency-gate__options {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.ub-currency-gate__option {
+    display: grid;
+    gap: 0.15rem;
+    margin: 0;
+    border: 1px solid rgb(231 225 221 / 0.18);
+    border-radius: 12px;
+    background: rgb(231 225 221 / 0.04);
+    padding: 0.95rem 0.75rem;
+    color: inherit;
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.ub-currency-gate__option:hover,
+.ub-currency-gate__option:focus-visible {
+    border-color: var(--color-accent-500, #b9865a);
+    background: rgb(185 134 90 / 0.14);
+    transform: translateY(-2px);
+}
+
+.ub-currency-gate__option:focus-visible {
+    outline: 2px solid var(--color-accent-500, #b9865a);
+    outline-offset: 2px;
+}
+
+.ub-currency-gate__code {
+    font-family: 'Fira Sans Condensed', ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.ub-currency-gate__label {
+    font-size: 0.8125rem;
+    color: var(--color-on-dark, #e7e1dd);
+}
+
+.ub-currency-gate__note {
+    font-size: 0.6875rem;
+    color: var(--color-on-dark-muted, #bdb7b3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ub-currency-gate__option {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* The currency switch in the utility strip. */
+.ub-currency-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0;
+}
+
+.ub-currency-switch__label {
+    margin-right: 0.15rem;
+    color: var(--color-on-dark-muted, #bdb7b3);
+    white-space: nowrap;
+}
+
+.ub-currency-switch__option {
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    padding: 0.15rem 0.45rem;
+    color: var(--color-on-dark-muted, #bdb7b3);
+    font: inherit;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.ub-currency-switch__option:hover,
+.ub-currency-switch__option:focus-visible {
+    color: var(--color-accent-300, #d6a878);
+}
+
+.ub-currency-switch__option.is-active {
+    border-color: rgb(185 134 90 / 0.5);
+    background: rgb(185 134 90 / 0.16);
+    color: var(--color-accent-300, #d6a878);
+}
+
+/* In the drawer this is the ONLY way to change currency — the bar's copy is
+   hidden below 1024px, and the question is asked once and then remembered for
+   a year. So its buttons are real tap targets rather than the small chips
+   that suit a crowded top bar, and they are outlined, because here there is
+   no surrounding text to tell the reader they are buttons at all. */
+.ub-currency-switch--drawer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.ub-currency-switch--drawer .ub-currency-switch__label {
+    width: 100%;
+    margin: 0;
+    font-size: 0.8125rem;
+}
+.ub-currency-switch--drawer .ub-currency-switch__option {
+    flex: 1 1 0;
+    min-height: 44px;
+    border-color: rgb(231 225 221 / 0.25);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}

@@ -138,7 +138,7 @@ function initTemplateHeader() {
 
 // Motion, applied from one place.
 //
-// The styles live in `public/template/css/motion.css`; this decides what wears
+// The styles live in `resources/css/site.css`; this decides what wears
 // them. Doing it here rather than in fourteen partials means a section an admin
 // builds in the page builder gets the same treatment, and there is one file to
 // read when something moves that should not.

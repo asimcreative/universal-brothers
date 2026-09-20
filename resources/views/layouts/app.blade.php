@@ -54,7 +54,7 @@
          generic "no favicon" placeholder in every tab and bookmark. --}}
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%23101b45'/%3E%3Cg fill='none' stroke='%23c9a227' stroke-width='2'%3E%3Crect x='11' y='11' width='22' height='22'/%3E%3Crect x='11' y='11' width='22' height='22' transform='rotate(45 22 22)'/%3E%3C/g%3E%3C/svg%3E">
 
-    @vite(['resources/scss/app.scss', 'resources/js/app.js'])
+    @vite(['resources/css/motion.css', 'resources/scss/app.scss', 'resources/css/header.css', 'resources/js/app.js'])
 
     <script type="application/ld+json">
     {
