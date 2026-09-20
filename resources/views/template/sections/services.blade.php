@@ -3,7 +3,7 @@
 
     The markup, the class names and the nesting below are the designer's own,
     taken from the reference template so that the compiled stylesheet in
-    `public/template/css/template.css` matches it rule for rule. Only the
+    `resources/css/site.css` matches it rule for rule. Only the
     content is ours: the cards are driven by the package categories and the
     photograph library, and the copy is the approved service wording rather
     than the placeholder lines the template shipped with.
@@ -51,7 +51,7 @@
 @endphp
 
 @if($ubServices)
-<section id="services" class="bg-ivory py-16 sm:py-20 lg:py-24">
+<section id="services" class="bg-sand-300 py-16 sm:py-20 lg:py-24">
     <div class="mx-auto w-full max-w-[var(--container-site)] px-5 sm:px-8 lg:px-10">
         <header class="text-center">
             <div class="reveal-on-scroll">
@@ -71,10 +71,10 @@
                         </div>
                         <div class="flex min-w-0 flex-1 flex-col">
                             <div>
-                                <h3 class="font-display text-[26px] font-bold leading-tight text-heading transition-colors duration-300 group-hover:text-accent-300 sm:text-[30px]">{{ $ubService['name'] }}</h3>
-                                <p class="mt-2 text-[13px] leading-snug text-foreground/85 sm:text-sm">{{ $ubService['copy'] }}</p>
+                                <h3 class="font-display text-[26px] font-bold leading-tight text-on-dark transition-colors duration-300 group-hover:text-accent-300 sm:text-[30px]">{{ $ubService['name'] }}</h3>
+                                <p class="mt-2 text-[13px] leading-snug text-on-dark sm:text-sm">{{ $ubService['copy'] }}</p>
                             </div>
-                            <span aria-hidden="true" class="mt-auto flex size-9 shrink-0 items-center justify-center self-end rounded-full border border-accent-500 bg-accent-500 text-inverse transition-all duration-300 group-hover:border-ivory group-hover:bg-ivory sm:size-10"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+                            <span aria-hidden="true" class="mt-auto flex size-9 shrink-0 items-center justify-center self-end rounded-full border border-accent-500 bg-accent-500 text-inverse transition-all duration-300 group-hover:border-ivory group-hover:bg-sand-300 sm:size-10"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-right transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
                         </div>
                     </a>
                 </div>
@@ -82,7 +82,7 @@
         </div>
 
         <div class="reveal-on-scroll">
-            <p class="mx-auto mt-12 max-w-2xl text-center text-sm leading-relaxed text-ink-600 sm:text-base">Visas, flights, hotels and complete ziyarat guidance — every part of the journey handled by the same team. @if($hajjCategory)<a class="font-semibold text-accent-800 underline decoration-accent-800/40 underline-offset-4 transition-colors hover:text-inverse hover:decoration-inverse" href="{{ route('hajj-services') }}">See all services</a>@endif</p>
+            <p class="mx-auto mt-12 max-w-2xl text-center text-sm leading-relaxed text-ink-400 sm:text-base">Visas, flights, hotels and complete ziyarat guidance — every part of the journey handled by the same team. @if($hajjCategory)<a class="font-semibold text-accent-800 underline decoration-accent-800/40 underline-offset-4 transition-colors hover:text-inverse hover:decoration-inverse" href="{{ route('hajj-services') }}">See all services</a>@endif</p>
         </div>
     </div>
 </section>

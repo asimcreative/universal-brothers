@@ -68,7 +68,7 @@
                     <span class="text-inverse">Recognised, Accredited</span> <span class="text-accent-700">&amp; Well Connected</span>
                 </h2>
 
-                <p class="reveal-on-scroll reveal-delay-2 mt-4 text-sm leading-relaxed text-ink-600 sm:text-base">The awards our work has earned and the bodies that accredit us.</p>
+                <p class="reveal-on-scroll reveal-delay-2 mt-4 text-sm leading-relaxed text-ink-400 sm:text-base">The awards our work has earned and the bodies that accredit us.</p>
             </header>
         </div>
 
@@ -88,7 +88,7 @@
                                     <div class="{{ $ubPlateClass }}">
                                 @endif
 
-                                <span class="text-[9px] font-bold uppercase tracking-[0.18em] text-accent-800/70">{{ $ubPlate['label'] }}</span>
+                                <span class="text-[11px] sm:text-[9px] font-bold uppercase tracking-[0.18em] text-accent-800">{{ $ubPlate['label'] }}</span>
 
                                 <span class="flex max-h-[72px] w-full min-h-0 flex-1 items-center justify-center sm:max-h-[92px]">
                                     @if($ubPlate['image'])

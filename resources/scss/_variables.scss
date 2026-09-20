@@ -106,8 +106,12 @@ $ub-surface-navy: #0b202a; // feature bands (--color-surface)
 $ub-ink: #0b202a;          // 15.4:1 — headings, primary text
 $ub-ink-body: #23343c;     // 12.4:1 — paragraphs (--color-ink-600)
 $ub-ink-muted: #4a5c65;    //  8.2:1 — captions, meta, helper text (--color-ink-400)
-$ub-on-dark: #efe9e6;      // 14.3:1 on teal (--color-heading)
-$ub-on-dark-muted: #d0c5c0; //  9.0:1 on teal
+// The two roles for text on a dark band, shared with `--color-on-dark` and
+// `--color-on-dark-muted` in theme.css so the whole site writes light-on-dark
+// in one pair of colours. The muted one used to be `#d0c5c0`, which is byte
+// for byte `--color-sand-300` — a light BACKGROUND band being used as text.
+$ub-on-dark: #e7e1dd;      // 12.0:1 on teal
+$ub-on-dark-muted: #bdb7b3; //  8.2:1 on teal
 
 // Borders.
 $ub-border: rgba(11, 32, 42, 0.1);

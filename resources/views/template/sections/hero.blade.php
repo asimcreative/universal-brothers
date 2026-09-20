@@ -31,7 +31,7 @@
     The designer's hero, with our photography and our words.
 
     The class names are the template's own and resolve against
-    `public/template/css/template.css`; the structure has to match it rather
+    `resources/css/site.css`; the structure has to match it rather
     than resemble it. What is ours: the photograph, the headline, the two
     actions, and the handwritten closing line — which is the company's own
     tagline, already carried in the footer as plain text.
@@ -63,7 +63,7 @@
             </h1>
 
             @if($ubFirst['lead'])
-                <p class="mx-auto mt-5 max-w-xl text-pretty text-sm leading-relaxed text-ivory/80 sm:mt-7 sm:text-lg" data-ub-slide-lead>{{ $ubFirst['lead'] }}</p>
+                <p class="mx-auto mt-5 max-w-xl text-pretty text-sm leading-relaxed text-on-dark-muted sm:mt-7 sm:text-lg" data-ub-slide-lead>{{ $ubFirst['lead'] }}</p>
             @endif
 
             <div class="mt-8 flex flex-wrap items-center justify-center gap-2.5 sm:mt-10 sm:gap-4">

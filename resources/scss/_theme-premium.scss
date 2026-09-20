@@ -20,8 +20,13 @@ $pt-ivory: $ub-cream;
 $pt-sand: #e2d9d3;          // the alternating light band, one step warmer than ivory
 $pt-ink: #0b202a;           // --color-inverse
 $pt-ink-muted: #4a5c65;     // --color-ink-400, the template's own muted ink
-$pt-on-dark: #f2ece9;
-$pt-on-dark-muted: #c9cfd2;
+// The same two values as `--color-on-dark` / `--color-on-dark-muted`, so the
+// fifteen Bootstrap pages and the homepage write light-on-dark in one colour
+// rather than two. The muted one used to be `#c9cfd2` — a cool blue-grey in a
+// palette that is warm everywhere else, which is why the inner pages read
+// colder than the homepage even where both were technically readable.
+$pt-on-dark: #e7e1dd;
+$pt-on-dark-muted: #bdb7b3;
 $pt-display: 'Fira Sans Condensed', 'Poppins', system-ui, sans-serif;
 $pt-radius-card: 1.25rem;
 $pt-radius-pill: 999px;
@@ -38,6 +43,10 @@ h4, .h4, h5, h6 { font-weight: 700; }
 
 p, li { color: $pt-ink; }
 .text-secondary, .text-muted, small { color: $pt-ink-muted !important; }
+
+// Bootstrap paints form labels and help text in its own secondary grey, which
+// is a fourth muted colour nobody chose. One muted role, everywhere.
+.form-label, .form-text, .col-form-label { color: $pt-ink-muted; }
 
 // Links inside body copy were taking the copper accent and speckling every
 // paragraph; only real links in prose should carry it.
@@ -62,6 +71,28 @@ p, li { color: $pt-ink; }
 }
 
 .hero-title-accent, .global-reach-lead { color: $pt-copper-light; }
+
+// --- The warm band ------------------------------------------------------------
+// `$ub-gold-dark` and `$pt-ink-muted` are both chosen against white, where they
+// measure about 4.8:1 and 8.2:1. The alternating sand band is several shades
+// darker than white, and on it the same two colours drop to 3.68:1 and 4.13:1 —
+// under the 4.5:1 minimum. Inside the band each steps one shade down, which
+// brings them to 5.35:1 and 5.03:1. Measured on /hajj-services, not guessed.
+.section.bg-light,
+.pt-band-sand {
+    .section-eyebrow,
+    .ub-eyebrow,
+    .hero-eyebrow,
+    .service-panel-eyebrow,
+    .package-card-series { color: #5f432b !important; }
+
+    p a:not(.btn),
+    li a:not(.btn) { color: #5f432b !important; }
+
+    .text-secondary,
+    .text-muted,
+    small { color: #3f4f58 !important; }
+}
 
 // --- Eyebrow -----------------------------------------------------------------
 .section-eyebrow, .ub-eyebrow, .hero-eyebrow, .service-panel-eyebrow, .package-card-series {

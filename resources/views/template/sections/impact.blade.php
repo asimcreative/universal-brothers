@@ -3,7 +3,7 @@
 
     The markup, the class names and the nesting below are the designer's own,
     taken from the reference template so that the compiled stylesheet in
-    `public/template/css/template.css` matches it rule for rule. Only the
+    `resources/css/site.css` matches it rule for rule. Only the
     content is ours: the headline figure is the admin-editable pilgrims-served
     setting rather than the template's hardcoded number, so it can never drift
     from the figure the rest of the site quotes.
@@ -41,7 +41,7 @@
         </div>
 
         <div class="reveal-on-scroll reveal-delay-2">
-            <div class="mt-10 flex items-center justify-center gap-4 px-4 sm:mt-12 md:gap-7"><div class="flex items-center justify-center gap-2 md:gap-6 whitespace-nowrap rounded-pill border-[1.4px] border-accent-600 bg-sand-50/80 px-6 py-2.5 backdrop-blur-sm sm:gap-2.5 sm:px-9 md:gap-3 md:px-11 md:py-3"><x-stat-number :display="$stats['pilgrims']" :target="$counters['pilgrims']" class="font-display text-[28px] font-extrabold leading-none tracking-[-0.03em] text-inverse md:text-[82px]" /><span class="text-[14px] font-medium leading-none text-ink-600 sm:text-[16px] md:text-[80px]">Haji Served</span></div></div>
+            <div class="mt-10 flex items-center justify-center gap-4 px-4 sm:mt-12 md:gap-7"><div class="flex items-center justify-center gap-2 md:gap-6 whitespace-nowrap rounded-pill border-[1.4px] border-accent-600 bg-sand-50/80 px-6 py-2.5 backdrop-blur-sm sm:gap-2.5 sm:px-9 md:gap-3 md:px-11 md:py-3"><x-stat-number :display="$stats['pilgrims']" :target="$counters['pilgrims']" class="font-display text-[28px] font-extrabold leading-none tracking-[-0.03em] text-inverse md:text-[82px]" /><span class="text-[14px] font-medium leading-none text-ink-400 sm:text-[16px] md:text-[80px]">Haji Served</span></div></div>
         </div>
 
         <div class="mt-12 sm:mt-14 lg:mt-16">
@@ -99,12 +99,12 @@
 
         <div class="reveal-on-scroll mt-8 flex items-center justify-center gap-3 px-5 sm:mt-10 sm:gap-7">
             <span aria-hidden="true" class="h-px w-10 shrink-0 bg-accent-700/75 sm:w-32"></span>
-            <p class="text-center font-display text-[10px] font-semibold uppercase leading-relaxed tracking-[0.2em] text-accent-700 sm:whitespace-nowrap sm:text-sm sm:tracking-[0.32em]">Different Places. One Faith. A Stronger Ummah.</p>
+            <p class="text-center font-display text-[11px] font-semibold uppercase leading-relaxed sm:text-[10px] tracking-[0.2em] text-accent-700 sm:whitespace-nowrap sm:text-sm sm:tracking-[0.32em]">Different Places. One Faith. A Stronger Ummah.</p>
             <span aria-hidden="true" class="h-px w-10 shrink-0 bg-accent-700/75 sm:w-32"></span>
         </div>
 
         <div class="reveal-on-scroll reveal-delay-4">
-            <p class="mx-auto mt-10 max-w-2xl px-5 text-center text-sm leading-relaxed text-ink-600 sm:mt-12 sm:text-base">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
+            <p class="mx-auto mt-10 max-w-2xl px-5 text-center text-sm leading-relaxed text-ink-400 sm:mt-12 sm:text-base">Our Hajj and Umrah programmes are arranged for pilgrims travelling from Pakistan and for families joining from abroad — with the same documentation support, accommodation standards and on-ground assistance wherever the journey begins.</p>
         </div>
     </div>
 </section>

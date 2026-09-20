@@ -51,7 +51,7 @@
 
                 <h2 class="reveal-on-scroll reveal-delay-2 mt-1 font-display text-3xl font-bold leading-[1.08] text-heading sm:text-4xl lg:text-5xl">Company Introduction</h2>
 
-                <p class="reveal-on-scroll reveal-delay-3 mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ivory/70 sm:text-base">A few minutes inside the offices, the team and the ground operation that stands behind every departure.</p>
+                <p class="reveal-on-scroll reveal-delay-3 mx-auto mt-4 max-w-xl text-sm leading-relaxed text-on-dark-muted sm:text-base">A few minutes inside the offices, the team and the ground operation that stands behind every departure.</p>
             </div>
         </div>
     </section>

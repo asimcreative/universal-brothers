@@ -36,7 +36,7 @@
                 <div class="rounded-card border border-border bg-surface-2 p-5 shadow-[0_16px_40px_-32px_rgba(6,20,24,0.6)] sm:p-6 reveal-on-scroll reveal-delay-3">
                     <form method="GET" action="{{ route('packages.category', 'hajj') }}" id="packageFinder" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end lg:gap-5">
                         <div class="relative">
-                            <label for="finder-service" class="block font-semibold uppercase tracking-[0.14em] mb-1.5 text-[11px] text-muted-foreground">Journey</label>
+                            <label for="finder-service" class="block font-semibold uppercase tracking-[0.14em] mb-1.5 text-[11px] text-on-dark-muted">Journey</label>
                             <select id="finder-service" data-finder-service class="w-full rounded-pill border text-left transition-colors duration-200 h-12 px-4 pr-6 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background border-accent-500 bg-accent-500/15 font-semibold text-accent-300 appearance-none cursor-pointer">
                                 @if($hajjCategory)<option value="{{ route('packages.category', 'hajj') }}">Hajj</option>@endif
                                 @if($umrahCategory)<option value="{{ route('packages.category', 'umrah') }}">Umrah</option>@endif
@@ -46,7 +46,7 @@
                         </div>
 
                         <div class="relative">
-                            <label for="finder-days" class="block font-semibold uppercase tracking-[0.14em] mb-1.5 text-[11px] text-muted-foreground">Duration</label>
+                            <label for="finder-days" class="block font-semibold uppercase tracking-[0.14em] mb-1.5 text-[11px] text-on-dark-muted">Duration</label>
                             <select name="days" id="finder-days" class="w-full rounded-pill border text-left transition-colors duration-200 h-12 px-4 pr-6 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background border-border bg-surface text-foreground hover:border-brand-400 appearance-none cursor-pointer">
                                 <option value="">Any length</option>
                                 @foreach($filterDurations as $days)
@@ -57,7 +57,7 @@
                         </div>
 
                         <div class="relative">
-                            <label for="finder-budget" class="block font-semibold uppercase tracking-[0.14em] mb-1.5 text-[11px] text-muted-foreground">Budget up to (US$)</label>
+                            <label for="finder-budget" class="block font-semibold uppercase tracking-[0.14em] mb-1.5 text-[11px] text-on-dark-muted">Budget up to (US$)</label>
                             <input type="number" name="price_max" id="finder-budget" min="0" step="500" placeholder="e.g. 12000" inputmode="numeric" class="w-full rounded-pill border text-left transition-colors duration-200 h-12 px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background border-border bg-surface text-foreground hover:border-brand-400">
                         </div>
 
