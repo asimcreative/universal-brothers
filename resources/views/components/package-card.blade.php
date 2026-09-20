@@ -25,9 +25,10 @@
         if (! is_null($package->is_shifting)) {
             $chips[] = ['bi-arrow-left-right', $package->is_shifting ? 'Shifting' : 'Non-Shifting'];
         }
-        if ($package->has_aziziya) {
-            $chips[] = ['bi-building', 'Aziziya'];
-        }
+        // Always one or the other. Saying nothing when a package has no
+        // Aziziya leg left the reader to infer it from an absence, and it is
+        // one of the two things people compare these packages on.
+        $chips[] = ['bi-building', $package->has_aziziya ? 'Aziziya' : 'No Aziziya'];
     }
     if (! $package->isHajj() && $package->duration_label) {
         $chips[] = ['bi-calendar-event', $package->duration_label];
@@ -100,9 +101,33 @@
     </div>
 
     <div class="card-body d-flex flex-column">
-        @if($seriesEyebrow)
-            <span class="package-card-series">{{ $seriesEyebrow }}</span>
-        @endif
+        {{-- Price at the top, beside the series. It sat in the footer under
+             the summary, which meant the one thing most people are comparing
+             was the last thing on the card and never at the same height on
+             two cards side by side. --}}
+        <div class="package-card-head">
+            @if($seriesEyebrow)
+                <span class="package-card-series">{{ $seriesEyebrow }}</span>
+            @endif
+
+            @php
+                // The chosen currency, and no other. Quoting a package's own
+                // `currency` column here showed rupees to a visitor reading in
+                // dollars, because that column holds one number in one currency
+                // and cannot answer the question being asked.
+                $ubCurrency = \App\Support\Currency::current();
+                $ubFrom = $package->startingPriceIn($ubCurrency);
+                $ubTo = $package->endingPriceIn($ubCurrency);
+            @endphp
+            <span class="package-card-price">
+                @if($ubFrom)
+                    <small>{{ $ubTo && $ubTo > $ubFrom ? 'From – to' : 'From' }}</small>
+                    {{ \App\Support\Currency::format($ubFrom) }}@if($ubTo && $ubTo > $ubFrom)<span class="package-card-price-to"> &ndash; {{ \App\Support\Currency::format($ubTo) }}</span>@endif
+                @else
+                    Price on request
+                @endif
+            </span>
+        </div>
 
         <h3 class="package-card-title">{{ $package->name }}</h3>
 
@@ -119,13 +144,6 @@
         @endif
 
         <div class="package-card-foot mt-auto">
-            <span class="package-card-price">
-                @if($package->starting_price)
-                    <small>From</small>{{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}
-                @else
-                    <small>&nbsp;</small>Price on request
-                @endif
-            </span>
             <a href="{{ route('packages.show', [$package->category->slug, $package->slug]) }}" class="btn btn-sm btn-primary package-card-cta">
                 View Details<i class="bi bi-arrow-right" aria-hidden="true"></i>
             </a>

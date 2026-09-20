@@ -966,10 +966,23 @@ html, body {
         i { color: $ub-gold-dark; font-size: 0.8rem; }
     }
 
+    // Series on its own line, price under it, both above the title.
+    //
+    // They shared one line until the price became a range: "PKR 4,640,000 –
+    // PKR 7,600,000" needs the full width of the card, and the series label
+    // beside it collapsed to "P…". A stacked pair fits at every width.
+    .package-card-head {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.1rem;
+        margin-bottom: 0.45rem;
+    }
+
     .package-card-foot {
         display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
+        align-items: center;
+        justify-content: flex-end;
         gap: 0.75rem;
         padding-top: 1rem;
         border-top: 1px solid rgba($ub-navy, 0.08);
@@ -977,11 +990,16 @@ html, body {
 
     .package-card-price {
         font-family: $headings-font-family;
-        font-size: 1.3rem;
+        // Smaller than it was in the footer: up here it sits beside the series
+        // label rather than opposite a button, and at 1.3rem it read as the
+        // card's headline instead of its price.
+        font-size: 1.05rem;
         font-weight: 700;
         color: $ub-navy;
-        line-height: 1.1;
-        white-space: nowrap;
+        line-height: 1.25;
+        // Wraps rather than overflows: a range in rupees is long, and on a
+        // narrow card the second half belongs on the next line.
+        white-space: normal;
 
         small {
             display: block;
@@ -3583,4 +3601,115 @@ h3, .h3 { font-size: clamp(1.35rem, 1.25rem + 0.4vw, 1.75rem); line-height: 1.3;
 
         &:hover, &:focus-visible { color: $ub-navy; }
     }
+}
+
+// Pagination arrives from Bootstrap at exactly 40px tall — the minimum, with
+// nothing to spare. Nudged clear of it.
+.pagination .page-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+// --- Duration tabs on the package listing ------------------------------------
+// Scrollable rather than wrapping: six or seven durations at this size fit a
+// desktop but not a phone, and a wrapped second row reads as a separate thing.
+.day-tab-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.35rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+.day-tab {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 0 1.05rem;
+    border: 1px solid rgba($ub-navy, 0.14);
+    border-radius: 999px;
+    background: #fff;
+    color: $ub-ink-muted;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color $ub-duration-fast $ub-ease, background-color $ub-duration-fast $ub-ease, color $ub-duration-fast $ub-ease;
+
+    &:hover,
+    &:focus-visible {
+        border-color: rgba($ub-gold, 0.55);
+        color: $ub-navy;
+    }
+
+    &.is-active {
+        border-color: $ub-navy;
+        background: $ub-navy;
+        color: #fff;
+    }
+}
+
+// The second half of a price range on a package card.
+.package-card-price-to {
+    display: inline;
+    white-space: nowrap;
+}
+
+// --- Services, stage by stage ------------------------------------------------
+.stage-tab-bar {
+    gap: 0.5rem;
+
+    .nav-link {
+        min-height: 44px;
+        border: 1px solid rgba($ub-navy, 0.14);
+        border-radius: 999px;
+        background: #fff;
+        color: $ub-ink-muted;
+        font-weight: 600;
+
+        &:hover,
+        &:focus-visible { border-color: rgba($ub-gold, 0.55); color: $ub-navy; }
+        &.active { border-color: $ub-navy; background: $ub-navy; color: #fff; }
+    }
+}
+
+.stage-service-card {
+    border: 1px solid rgba($ub-navy, 0.08);
+    border-radius: $border-radius-lg;
+    background: #fff;
+    padding: 1.15rem 1.25rem;
+    box-shadow: $ub-shadow-sm;
+}
+
+.stage-service-term {
+    margin: 0 0 0.3rem;
+    color: $ub-gold-dark;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.stage-service-value {
+    margin: 0;
+    color: $ub-navy;
+    font-size: 0.93rem;
+    line-height: 1.55;
+}
+
+.stage-service-tag {
+    display: inline-block;
+    margin: 0.6rem 0 0;
+    border-radius: 999px;
+    background: rgba($ub-gold, 0.16);
+    padding: 0.15rem 0.6rem;
+    color: $ub-gold-dark;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }

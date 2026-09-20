@@ -131,7 +131,95 @@
         </div>
     </section>
 
-    {{-- Next Flight Date --}}
+    {{-- Services, stage by stage --------------------------------------------
+     Organised by where you are rather than by what the service is, because
+     that is the order a pilgrim experiences them in and the order the
+     questions come in.
+
+     The tabs are built from the stages that actually have services recorded.
+     Mina and Arafat each resolve to exactly one set of arrangements across
+     every package — they are the company's standing offering, not a
+     per-package variable — which is why they can be stated once here.
+     Muzdalifah has no arrangements of its own recorded yet; it appears in the
+     Arafat notes and in the Mashaer transport, and it will get its own tab the
+     day it gets its own entry. --}}
+<section id="stage-services" class="section bg-light">
+    <div class="container">
+        <div class="text-center mb-4 reveal-on-scroll">
+            <x-section-header eyebrow="On the ground" title="Services at Every Stage" />
+        </div>
+
+        @php
+            $ubStageLabels = ['mina' => 'Mina', 'arafat' => 'Arafat', 'muzdalifah' => 'Muzdalifah'];
+            $ubStages = collect($ubStageLabels)->filter(fn ($label, $key) => ($stages[$key] ?? collect())->isNotEmpty());
+        @endphp
+
+        <ul class="nav nav-pills stage-tab-bar justify-content-center mb-4" role="tablist">
+            @foreach($ubStages as $ubKey => $ubLabel)
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {{ $loop->first ? 'active' : '' }}" id="stage-tab-{{ $ubKey }}" data-bs-toggle="pill"
+                            data-bs-target="#stage-pane-{{ $ubKey }}" type="button" role="tab"
+                            aria-controls="stage-pane-{{ $ubKey }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">{{ $ubLabel }}</button>
+                </li>
+            @endforeach
+            @if($transport->isNotEmpty())
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="stage-tab-transport" data-bs-toggle="pill" data-bs-target="#stage-pane-transport"
+                            type="button" role="tab" aria-controls="stage-pane-transport" aria-selected="false">Transport</button>
+                </li>
+            @endif
+        </ul>
+
+        <div class="tab-content stage-tab-content">
+            @foreach($ubStages as $ubKey => $ubLabel)
+                @php $ubStage = $stages[$ubKey]->first(); @endphp
+                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="stage-pane-{{ $ubKey }}" role="tabpanel" aria-labelledby="stage-tab-{{ $ubKey }}" tabindex="0">
+                    <div class="row g-4 justify-content-center">
+                        @foreach([
+                            ['Camp', trim(collect([$ubStage->category, $ubStage->zone, $ubStage->maktab ? 'Maktab '.$ubStage->maktab : null])->filter()->implode(' · '))],
+                            ['Tent', $ubStage->tent_type],
+                            ['Sleeping', $ubStage->accommodation_type],
+                            ['Meals', $ubStage->meal_plan],
+                            ['Bathroom', $ubStage->bathroom],
+                            ['Cooling', $ubStage->air_conditioning],
+                            ['Also provided', $ubStage->other_services],
+                            ['Location', $ubStage->notes],
+                        ] as [$ubTerm, $ubValue])
+                            @if(filled($ubValue))
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="stage-service-card h-100">
+                                        <p class="stage-service-term">{{ $ubTerm }}</p>
+                                        <p class="stage-service-value">{{ $ubValue }}</p>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+
+            @if($transport->isNotEmpty())
+                <div class="tab-pane fade" id="stage-pane-transport" role="tabpanel" aria-labelledby="stage-tab-transport" tabindex="0">
+                    <div class="row g-4 justify-content-center">
+                        @foreach($transport as $ubRoute)
+                            <div class="col-md-6 col-lg-4">
+                                <div class="stage-service-card h-100">
+                                    <p class="stage-service-term">{{ ucwords(str_replace('_', ' ', $ubRoute->transport_type)) }}</p>
+                                    <p class="stage-service-value">{{ $ubRoute->from_location }} &rarr; {{ $ubRoute->to_location }}</p>
+                                    @if($ubRoute->is_included)
+                                        <p class="stage-service-tag">Included</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</section>
+
+{{-- Next Flight Date --}}
     <section id="next-flight-date" class="section bg-light text-center">
         <div class="container">
             <h2>Next Flight Date</h2>

@@ -47,6 +47,30 @@
                         <div class="offcanvas-body d-block">
                             <p class="filter-panel-heading d-none d-lg-block">Refine Packages</p>
                             <form method="GET" action="{{ route('packages.category', $category->slug) }}" class="row g-3">
+                                {{-- Series leads the form. It used to be a separate
+                                     row of pills above the grid, which meant the page
+                                     asked for the same thing in two places — pills for
+                                     the tier, a form for everything else — and the two
+                                     did not look or behave alike. One filter, one place. --}}
+                                @if($series->isNotEmpty())
+                                    <div class="col-12">
+                                        <label for="filter-series" class="form-label">Package Series</label>
+                                        <select name="series" id="filter-series" class="form-select">
+                                            <option value="">All series</option>
+                                            @foreach($series as $s)
+                                                <option value="{{ $s->slug }}" {{ request('series') === $s->slug ? 'selected' : '' }}>{{ $s->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endif
+                                <div class="col-6">
+                                    <label for="filter-price-min" class="form-label">Min price ({{ \App\Support\Currency::current() }})</label>
+                                    <input type="number" inputmode="numeric" name="price_min" id="filter-price-min" class="form-control" value="{{ request('price_min') }}">
+                                </div>
+                                <div class="col-6">
+                                    <label for="filter-price-max" class="form-label">Max price ({{ \App\Support\Currency::current() }})</label>
+                                    <input type="number" inputmode="numeric" name="price_max" id="filter-price-max" class="form-control" value="{{ request('price_max') }}">
+                                </div>
                                 <div class="col-12">
                                     <label for="filter-days" class="form-label">Duration</label>
                                     <select name="days" id="filter-days" class="form-select">
@@ -63,6 +87,14 @@
                                         @foreach($hajjFilters['variants'] as $code)
                                             <option value="{{ $code }}" {{ request('variant') === $code ? 'selected' : '' }}>Package {{ $code }}</option>
                                         @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="filter-shifting" class="form-label">Shifting</label>
+                                    <select name="shifting" id="filter-shifting" class="form-select">
+                                        <option value="">Any</option>
+                                        <option value="non_shifting" {{ request('shifting') === 'non_shifting' ? 'selected' : '' }}>Non-Shifting</option>
+                                        <option value="shifting" {{ request('shifting') === 'shifting' ? 'selected' : '' }}>Shifting</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
@@ -91,14 +123,6 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-12">
-                                    <label for="filter-price-min" class="form-label">Min Price (US$)</label>
-                                    <input type="number" name="price_min" id="filter-price-min" class="form-control" value="{{ request('price_min') }}">
-                                </div>
-                                <div class="col-12">
-                                    <label for="filter-price-max" class="form-label">Max Price (US$)</label>
-                                    <input type="number" name="price_max" id="filter-price-max" class="form-control" value="{{ request('price_max') }}">
-                                </div>
                                 <div class="col-12 form-check ps-4">
                                     <input type="checkbox" name="star5" value="1" id="filter-star5" class="form-check-input" {{ request('star5') ? 'checked' : '' }}>
                                     <label for="filter-star5" class="form-check-label">5-Star Only</label>
@@ -114,16 +138,32 @@
             @endif
 
             <div class="{{ $hajjFilters ? 'col-lg-9' : 'col-12' }}">
-                @if($series->isNotEmpty())
-                    {{-- Horizontal scroll rather than wrap: the real series names
-                         run to 45 characters, so on the live site four pills wrapped
-                         onto three ragged rows above the grid. --}}
-                    <div class="series-pill-bar" role="group" aria-label="Filter by series">
-                        <a href="{{ route('packages.category', $category->slug) }}" class="series-pill {{ request('series') ? '' : 'is-active' }}">All</a>
-                        @foreach($series as $s)
-                            <a href="{{ route('packages.category', [$category->slug, 'series' => $s->slug]) }}" class="series-pill {{ request('series') === $s->slug ? 'is-active' : '' }}">{{ $s->name }}</a>
+
+                @if($hajjFilters && $hajjFilters['days']->count() > 1)
+                    {{-- Duration first, as tabs rather than a dropdown: it is
+                         the thing people narrow by before anything else, and
+                         the brochure itself is organised by it.
+
+                         Built from the durations that actually exist, so a tab
+                         can never lead to an empty grid — and a new length
+                         appears here on its own the day a package has it. --}}
+                    {{-- A nav, not a `role="tablist"`. These look like tabs and
+                         are described as tabs, but each one is a link that
+                         reloads the listing with a `days` filter — there is no
+                         tab panel, and nothing responds to an arrow key.
+                         Announcing them as a tab list would promise a widget
+                         that is not here; `aria-current="page"` says which one
+                         is in force, which is what is actually true. --}}
+                    <nav class="day-tab-bar" aria-label="Filter by duration">
+                        <a href="{{ route('packages.category', array_merge([$category->slug], request()->except(['days', 'page']))) }}"
+                           class="day-tab {{ request()->filled('days') ? '' : 'is-active' }}"
+                           @unless(request()->filled('days')) aria-current="page" @endunless>All</a>
+                        @foreach($hajjFilters['days'] as $ubDays)
+                            <a href="{{ route('packages.category', array_merge([$category->slug], request()->except(['days', 'page']), ['days' => $ubDays])) }}"
+                               class="day-tab {{ (string) request('days') === (string) $ubDays ? 'is-active' : '' }}"
+                               @if((string) request('days') === (string) $ubDays) aria-current="page" @endif>{{ $ubDays }} Days</a>
                         @endforeach
-                    </div>
+                    </nav>
                 @endif
 
                 @php
@@ -133,6 +173,7 @@
                         'variant' => fn ($v) => 'Package ' . $v,
                         'arrival' => fn ($v) => $v === 'madina' ? 'Madina first' : 'Jeddah first',
                         'aziziya' => fn ($v) => 'Aziziya: ' . str_replace('_', ' ', $v),
+                        'shifting' => fn ($v) => $v === 'shifting' ? 'Shifting' : 'Non-Shifting',
                         'sharing' => fn ($v) => ucfirst($v) . ' sharing',
                         'price_max' => fn ($v) => 'Up to US$' . number_format((int) $v),
                         'star5' => fn ($v) => '5-star only',
