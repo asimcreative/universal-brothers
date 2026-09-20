@@ -90,7 +90,21 @@ class LibraryBackfill
      * "Dar Al Tawhid Intercontinental", "Makkah Tower (Hajar Tower)" and
      * "Makkah Tower", "Al Aqeeq / Dallah Taibah / Similar" and
      * "Al Aqeeq / Dallah Taibah".
+     *
+     * Where two printings cannot be reconciled by rule they are listed in
+     * ALIASES instead — written out one by one rather than guessed at, so a
+     * new pair is a deliberate decision and never a side effect.
      */
+    private const ALIASES = [
+        // The September brochures print the owning group rather than the
+        // brand: "Dar Al Tawhid IHG" is the InterContinental at Dar Al
+        // Tawhid, which the catalogue already carries under its full name.
+        // Unmapped it becomes a second hotel record for one building — two
+        // rows in the admin's hotel library, and a library update that
+        // reaches only half the packages that use it.
+        'dar al tawhid ihg' => 'dar al tawhid intercontinental',
+    ];
+
     public static function normaliseHotelName(string $name): string
     {
         $value = Str::lower($name);
@@ -100,8 +114,9 @@ class LibraryBackfill
         $value = preg_replace('/\bsimilar\b/u', ' ', $value);
         $value = trim(preg_replace('/\s+/u', ' ', $value));
         $value = preg_replace('/\s(makkah|medinah|madinah)$/u', '', $value);
+        $value = trim($value);
 
-        return trim($value);
+        return self::ALIASES[$value] ?? $value;
     }
 
     private function count(string $key, int $by = 1): void

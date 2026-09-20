@@ -29,17 +29,43 @@ class HajjPackageSeeder extends Seeder
     private const SEASON_YEAR = 2027;
     private const SEASON_LABEL = 'Hajj 2027 / 1448 AH';
 
+    /**
+     * Create only the packages that are not in the database yet.
+     *
+     * Off by default: locally the point of re-running this seeder is to
+     * refresh everything from the brochure. On the live site it is the
+     * opposite — the twelve packages that were already there may have been
+     * edited in the admin since, and this seeder replaces a package's
+     * variants, itinerary, accommodation, rooms and notes wholesale. Adding
+     * the fourteen new ones must not quietly undo the client's own edits to
+     * the other twelve.
+     */
+    public bool $onlyMissing = false;
+
     public function run(): void
     {
         $category = PackageCategory::where('slug', 'hajj')->firstOrFail();
-        $nonAziziyaSeries = PackageSeries::where('slug', 'platinum-non-aziziya')->firstOrFail();
-        $withAziziyaSeries = PackageSeries::where('slug', 'platinum-with-aziziya')->firstOrFail();
-        $valueSeries = PackageSeries::where('slug', 'platinum-value-aziziya')->firstOrFail();
+        // The four tiers the brochure names on every package: Platinum, Flex,
+        // Comfort, Value. Which one a package belongs to is written in its own
+        // title, and the code ranges in the brochure's index agree.
+        $nonAziziyaSeries = PackageSeries::where('slug', 'platinum')->firstOrFail();
+        $withAziziyaSeries = PackageSeries::where('slug', 'flex')->firstOrFail();
+        $comfortSeries = PackageSeries::where('slug', 'comfort')->firstOrFail();
+        $valueSeries = PackageSeries::where('slug', 'value')->firstOrFail();
+
+        $existing = $this->onlyMissing
+            ? Package::whereIn('code', array_column($this->packages(), 'code'))->pluck('code')->all()
+            : [];
 
         foreach ($this->packages() as $index => $data) {
-            $isAziziyaGroup = in_array($data['series'], ['with_aziziya', 'value'], true);
+            if (in_array($data['code'], $existing, true)) {
+                continue;
+            }
+
+            $isAziziyaGroup = in_array($data['series'], ['with_aziziya', 'comfort', 'value'], true);
             $seriesId = match ($data['series']) {
                 'with_aziziya' => $withAziziyaSeries->id,
+                'comfort' => $comfortSeries->id,
                 'value' => $valueSeries->id,
                 default => $nonAziziyaSeries->id,
             };
@@ -501,6 +527,587 @@ class HajjPackageSeeder extends Seeder
                     [null, 'double', 2, 'Double Sharing', 9450],
                 ],
             ],
+
+            // ---------------------------------------------------------------
+            // The fourteen packages the older dollar-only brochure did not
+            // carry. Read page by page out of the three September 2026
+            // brochures — rupee, riyal and dollar — and generated rather than
+            // typed: fourteen itineraries and three price lists is nine
+            // hundred lines, and one slip is a wrong price on a public site.
+            //
+            // Brochure discrepancies are carried through as notes, not fixed:
+            // UB018-UB021 print their code as "UHS 0xx", UB020's header says
+            // 14 days over a 13-row table, and UB021 repeats UB020's prices.
+            // ---------------------------------------------------------------
+            [
+                'code' => 'UB002', 'series' => 'non_aziziya',
+                'name' => 'Executive Platinum Intercon / Fairmont — Makkah First',
+                'duration_days' => 14, 'duration_label' => '14 Days Package',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => ['A' => 'Dar Al Tawhid Intercontinental', 'B' => 'Fairmont Clock Tower'],
+                'itinerary' => [
+                    [1, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Dar Al Tawhid Intercontinental ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [2, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Dar Al Tawhid Intercontinental ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [3, '2027-05-12', '06 Zil Hajj', 'Makkah', 'Dar Al Tawhid Intercontinental ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [4, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Dar Al Tawhid Intercontinental ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [5, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [7, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [8, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'Dar Al Tawhid Intercontinental ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [10, '2027-05-19', '13 Zil Hajj', 'Makkah', 'Dar Al Tawhid Intercontinental ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [11, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa ★★★★★', null],
+                    [12, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', null],
+                    [13, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', null],
+                    [14, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', 'A', 'Dar Al Tawhid Intercontinental', 5, 6],
+                    ['makkah', 'B', 'Fairmont Clock Tower', 5, 6],
+                    ['medinah', null, 'Dar Al Taqwa', 5, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', null, null, null],
+                    ['A', 'triple', 3, 'Triple Sharing', 22450, 6372000, 82000],
+                    ['A', 'double', 2, 'Double Sharing', 26850, 7600000, 98000],
+                    ['B', 'quad', 4, 'Quad Sharing', 16300, 4640000, 59500],
+                    ['B', 'triple', 3, 'Triple Sharing', 18100, 5140000, 66000],
+                    ['B', 'double', 2, 'Double Sharing', 20850, 5910000, 76000],
+                ],
+                'brochure_notes' => [
+                    'Makkah hotel rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB005', 'series' => 'non_aziziya',
+                'name' => 'Executive Platinum Swissotel — Makkah First',
+                'duration_days' => 14, 'duration_label' => '14 Days Package',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => ['A' => 'Dar Al Taqwa / Hilton', 'B' => 'Dallah Taibah (Premier Floor)'],
+                'itinerary' => [
+                    [1, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [2, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [3, '2027-05-12', '06 Zil Hajj', 'Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [4, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [5, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [7, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [8, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [10, '2027-05-19', '13 Zil Hajj', 'Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [11, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa / Hilton ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [12, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa / Hilton ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [13, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa / Hilton ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [14, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Swissotel Makkah', 5, 6],
+                    ['medinah', 'A', 'Dar Al Taqwa / Hilton', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', 14950, 4250000, 54500],
+                    ['A', 'triple', 3, 'Triple Sharing', 16300, 4640000, 59500],
+                    ['A', 'double', 2, 'Double Sharing', 19300, 5485000, 70500],
+                    ['B', 'quad', 4, 'Quad Sharing', 14200, 4050000, 51900],
+                    ['B', 'triple', 3, 'Triple Sharing', 15590, 4440000, 56900],
+                    ['B', 'double', 2, 'Double Sharing', 18350, 5200000, 66900],
+                ],
+                'brochure_notes' => [
+                    'Makkah hotel rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB007', 'series' => 'non_aziziya',
+                'name' => 'Executive Platinum Swissotel — Makkah First (Short Package)',
+                'duration_days' => 9, 'duration_label' => 'Short Package — 09 Days Package',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => [],
+                'itinerary' => [
+                    [1, '2027-05-12', '06 Zil Hajj', 'To Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [2, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [3, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [4, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [5, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [7, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'Swissotel Makkah ★★★★★', null],
+                    [8, '2027-05-19', '13 Zil Hajj', 'Medinah', 'Al Aqeeq ★★★★ / Dallah Taibah ★★★★ / Similar', null],
+                    [9, '2027-05-20', '14 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Swissotel Makkah', 5, 3],
+                    ['medinah', null, 'Al Aqeeq / Dallah Taibah / Similar', 4, 1],
+                ],
+                'room_options' => [
+                    [null, 'quad', 4, 'Quad Sharing', 13850, 3945000, 50500],
+                    [null, 'triple', 3, 'Triple Sharing', 15200, 4330000, 55500],
+                    [null, 'double', 2, 'Double Sharing', 17950, 5100000, 65500],
+                ],
+                'brochure_notes' => [
+                    'Makkah hotel rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB009', 'series' => 'non_aziziya',
+                'name' => 'Executive Platinum Makkah Tower — Makkah First',
+                'duration_days' => 14, 'duration_label' => '14 Days Package',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => ['A' => 'Dar Al Taqwa / Hilton', 'B' => 'Dallah Taibah (Premier Floor)'],
+                'itinerary' => [
+                    [1, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Makkah Tower ★★★★', null],
+                    [2, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Makkah Tower ★★★★', null],
+                    [3, '2027-05-12', '06 Zil Hajj', 'Makkah', 'Makkah Tower ★★★★', null],
+                    [4, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Makkah Tower ★★★★', null],
+                    [5, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [7, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [8, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'Makkah Tower ★★★★', null],
+                    [10, '2027-05-19', '13 Zil Hajj', 'Makkah', 'Makkah Tower ★★★★', null],
+                    [11, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa / Hilton ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [12, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa / Hilton ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [13, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa / Hilton ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [14, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Makkah Tower', 4, 6],
+                    ['medinah', 'A', 'Dar Al Taqwa / Hilton', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    ['A', 'sharing', null, 'Sharing Room', null, null, null],
+                    ['A', 'quad', 4, 'Quad Sharing', 13250, 3785000, 48400],
+                    ['A', 'triple', 3, 'Triple Sharing', 14600, 4160000, 53300],
+                    ['A', 'double', 2, 'Double Sharing', 17900, 5085000, 65300],
+                    ['B', 'sharing', null, 'Sharing Room', 12450, 3550000, 45400],
+                    ['B', 'quad', 4, 'Quad Sharing', 12450, 3550000, 45400],
+                    ['B', 'triple', 3, 'Triple Sharing', 14050, 4000000, 51300],
+                    ['B', 'double', 2, 'Double Sharing', 16990, 4830000, 62000],
+                ],
+                'brochure_notes' => [
+                    'Makkah hotel rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB012', 'series' => 'non_aziziya',
+                'name' => 'Executive Platinum Voco by IHG — Makkah First',
+                'duration_days' => 14, 'duration_label' => '14 Days Package',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => [],
+                'itinerary' => [
+                    [1, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Voco Makkah By IHG ★★★★', null],
+                    [2, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Voco Makkah By IHG ★★★★', null],
+                    [3, '2027-05-12', '06 Zil Hajj', 'Makkah', 'Voco Makkah By IHG ★★★★', null],
+                    [4, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Voco Makkah By IHG ★★★★', null],
+                    [5, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [7, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [8, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'Voco Makkah By IHG ★★★★', null],
+                    [10, '2027-05-19', '13 Zil Hajj', 'Makkah', 'Voco Makkah By IHG ★★★★', null],
+                    [11, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dallah Taibah (Premier Floor) ★★★★', null],
+                    [12, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dallah Taibah (Premier Floor) ★★★★', null],
+                    [13, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dallah Taibah (Premier Floor) ★★★★', null],
+                    [14, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Voco Makkah By IHG', 4, 6],
+                    ['medinah', null, 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    [null, 'quad', 4, 'Quad Sharing', 10450, 2999000, 38200],
+                    [null, 'triple', 3, 'Triple Sharing', 11500, 3290000, 42000],
+                    [null, 'double', 2, 'Double Sharing', 13425, 3830000, 49000],
+                ],
+                'brochure_notes' => [
+                    'Makkah hotel rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB014', 'series' => 'with_aziziya',
+                'name' => 'Executive Platinum Flex 14 — Makkah First',
+                'duration_days' => 14, 'duration_label' => 'Flex 14 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => true,
+                'variants' => ['A' => 'Dar Al Taqwa', 'B' => 'Dallah Taibah (Premier Floor)'],
+                'itinerary' => [
+                    [1, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Pullman Zamzam Makkah ★★★★+', null],
+                    [2, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Pullman Zamzam Makkah ★★★★+', null],
+                    [3, '2027-05-12', '06 Zil Hajj', 'Makkah', 'Pullman Zamzam Makkah ★★★★+', null],
+                    [4, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Pullman Zamzam Makkah ★★★★+', null],
+                    [5, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [7, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [8, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [10, '2027-05-19', '13 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [11, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [12, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [13, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [14, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Pullman Zamzam Makkah', 4, 4],
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 2],
+                    ['medinah', 'A', 'Dar Al Taqwa', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', 11650, 3330000, 42500],
+                    ['A', 'triple', 3, 'Triple Sharing', 12750, 3640000, 46500],
+                    ['A', 'double', 2, 'Double Sharing', 14520, 4140000, 53000],
+                    ['B', 'quad', 4, 'Quad Sharing', 11100, 3175000, 40500],
+                    ['B', 'triple', 3, 'Triple Sharing', 12200, 3485000, 44500],
+                    ['B', 'double', 2, 'Double Sharing', 13560, 3870000, 49500],
+                ],
+                'brochure_notes' => [
+                    'Special facility: Aziziya family room for 5 days of Hajj also included.',
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB017', 'series' => 'with_aziziya',
+                'name' => 'Executive Platinum Flex 09 — Makkah First',
+                'duration_days' => 9, 'duration_label' => 'Flex 09 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => true,
+                'variants' => [],
+                'itinerary' => [
+                    [1, '2027-05-12', '06 Zil Hajj', 'To Makkah', 'Pullman Zamzam Makkah ★★★★+', null],
+                    [2, '2027-05-13', '07 Zil Hajj', 'Makkah', 'Pullman Zamzam Makkah ★★★★+', null],
+                    [3, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [4, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [5, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [7, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-19', '13 Zil Hajj', 'Medinah', 'Al Aqeeq ★★★★ / Dallah Taibah ★★★★ / Similar', null],
+                    [9, '2027-05-20', '14 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Pullman Zamzam Makkah', 4, 2],
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 1],
+                    ['medinah', null, 'Al Aqeeq / Dallah Taibah / Similar', 4, 1],
+                ],
+                'room_options' => [
+                    [null, 'quad', 4, 'Quad Sharing', 10685, 3060000, 39000],
+                    [null, 'triple', 3, 'Triple Sharing', 11370, 3250000, 41500],
+                    [null, 'double', 2, 'Double Sharing', 12330, 3525000, 45000],
+                ],
+                'brochure_notes' => [
+                    'Special facility: Aziziya family room for 5 days of Hajj also included.',
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB018', 'series' => 'comfort',
+                'name' => 'Executive Platinum Comfort — Medinah First',
+                'duration_days' => 17, 'duration_label' => 'Comfort 17 Days — Medinah',
+                'medinah_first' => true, 'is_shifting' => true,
+                'variants' => ['A' => 'Dar Al Tawhid IHG', 'B' => 'Fairmont Clock Tower'],
+                'itinerary' => [
+                    [1, '2027-05-04', '27 Zil Qad', 'To Medinah', 'Dar Al Taqwa ★★★★★', null],
+                    [2, '2027-05-05', '28 Zil Qad', 'Medinah', 'Dar Al Taqwa ★★★★★', null],
+                    [3, '2027-05-06', '29 Zil Qad', 'Medinah', 'Dar Al Taqwa ★★★★★', null],
+                    [4, '2027-05-07', '01 Zil Hajj', 'To Makkah', 'Dar Al Tawhid IHG ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [5, '2027-05-08', '02 Zil Hajj', 'Makkah', 'Dar Al Tawhid IHG ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [6, '2027-05-09', '03 Zil Hajj', 'Makkah', 'Dar Al Tawhid IHG ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [7, '2027-05-10', '04 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-11', '05 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [9, '2027-05-12', '06 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [10, '2027-05-13', '07 Zil Hajj', 'To Mina', 'AZIZIYA Accommodation - A CLASS', null],
+                    [11, '2027-05-14', '08 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [12, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [13, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [14, '2027-05-17', '11 Zil Hajj', 'To Makkah', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [15, '2027-05-18', '12 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [16, '2027-05-19', '13 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [17, '2027-05-20', '14 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['medinah', null, 'Dar Al Taqwa', 5, 3],
+                    ['makkah', 'A', 'Dar Al Tawhid IHG', 5, 3],
+                    ['makkah', 'B', 'Fairmont Clock Tower', 5, 3],
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 5],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', null, null, null],
+                    ['A', 'triple', 3, 'Triple Sharing', 11170, 3199000, 40800],
+                    ['A', 'double', 2, 'Double Sharing', 11790, 3370000, 43000],
+                    ['B', 'quad', 4, 'Quad Sharing', 10520, 3015000, 38400],
+                    ['B', 'triple', 3, 'Triple Sharing', 10800, 3085000, 39300],
+                    ['B', 'double', 2, 'Double Sharing', 11250, 3215000, 41000],
+                ],
+                'brochure_notes' => [
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                    'Brochure prints the code as “UHS 018” on this page; the index lists UB018. Recorded as found.',
+                ],
+            ],
+            [
+                'code' => 'UB019', 'series' => 'comfort',
+                'name' => 'Executive Platinum Comfort — Makkah First',
+                'duration_days' => 17, 'duration_label' => 'Comfort 17 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => true,
+                'variants' => ['A' => 'Dar Al Tawhid IHG', 'B' => 'Fairmont Clock Tower'],
+                'itinerary' => [
+                    [1, '2027-05-07', '01 Zil Hajj', 'To Makkah', 'Dar Al Tawhid IHG ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [2, '2027-05-08', '02 Zil Hajj', 'Makkah', 'Dar Al Tawhid IHG ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [3, '2027-05-09', '03 Zil Hajj', 'Makkah', 'Dar Al Tawhid IHG ★★★★★', 'Fairmont Clock Tower ★★★★★'],
+                    [4, '2027-05-10', '04 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [5, '2027-05-11', '05 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [6, '2027-05-12', '06 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [7, '2027-05-13', '07 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [10, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [11, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [12, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [13, '2027-05-19', '13 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [14, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [15, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [16, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [17, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', 'A', 'Dar Al Tawhid IHG', 5, 3],
+                    ['makkah', 'B', 'Fairmont Clock Tower', 5, 3],
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 6],
+                    ['medinah', 'A', 'Dar Al Taqwa', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', null, null, null],
+                    ['A', 'triple', 3, 'Triple Sharing', 11900, 3399000, 43400],
+                    ['A', 'double', 2, 'Double Sharing', 12800, 3650000, 46700],
+                    ['B', 'quad', 4, 'Quad Sharing', 11100, 3175000, 40500],
+                    ['B', 'triple', 3, 'Triple Sharing', 11480, 3285000, 41900],
+                    ['B', 'double', 2, 'Double Sharing', 12250, 3499000, 44700],
+                ],
+                'brochure_notes' => [
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                    'Brochure prints the code as “UHS 019” on this page; the index lists UB019. Recorded as found.',
+                ],
+            ],
+            [
+                'code' => 'UB020', 'series' => 'comfort',
+                'name' => 'Executive Platinum Comfort 14 — Medinah First',
+                'duration_days' => 14, 'duration_label' => 'Comfort 14 Days — Medinah',
+                'medinah_first' => true, 'is_shifting' => true,
+                'variants' => ['A' => 'Dar Al Taqwa', 'B' => 'Dallah Taibah (Premier Floor)'],
+                'itinerary' => [
+                    [1, '2027-05-07', '01 Zil Hajj', 'To Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [2, '2027-05-08', '02 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [3, '2027-05-09', '03 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [4, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Makkah Tower / Abraj Tower ★★★★★', null],
+                    [5, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Makkah Tower / Abraj Tower ★★★★★', null],
+                    [6, '2027-05-12', '06 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [7, '2027-05-13', '07 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [10, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [11, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [12, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [13, '2027-05-19', '13 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['medinah', 'A', 'Dar Al Taqwa', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                    ['makkah', null, 'Makkah Tower / Abraj Tower', 5, 2],
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', 10950, 3140000, 40000],
+                    ['A', 'triple', 3, 'Triple Sharing', 11230, 3215000, 41000],
+                    ['A', 'double', 2, 'Double Sharing', 11500, 3290000, 42000],
+                    ['B', 'quad', 4, 'Quad Sharing', 10410, 2985000, 38000],
+                    ['B', 'triple', 3, 'Triple Sharing', 10685, 3060000, 39000],
+                    ['B', 'double', 2, 'Double Sharing', 10950, 3140000, 40000],
+                ],
+                'brochure_notes' => [
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                    'Header says 14 days; the itinerary table has 13 rows. Recorded as found.',
+                    'Brochure prints the code as “UHS 020” on this page; the index lists UB020. Recorded as found.',
+                ],
+            ],
+            [
+                'code' => 'UB021', 'series' => 'comfort',
+                'name' => 'Executive Platinum Comfort 14 — Makkah First',
+                'duration_days' => 14, 'duration_label' => 'Comfort 14 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => true,
+                'variants' => ['A' => 'Dar Al Taqwa', 'B' => 'Dallah Taibah (Premier Floor)'],
+                'itinerary' => [
+                    [1, '2027-05-10', '04 Zil Hajj', 'To Makkah', 'Makkah Tower / Abraj Tower ★★★★★', null],
+                    [2, '2027-05-11', '05 Zil Hajj', 'Makkah', 'Makkah Tower / Abraj Tower ★★★★★', null],
+                    [3, '2027-05-12', '06 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [4, '2027-05-13', '07 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [5, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [7, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [8, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [9, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [10, '2027-05-19', '13 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [11, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [12, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [13, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [14, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'Makkah Tower / Abraj Tower', 5, 2],
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 4],
+                    ['medinah', 'A', 'Dar Al Taqwa', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', 10950, 3140000, 40000],
+                    ['A', 'triple', 3, 'Triple Sharing', 11230, 3215000, 41000],
+                    ['A', 'double', 2, 'Double Sharing', 11500, 3290000, 42000],
+                    ['B', 'quad', 4, 'Quad Sharing', 10410, 2985000, 38000],
+                    ['B', 'triple', 3, 'Triple Sharing', 10685, 3060000, 39000],
+                    ['B', 'double', 2, 'Double Sharing', 10950, 3140000, 40000],
+                ],
+                'brochure_notes' => [
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                    'Brochure prints the code as “UHS 021” on this page; the index lists UB021. Recorded as found.',
+                    'Prices on this page are identical to UB020. Recorded as found.',
+                ],
+            ],
+            [
+                'code' => 'UB022', 'series' => 'value',
+                'name' => 'Executive Platinum Value 13 — Makkah First',
+                'duration_days' => 13, 'duration_label' => 'Value 13 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => ['A' => 'Dar Al Taqwa', 'B' => 'Dallah Taibah (Premier Floor)'],
+                'itinerary' => [
+                    [1, '2027-05-10', '4-6 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [2, '2027-05-13', '07 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [3, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [4, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [5, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [7, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-19', '13 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [9, '2027-05-20', '14 Zil Hajj', 'To Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [10, '2027-05-21', '15 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [11, '2027-05-22', '16 Zil Hajj', 'Medinah', 'Dar Al Taqwa ★★★★★', 'Dallah Taibah (Premier Floor) ★★★★'],
+                    [12, '2027-05-23', '17 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 4],
+                    ['medinah', 'A', 'Dar Al Taqwa', 5, 3],
+                    ['medinah', 'B', 'Dallah Taibah (Premier Floor)', 4, 3],
+                ],
+                'room_options' => [
+                    ['A', 'quad', 4, 'Quad Sharing', 10410, 2985000, 38000],
+                    ['A', 'triple', 3, 'Triple Sharing', 10685, 3060000, 39000],
+                    ['A', 'double', 2, 'Double Sharing', 11230, 3215000, 41000],
+                    ['B', 'quad', 4, 'Quad Sharing', 9725, 2790000, 35500],
+                    ['B', 'triple', 3, 'Triple Sharing', 10000, 2870000, 36500],
+                    ['B', 'double', 2, 'Double Sharing', 10275, 2945000, 37500],
+                ],
+                'brochure_notes' => [
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                    'Header says 13 days; the table has 12 rows because the first covers 10-12 May. Recorded as found.',
+                ],
+            ],
+            [
+                'code' => 'UB025', 'series' => 'value',
+                'name' => 'Executive Platinum Value 09 — Makkah First',
+                'duration_days' => 9, 'duration_label' => 'Value 9-10 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => false,
+                'variants' => [],
+                'itinerary' => [
+                    [1, '2027-05-10', '4-6 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [2, '2027-05-13', '07 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [3, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services) / AZIZIYA Accommodation - A CLASS', null],
+                    [4, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services) / AZIZIYA Accommodation - A CLASS', null],
+                    [5, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services) / AZIZIYA Accommodation - A CLASS', null],
+                    [6, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services) / AZIZIYA Accommodation - A CLASS', null],
+                    [7, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-19', '13 Zil Hajj', 'To Medinah', '4 Star Hotel ★★★★', null],
+                    [9, '2027-05-20', '14 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 3],
+                    ['medinah', null, '4 Star Hotel', 4, 1],
+                ],
+                'room_options' => [
+                    [null, 'quad', 4, 'Quad Sharing', 9175, 2635000, 33500],
+                    [null, 'triple', 3, 'Triple Sharing', 9315, 2675000, 34000],
+                    [null, 'double', 2, 'Double Sharing', 9450, 2715000, 34500],
+                ],
+                'brochure_notes' => [
+                    'Makkah and Medinah nights can be reduced; the package price remains the same.',
+                    'Transfer from Makkah to Medinah by car.',
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                ],
+            ],
+            [
+                'code' => 'UB026', 'series' => 'value',
+                'name' => 'Executive Platinum Value 20 — Makkah First',
+                'duration_days' => 20, 'duration_label' => 'Value 20 Days — Makkah',
+                'medinah_first' => false, 'is_shifting' => true,
+                'variants' => [],
+                'itinerary' => [
+                    [1, '2027-05-10', '4-6 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [2, '2027-05-13', '07 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [3, '2027-05-14', '08 Zil Hajj', 'To Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [4, '2027-05-15', '09 Zil Hajj', 'Mina', 'Arafat Air Conditioned Marquee (Exclusive Services)', null],
+                    [5, '2027-05-16', '10 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [6, '2027-05-17', '11 Zil Hajj', 'Mina', 'Zone 1 near to Jamarat A Category (Exclusive Services)', null],
+                    [7, '2027-05-18', '12 Zil Hajj', 'To Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [8, '2027-05-19', '13 Zil Hajj', 'Makkah', 'AZIZIYA Accommodation - A CLASS', null],
+                    [9, '2027-05-20', '14 Zil Hajj', 'Makkah', 'Abraj Tower / Makkah Hotel & Tower ★★★★★', null],
+                    [10, '2027-05-21', '15 Zil Hajj', 'Makkah', 'Abraj Tower / Makkah Hotel & Tower ★★★★★', null],
+                    [11, '2027-05-22', '16 Zil Hajj', 'Makkah', 'Abraj Tower / Makkah Hotel & Tower ★★★★★', null],
+                    [12, '2027-05-23', '17 Zil Hajj', 'Makkah', 'Abraj Tower / Makkah Hotel & Tower ★★★★★', null],
+                    [13, '2027-05-24', '18 Zil Hajj', 'Makkah', 'Abraj Tower / Makkah Hotel & Tower ★★★★★', null],
+                    [14, '2027-05-25', '19 Zil Hajj', 'Makkah', 'Abraj Tower / Makkah Hotel & Tower ★★★★★', null],
+                    [15, '2027-05-26', '20 Zil Hajj', 'To Medinah', 'Dar Al Taqwa / Hilton ★★★★★', null],
+                    [16, '2027-05-27', '21 Zil Hajj', 'Medinah', 'Dar Al Taqwa / Hilton ★★★★★', null],
+                    [17, '2027-05-28', '22 Zil Hajj', 'Medinah', 'Dar Al Taqwa / Hilton ★★★★★', null],
+                    [18, '2027-05-29', '23 Zil Hajj', null, 'DEPARTURE TO AIRPORT', null],
+                ],
+                'accommodations' => [
+                    ['makkah', null, 'AZIZIYA Accommodation - A CLASS', null, 4],
+                    ['makkah', null, 'Abraj Tower / Makkah Hotel & Tower', 5, 6],
+                    ['medinah', null, 'Dar Al Taqwa / Hilton', 5, 3],
+                ],
+                'room_options' => [
+                    [null, 'quad', 4, 'Quad Sharing', 11100, 3175000, 40500],
+                    [null, 'triple', 3, 'Triple Sharing', 11370, 3250000, 41500],
+                    [null, 'double', 2, 'Double Sharing', 11920, 3400000, 43500],
+                ],
+                'brochure_notes' => [
+                    'Aziziya rooms will be retained from 08 Zil Hajj to 12 Zil Hajj.',
+                    'Supplement for Aziziya family room: double PKR 308000 per person, triple PKR 154000 per person.',
+                    'Shuttle included, Aziziya to Haram.',
+                    'Ticket not included.',
+                ],
+            ],
         ];
     }
 
@@ -550,7 +1157,16 @@ class HajjPackageSeeder extends Seeder
     {
         $package->roomOptions()->delete();
         $variantIds = $this->variantIdMap($package);
-        foreach ($roomOptions as $i => [$variantCode, $sharingType, $occupancy, $label, $priceUsd]) {
+        foreach ($roomOptions as $i => $row) {
+            // The twelve packages taken from the older dollar-only brochure
+            // carry a dollar price here and get their rupee and riyal columns
+            // from HajjPriceCurrencySeeder. The fourteen added from the three
+            // September brochures carry all three, read off their own page in
+            // each currency, so they are given here and nothing is converted.
+            [$variantCode, $sharingType, $occupancy, $label, $priceUsd] = $row;
+            $pricePkr = $row[5] ?? null;
+            $priceSar = $row[6] ?? null;
+
             $package->roomOptions()->create([
                 'variant_id' => $variantCode ? ($variantIds[$variantCode] ?? null) : null,
                 'sharing_type' => $sharingType,
@@ -558,7 +1174,9 @@ class HajjPackageSeeder extends Seeder
                 'display_label' => $label,
                 'price_basis' => 'per_person',
                 'price_usd' => $priceUsd,
-                'is_available' => $priceUsd !== null,
+                'price_pkr' => $pricePkr,
+                'price_sar' => $priceSar,
+                'is_available' => $priceUsd !== null || $pricePkr !== null || $priceSar !== null,
                 'sort_order' => $i,
             ]);
         }
@@ -713,6 +1331,15 @@ class HajjPackageSeeder extends Seeder
             'note_type' => 'pricing', 'content' => 'Book Early, Prices and Packages Subject to Change.',
             'is_important' => true, 'sort_order' => $i++,
         ]);
+
+        // Anything the package's own brochure page says that the shared notes
+        // below do not cover — a supplement, a caveat, or a discrepancy in the
+        // brochure itself, recorded rather than quietly corrected.
+        foreach ($data['brochure_notes'] ?? [] as $note) {
+            $package->packageNotes()->create([
+                'note_type' => 'general', 'content' => $note, 'sort_order' => $i++,
+            ]);
+        }
         $package->packageNotes()->create([
             'note_type' => 'accommodation',
             'content' => $isAziziyaGroup
