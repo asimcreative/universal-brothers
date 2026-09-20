@@ -47,8 +47,8 @@
             aria-controls="ai-assistant-panel"
             aria-label="{{ __('Open the :name', ['name' => $assistantName]) }}"
         >
-            <i class="bi {{ $icon }} ai-launcher-icon" aria-hidden="true"></i>
-            <i class="bi bi-x-lg ai-launcher-close" aria-hidden="true"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" class="ai-launcher-icon" aria-hidden="true">{!! \App\Support\AssistantIcons::path($icon) !!}</svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" class="ai-launcher-close" aria-hidden="true">{!! \App\Support\AssistantIcons::path('bi-x-lg') !!}</svg>
             <span class="ai-launcher-label">{{ __('Ask us') }}</span>
         </button>
 
@@ -61,7 +61,7 @@
             hidden
         >
             <header class="ai-panel-header">
-                <span class="ai-avatar" aria-hidden="true"><i class="bi {{ $icon }}"></i></span>
+                <span class="ai-avatar" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{!! \App\Support\AssistantIcons::path($icon) !!}</svg></span>
                 <span class="ai-panel-heading">
                     <span class="ai-panel-title" id="ai-panel-title">{{ $assistantName }}</span>
                     {{-- Short enough not to wrap at the 380px panel width, and
@@ -70,10 +70,10 @@
                     <span class="ai-panel-subtitle">{{ __('AI assistant — any language') }}</span>
                 </span>
                 <button type="button" class="ai-icon-button" data-ai-clear title="{{ __('Start a new conversation') }}" aria-label="{{ __('Start a new conversation') }}">
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{!! \App\Support\AssistantIcons::path('bi-arrow-counterclockwise') !!}</svg>
                 </button>
                 <button type="button" class="ai-icon-button" data-ai-close aria-label="{{ __('Close the chat') }}">
-                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{!! \App\Support\AssistantIcons::path('bi-x-lg') !!}</svg>
                 </button>
             </header>
 
@@ -82,7 +82,7 @@
                  instead of interrupting whatever the user is doing. --}}
             <div class="ai-messages" data-ai-messages role="log" aria-live="polite" aria-relevant="additions" tabindex="0">
                 <div class="ai-message ai-message--assistant">
-                    <span class="ai-avatar ai-avatar--sm" aria-hidden="true"><i class="bi {{ $icon }}"></i></span>
+                    <span class="ai-avatar ai-avatar--sm" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{!! \App\Support\AssistantIcons::path($icon) !!}</svg></span>
                     <div class="ai-bubble">{!! nl2br(e($welcome)) !!}</div>
                 </div>
             </div>
@@ -90,7 +90,7 @@
             <div class="ai-quick-actions" data-ai-quick-actions>
                 @foreach($quickActions as $action)
                     <button type="button" class="ai-chip" data-ai-quick="{{ $action['question'] }}">
-                        <i class="bi {{ $action['icon'] }}" aria-hidden="true"></i>{{ $action['label'] }}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{!! \App\Support\AssistantIcons::path($action['icon']) !!}</svg>{{ $action['label'] }}
                     </button>
                 @endforeach
             </div>
@@ -204,7 +204,7 @@
                     "never competes with the page" test.
                 --}}
                 <button type="submit" class="ai-send" data-ai-send aria-label="{{ __('Send to the assistant') }}">
-                    <i class="bi bi-send-fill" aria-hidden="true"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">{!! \App\Support\AssistantIcons::path('bi-send-fill') !!}</svg>
                 </button>
             </form>
 
