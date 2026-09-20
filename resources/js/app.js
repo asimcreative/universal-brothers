@@ -337,6 +337,56 @@ function initMapEmbeds() {
 // back as a custom property; `_variables.scss` carries a fallback that already
 // clears the tallest case, so the layout is correct before this runs and
 // simply gets tighter afterwards.
+/**
+ * Back to top.
+ *
+ * Offered only once there is enough page behind the reader to make it worth
+ * having — one and a half screens — and taken out of the tab order entirely
+ * until then, so a keyboard user never lands on a control they cannot see.
+ *
+ * The scroll listener is passive and does nothing but flip a class; the
+ * showing and hiding is CSS.
+ */
+function initBackToTop() {
+    const button = document.querySelector('[data-ub-to-top]');
+    if (!button) return;
+
+    const threshold = () => window.innerHeight * 1.5;
+    let shown = null;
+
+    const sync = () => {
+        const should = window.scrollY > threshold();
+        if (should === shown) return;
+        shown = should;
+
+        if (should) {
+            button.hidden = false;
+            // A frame between unhiding and the class, or the transition has
+            // nothing to animate from and the button simply appears.
+            requestAnimationFrame(() => button.classList.add('is-shown'));
+        } else {
+            button.classList.remove('is-shown');
+            // Hidden only after it has faded, so it is never removed mid-fade.
+            window.setTimeout(() => {
+                if (!shown) button.hidden = true;
+            }, 300);
+        }
+    };
+
+    button.addEventListener('click', () => {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+        // Send focus back where the page begins, so a keyboard user carries on
+        // from the top rather than from a button that is about to disappear.
+        const main = document.getElementById('main-content');
+        if (main) main.focus({ preventScroll: true });
+    });
+
+    window.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync, { passive: true });
+    sync();
+}
+
 function initHeaderOffset() {
     const header = document.querySelector('.site-header');
     if (!header) return;
@@ -460,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // un-caught handler, so a throw in any of them silently prevented the
     // reveal pass from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initOverlayHeader, initTemplateHeader, initMotion, initMotionSystem, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
+    [initHeaderOffset, initOverlayHeader, initBackToTop, initTemplateHeader, initMotion, initMotionSystem, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {

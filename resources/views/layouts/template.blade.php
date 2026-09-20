@@ -107,6 +107,7 @@
     @include('layouts.partials.template-footer')
 
 
+    @include('layouts.partials.back-to-top')
 
     <x-ai-assistant />
 

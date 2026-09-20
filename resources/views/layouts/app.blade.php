@@ -95,6 +95,8 @@
 
     <x-lightbox-modal />
 
+    @include('layouts.partials.back-to-top')
+
     {{-- Renders nothing at all unless the assistant is enabled, has public
          access switched on, and has an API key — see AiConfig::publiclyAvailable(). --}}
     <x-ai-assistant />
