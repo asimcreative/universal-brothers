@@ -32,6 +32,7 @@ import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
 
 import { initAiAssistant } from './ai-assistant';
+import { initMotionSystem } from './motion';
 
 function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -184,119 +185,11 @@ function initMotion() {
     document.querySelectorAll('.ub-ticker-track').forEach((t) => t.closest('div')?.classList.add('ub-ticker'));
 }
 
-function initAutoReveal() {
-    // Reduced motion: leave every element untouched and visible. Nothing below
-    // may add a class that starts something at opacity 0.
-    if (prefersReducedMotion()) return;
-
-    const main = document.getElementById('main-content');
-    if (!main) return;
-
-    // The hero animates itself on load; a marquee, a ticker, a modal or the
-    // assistant must never start invisible.
-    const FORBIDDEN = '.hero-slide, .news-ticker, .pt-strip, .topbar-ticker, .modal, .offcanvas, .ai-assistant, .carousel';
-
-    const tag = (el, index) => {
-        if (!el || el.classList.contains('reveal-on-scroll') || el.classList.contains('reveal-scale')) return;
-        if (el.closest(FORBIDDEN)) return;
-        // Don't wrap a reveal around something that already reveals itself —
-        // the two would compound into a double fade.
-        if (el.querySelector('.reveal-on-scroll, .reveal-scale')) return;
-        el.classList.add('reveal-on-scroll');
-        const step = Math.min(index, 6);
-        if (step > 0) el.classList.add(`reveal-delay-${step}`);
-    };
-
-    main.querySelectorAll('section, .section').forEach((section) => {
-        if (section.closest(FORBIDDEN)) return;
-
-        // 1. The furniture of the section, in the order it is read. A heading
-        //    inside a column counts: the reference stages the eyebrow, the
-        //    heading and the sentence separately even in its off-centre bands,
-        //    and tagging them individually is what makes the column itself get
-        //    skipped below — which is the behaviour we want, not a fallback.
-        let i = 0;
-        section.querySelectorAll(
-            '.section-eyebrow, h2, .pt-lead, .pt-rule, .pt-pane-note, .pt-stat-pill, '
-            + '.pt-tabs, .pt-finder-bar, .pt-services-note, .pt-affiliations, .pt-collage, '
-            + '.text-center.mt-5, .text-center.mt-4, .text-center.mt-2'
-        ).forEach((el) => {
-            if (el.closest('.card')) return;
-            tag(el, i++);
-        });
-
-        // 2. Every column of every row, staggered across the row.
-        section.querySelectorAll('.row').forEach((row) => {
-            Array.from(row.children).forEach((col, index) => tag(col, index));
-        });
-    });
-}
-
-function initScrollReveal() {
-    const targets = document.querySelectorAll('.reveal-on-scroll');
-    if (!targets.length) return;
-
-    if (prefersReducedMotion()) {
-        targets.forEach((el) => el.classList.add('is-visible'));
-        return;
-    }
-
-    // `threshold: 0.15` was unsafe: intersectionRatio is measured against the
-    // element's OWN height, so anything taller than ~6.7x the viewport can
-    // never reach 0.15 and would stay invisible forever. Several sections on
-    // this site are full-page-height wrappers. A zero threshold with a
-    // bottom rootMargin triggers as soon as the element's leading edge is
-    // meaningfully on screen, independent of how tall it is.
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            // `isIntersecting` alone is not enough. The browser coalesces
-            // intersection records and delivers them at the end of a frame, so
-            // during a fast flick — or an anchor jump, or a restored scroll
-            // position — an element can enter and leave between two deliveries
-            // and be reported only as "not intersecting". It would then stay at
-            // opacity 0 with the reader already past it. Measured on the
-            // homepage: scrolling to the bottom and back left 61 of 74 staged
-            // elements invisible. Anything whose top edge is above the viewport
-            // has been passed, so it is shown regardless.
-            if (entry.isIntersecting || entry.boundingClientRect.top < 0) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
-
-    targets.forEach((el) => observer.observe(el));
-
-    // Last-resort safety net. Content visibility must never depend on an
-    // observer callback firing; anything still hidden shortly after load is
-    // revealed unconditionally.
-    window.setTimeout(() => {
-        document.querySelectorAll('.reveal-on-scroll:not(.is-visible)').forEach((el) => {
-            const rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight) el.classList.add('is-visible');
-        });
-    }, 2500);
-
-    // Second net, for the coalescing case above: whenever scrolling settles,
-    // reveal anything the reader has already passed. Cheap — it runs once per
-    // idle moment, not per scroll event, and stops once nothing is left.
-    let settle;
-    const sweep = () => {
-        const remaining = document.querySelectorAll('.reveal-on-scroll:not(.is-visible)');
-        if (!remaining.length) {
-            window.removeEventListener('scroll', onScroll);
-            return;
-        }
-        remaining.forEach((el) => {
-            if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('is-visible');
-        });
-    };
-    const onScroll = () => {
-        window.clearTimeout(settle);
-        settle = window.setTimeout(sweep, 150);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-}
+// `initAutoReveal` and `initScrollReveal` used to live here: one tagged
+// elements with `.reveal-on-scroll`, the other observed them. Both are now
+// `resources/js/motion.js`, which does the same work for every page rather
+// than for the ones loading this bundle, and which adopts the old class by
+// name so markup written before it still reveals.
 
 // The counters are server-rendered with their real, approved value already in
 // the markup (see components/stat-number.blade.php — the live site shipped a
@@ -564,10 +457,10 @@ function initHajjDetail() {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Each initialiser is isolated: before this, all four ran in one
-    // un-caught handler, so a throw in any of them silently prevented
-    // `initScrollReveal` from ever adding `.is-visible` — leaving most of the
+    // un-caught handler, so a throw in any of them silently prevented the
+    // reveal pass from ever adding `.is-visible` — leaving most of the
     // homepage stuck at `opacity: 0`.
-    [initHeaderOffset, initOverlayHeader, initTemplateHeader, initMotion, initAutoReveal, initScrollReveal, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
+    [initHeaderOffset, initOverlayHeader, initTemplateHeader, initMotion, initMotionSystem, initCounters, initParallax, initLightbox, initPackageFinder, initMapEmbeds, initHajjDetail, initAiAssistant].forEach((fn) => {
         try {
             fn();
         } catch (error) {
