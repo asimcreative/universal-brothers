@@ -101,7 +101,15 @@
                                 <strong>{{ $ubService->name }}</strong>
                                 @if($ubService->description) — {{ $ubService->description }}@endif
                                 @if(! $ubService->is_included && ! is_null($ubService->price))
-                                    <span class="hajj-inline-price">{{ $hajj->money($ubService->price, $ubService->currency) }}</span>
+                                    @if(strtoupper((string) $ubService->currency) === \App\Support\Currency::current())
+                                        <span class="hajj-inline-price">{{ $hajj->money($ubService->price, $ubService->currency) }}</span>
+                                    @else
+                                        {{-- This table stores one price in one currency. Rather
+                                             than quote it in a currency the visitor did not
+                                             choose, say nothing — the same rule the rooms and
+                                             upgrades follow. --}}
+                                        <span class="hajj-chip">On request</span>
+                                    @endif
                                 @endif
                             </span>
                         </li>

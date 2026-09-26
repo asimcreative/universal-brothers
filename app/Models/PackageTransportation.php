@@ -15,7 +15,8 @@ class PackageTransportation extends Model
 
     protected $fillable = [
         'package_id', 'transport_option_id', 'from_location', 'to_location', 'transport_type',
-        'is_included', 'price', 'currency', 'price_basis', 'notes', 'sort_order',
+        'is_included', 'price', 'currency', 'price_pkr', 'price_sar', 'price_usd',
+        'price_basis', 'notes', 'sort_order',
     ];
 
     protected function casts(): array
@@ -23,7 +24,21 @@ class PackageTransportation extends Model
         return [
             'is_included' => 'boolean',
             'price' => 'decimal:2',
+            'price_pkr' => 'decimal:2',
+            'price_sar' => 'decimal:2',
+            'price_usd' => 'decimal:2',
         ];
+    }
+
+    /**
+     * This leg's price in one currency, or null if that brochure does not
+     * publish it. Never converted — see PackageUpgrade::priceIn().
+     */
+    public function priceIn(?string $currency = null): ?float
+    {
+        $value = $this->{\App\Support\Currency::column($currency ?? \App\Support\Currency::current())};
+
+        return $value === null ? null : (float) $value;
     }
 
     public function package(): BelongsTo

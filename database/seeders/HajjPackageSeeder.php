@@ -1268,19 +1268,26 @@ class HajjPackageSeeder extends Seeder
     {
         $package->transportation()->delete();
 
+        // The paid legs carry a figure per currency, each transcribed from the
+        // brochure printed in it — the taxi rates from the package pages, the
+        // VIP GMC from the services page. Nothing is converted: US$165 is
+        // PKR 46,000 and SAR 600 because that is what the three brochures
+        // say, not because of a rate.
         $rows = [
-            ['Jeddah/Medinah Hajj Terminal', 'Hotel', 'airport_transfer', true, null, null, null, 'Group arrival transfer by bus, provided by NAQABA / Saudi Moallim (subject to approval handling).'],
-            ['Mina', 'Arafat / Muzdalifah / Mina', 'mashaer', true, null, null, null, 'Private Special Luxury Busses with bathroom.'],
-            ['Makkah', 'Medinah', 'train_or_bus', true, null, null, null, 'Bullet train Makkah↔Medinah, or bus.'],
-            ['Jeddah Airport', 'Makkah Hotel', 'car_taxi', false, 165, 'USD', 'per person, round trip', null],
-            ['Medinah Airport', 'Medinah Hotel', 'car_taxi', false, 40, 'USD', 'per person, round trip', null],
-            ['Mina/Arafat/Muzdalifah', 'and back', 'vip_gmc', false, 9600, 'USD', 'per GMC (Land Cruiser, max 6 persons), for 5 days of Hajj', 'Urdu/English-speaking chauffeur with mobile phone, 08–13 Zil Hajj.'],
+            ['Jeddah/Medinah Hajj Terminal', 'Hotel', 'airport_transfer', true, null, null, null, null, 'Group arrival transfer by bus, provided by NAQABA / Saudi Moallim (subject to approval handling).'],
+            ['Mina', 'Arafat / Muzdalifah / Mina', 'mashaer', true, null, null, null, null, 'Private Special Luxury Busses with bathroom.'],
+            ['Makkah', 'Medinah', 'train_or_bus', true, null, null, null, null, 'Bullet train Makkah↔Medinah, or bus.'],
+            ['Jeddah Airport', 'Makkah Hotel', 'car_taxi', false, 165, 46000, 600, 'per person, round trip', null],
+            ['Medinah Airport', 'Medinah Hotel', 'car_taxi', false, 40, 11600, 150, 'per person, round trip', null],
+            ['Mina/Arafat/Muzdalifah', 'and back', 'vip_gmc', false, 9600, 2695000, 35000, 'per GMC (Land Cruiser, max 6 persons), for 5 days of Hajj', 'Urdu/English-speaking chauffeur with mobile phone, 08–13 Zil Hajj.'],
         ];
 
-        foreach ($rows as $i => [$from, $to, $type, $included, $price, $currency, $basis, $notes]) {
+        foreach ($rows as $i => [$from, $to, $type, $included, $usd, $pkr, $sar, $basis, $notes]) {
             $package->transportation()->create([
                 'from_location' => $from, 'to_location' => $to, 'transport_type' => $type,
-                'is_included' => $included, 'price' => $price, 'currency' => $currency,
+                'is_included' => $included,
+                'price' => $usd, 'currency' => $usd === null ? null : 'USD',
+                'price_usd' => $usd, 'price_pkr' => $pkr, 'price_sar' => $sar,
                 'price_basis' => $basis, 'notes' => $notes, 'sort_order' => $i,
             ]);
         }
@@ -1290,21 +1297,34 @@ class HajjPackageSeeder extends Seeder
     {
         $package->upgrades()->delete();
 
+        // The Aziziya series' Kaba view supplement has NO rupee figure, and
+        // that null is deliberate: the US$ and Riyal brochures publish it
+        // (US$1,050 / SAR 3,800) and the PKR brochure does not list the item
+        // at all. A blank column means the brochure is silent, and the page
+        // then says "Price on request" instead of quoting dollars to someone
+        // reading rupees.
         $package->upgrades()->create([
             'name' => 'Kaba View Supplement',
             'price' => $isAziziyaGroup ? 1050 : 2200,
-            'currency' => 'USD', 'price_basis' => 'per person', 'sort_order' => 0,
+            'currency' => 'USD',
+            'price_usd' => $isAziziyaGroup ? 1050 : 2200,
+            'price_pkr' => $isAziziyaGroup ? null : 616000,
+            'price_sar' => $isAziziyaGroup ? 3800 : 8000,
+            'price_basis' => 'per person', 'sort_order' => 0,
         ]);
 
         if (! $isAziziyaGroup) {
+            // Quad and triple are both US$600 and yet 168,600 and 169,400 in
+            // rupees. Transcribed, not calculated.
             $nights = [
-                ['Additional Medinah Night — Double', 850],
-                ['Additional Medinah Night — Triple', 600],
-                ['Additional Medinah Night — Quad', 600],
+                ['Additional Medinah Night — Double', 850, 231000, 3000],
+                ['Additional Medinah Night — Triple', 600, 169400, 2200],
+                ['Additional Medinah Night — Quad', 600, 168600, 2190],
             ];
-            foreach ($nights as $i => [$name, $price]) {
+            foreach ($nights as $i => [$name, $usd, $pkr, $sar]) {
                 $package->upgrades()->create([
-                    'name' => $name, 'price' => $price, 'currency' => 'USD',
+                    'name' => $name, 'price' => $usd, 'currency' => 'USD',
+                    'price_usd' => $usd, 'price_pkr' => $pkr, 'price_sar' => $sar,
                     'price_basis' => 'per night per person', 'sort_order' => $i + 1,
                 ]);
             }

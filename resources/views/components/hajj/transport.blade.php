@@ -42,8 +42,12 @@
                         @endif
                         @if($ubLeg->is_included)
                             <span class="hajj-chip hajj-chip--yes">Included</span>
-                        @elseif(! is_null($ubLeg->price))
-                            <span class="hajj-inline-price">{{ $hajj->money($ubLeg->price, $ubLeg->currency) }}@if($ubLeg->price_basis) <small>{{ str_replace('_', ' ', $ubLeg->price_basis) }}</small>@endif</span>
+                        @elseif(! is_null($ubLeg->priceIn()))
+                            {{-- The figure the brochure prints in the currency being
+                                 read. Where that brochure does not publish one, the
+                                 row falls through to "On request" rather than quoting
+                                 a number in a currency nobody asked for. --}}
+                            <span class="hajj-inline-price">{{ $hajj->money($ubLeg->priceIn(), null) }}@if($ubLeg->price_basis) <small>{{ str_replace('_', ' ', $ubLeg->price_basis) }}</small>@endif</span>
                         @else
                             <span class="hajj-chip">On request</span>
                         @endif

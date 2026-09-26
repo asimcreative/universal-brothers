@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Office;
 use App\Models\Package;
 use App\Models\PackageCategory;
+use App\Support\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -165,19 +166,40 @@ class PackageBrowsingTest extends TestCase
         $nonAziziyaPackage = Package::factory()->create(['package_category_id' => $category->id, 'has_aziziya' => false]);
         $aziziyaPackage = Package::factory()->create(['package_category_id' => $category->id, 'has_aziziya' => true, 'slug' => 'aziziya-test-package']);
 
-        $nonAziziyaPackage->upgrades()->create(['name' => 'Kaba view supplement', 'price' => 2200, 'currency' => 'USD', 'price_basis' => 'per person']);
-        $aziziyaPackage->upgrades()->create(['name' => 'Kaba view supplement', 'price' => 1050, 'currency' => 'USD', 'price_basis' => 'per person']);
+        // Each upgrade carries a figure per currency now, the way the
+        // brochures print them, so the test says which currency it is reading
+        // rather than relying on dollars being the only one there is.
+        $nonAziziyaPackage->upgrades()->create([
+            'name' => 'Kaba view supplement', 'price' => 2200, 'currency' => 'USD',
+            'price_usd' => 2200, 'price_pkr' => 616000, 'price_basis' => 'per person',
+        ]);
+        $aziziyaPackage->upgrades()->create([
+            'name' => 'Kaba view supplement', 'price' => 1050, 'currency' => 'USD',
+            'price_usd' => 1050, 'price_pkr' => 294000, 'price_basis' => 'per person',
+        ]);
 
-        $nonAziziyaResponse = $this->get('/hajj/'.$nonAziziyaPackage->slug);
+        $nonAziziyaResponse = $this->withSession([Currency::SESSION_KEY => 'USD'])
+            ->get('/hajj/'.$nonAziziyaPackage->slug);
         $nonAziziyaResponse->assertOk();
         $nonAziziyaResponse->assertSee('Optional Upgrades');
         $nonAziziyaResponse->assertSee('Kaba view supplement');
         $nonAziziyaResponse->assertSee('US$2,200');
 
-        $aziziyaResponse = $this->get('/hajj/'.$aziziyaPackage->slug);
+        $aziziyaResponse = $this->withSession([Currency::SESSION_KEY => 'USD'])
+            ->get('/hajj/'.$aziziyaPackage->slug);
         $aziziyaResponse->assertOk();
         $aziziyaResponse->assertSee('US$1,050');
         $aziziyaResponse->assertDontSee('US$2,200');
+
+        // And the same distinction holds when the page is read in rupees:
+        // each package still shows its own figure, in the list being read.
+        $this->withSession([Currency::SESSION_KEY => 'PKR'])
+            ->get('/hajj/'.$nonAziziyaPackage->slug)
+            ->assertOk()->assertSee('PKR 616,000')->assertDontSee('US$2,200');
+
+        $this->withSession([Currency::SESSION_KEY => 'PKR'])
+            ->get('/hajj/'.$aziziyaPackage->slug)
+            ->assertOk()->assertSee('PKR 294,000')->assertDontSee('PKR 616,000');
     }
 
     public function test_draft_package_detail_returns_404(): void

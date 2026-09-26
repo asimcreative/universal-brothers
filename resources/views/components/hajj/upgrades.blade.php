@@ -30,8 +30,12 @@
                     <p class="hajj-upgrade-price">
                         @if($ubUpgrade->is_included)
                             <span class="hajj-chip hajj-chip--yes">Included</span>
-                        @elseif(! is_null($ubUpgrade->price))
-                            {{ $hajj->money($ubUpgrade->price, $ubUpgrade->currency) }}
+                        @elseif(! is_null($ubUpgrade->priceIn()))
+                            {{-- See transport.blade.php: the currency being read, or
+                                 "Price on request" when that brochure is silent. The
+                                 Kaba view supplement on the Aziziya packages is
+                                 exactly that case in rupees. --}}
+                            {{ $hajj->money($ubUpgrade->priceIn(), null) }}
                             @if($ubUpgrade->price_basis)<small>{{ str_replace('_', ' ', $ubUpgrade->price_basis) }}</small>@endif
                         @else
                             <span class="hajj-upgrade-onrequest">Price on request</span>

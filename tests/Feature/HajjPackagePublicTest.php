@@ -74,6 +74,38 @@ class HajjPackagePublicTest extends TestCase
         }
     }
 
+    /**
+     * A price the brochure does not publish is not invented.
+     *
+     * The US$ and Riyal brochures list a Kaba view supplement for the Aziziya
+     * packages (US$1,050 / SAR 3,800). The PKR brochure does not list the
+     * item at all, so in rupees the page says so rather than quoting dollars
+     * or converting at some rate the client never agreed.
+     */
+    public function test_an_extra_the_rupee_brochure_does_not_publish_is_offered_on_request(): void
+    {
+        Artisan::call('db:seed');
+        $package = Package::where('code', 'UB015')->firstOrFail();
+
+        $this->withSession([Currency::SESSION_KEY => 'USD'])
+            ->get('/hajj/'.$package->slug)
+            ->assertOk()
+            ->assertSee('US$1,050');
+
+        $this->withSession([Currency::SESSION_KEY => 'SAR'])
+            ->get('/hajj/'.$package->slug)
+            ->assertOk()
+            ->assertSee('SAR 3,800');
+
+        $rupees = $this->withSession([Currency::SESSION_KEY => 'PKR'])
+            ->get('/hajj/'.$package->slug)
+            ->assertOk();
+
+        $rupees->assertDontSee('US$1,050');
+        $rupees->assertDontSee('SAR 3,800');
+        $rupees->assertSee('Price on request');
+    }
+
     private function buildPackage(array $overrides = []): Package
     {
         $package = Package::factory()->create(array_merge([
