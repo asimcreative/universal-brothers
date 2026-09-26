@@ -1378,7 +1378,11 @@ class HajjPackageSeeder extends Seeder
             'sort_order' => $i++,
         ]);
         $package->packageNotes()->create([
-            'note_type' => 'important', 'content' => 'Ticket & Qurbani not included.', 'is_important' => true, 'sort_order' => $i++,
+            // The PKR brochure prints "Ticket not Included" and lists Qurbani
+            // among the inclusions; the Riyal and US$ ones print "Ticket &
+            // Qurbani not Included". Both are true of their own list, so the
+            // note says which is which instead of picking one.
+            'note_type' => 'important', 'content' => 'Airline ticket not included. Qurbani is included on the rupee price list and charged separately on the riyal and US dollar lists.', 'is_important' => true, 'sort_order' => $i++,
         ]);
 
         if (! $isAziziyaGroup) {
@@ -1424,7 +1428,7 @@ class HajjPackageSeeder extends Seeder
             'Hajj training program and guidance in Pakistan/Saudi Arabia',
             'Religious guide book',
             'Assistance in Tawaf-e-Ziyarah',
-            'Assistance in doing Qurbani (approx. US$200 charge applies — see exclusions)',
+            'Assistance in doing Qurbani',
         ];
     }
 
@@ -1446,7 +1450,7 @@ class HajjPackageSeeder extends Seeder
             'Ziyarat in Medinah with guidance',
             'Hajj training program and guidance',
             'Religious guide book',
-            'Assistance in doing Qurbani (approx. US$200 charge applies — see exclusions)',
+            'Assistance in doing Qurbani',
             'Assistance in Tawaf-e-Ziyarah',
         ];
     }
@@ -1456,7 +1460,12 @@ class HajjPackageSeeder extends Seeder
     {
         return [
             'Airline ticket (approx. PKR 335,000 from Karachi / PKR 345,000 from North Pakistan; fares vary for Hajis travelling from international destinations) — KHI-JED-KHI or KHI/JED/MED-KHI routing, PSF inclusive',
-            'Qurbani actual cost (approx. US$200) — assistance in arranging it is included, the cost itself is not',
+            // Stated as the difference it actually is, rather than as one
+            // figure. The PKR brochure lists Qurbani among the inclusions;
+            // the Riyal and US$ brochures list a charge for it (SAR 750 /
+            // US$200). A reader of the rupee list was being told they owed
+            // two hundred dollars for something their own list includes.
+            'Qurbani cost, on the riyal and US dollar price lists only (approx. SAR 750 / US$200) — the rupee list includes it. Assistance in arranging it is included either way',
         ];
     }
 
