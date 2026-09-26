@@ -175,7 +175,8 @@
                         'aziziya' => fn ($v) => 'Aziziya: ' . str_replace('_', ' ', $v),
                         'shifting' => fn ($v) => $v === 'shifting' ? 'Shifting' : 'Non-Shifting',
                         'sharing' => fn ($v) => ucfirst($v) . ' sharing',
-                        'price_max' => fn ($v) => 'Up to US$' . number_format((int) $v),
+                        'price_min' => fn ($v) => 'From ' . \App\Support\Currency::format((int) $v),
+                        'price_max' => fn ($v) => 'Up to ' . \App\Support\Currency::format((int) $v),
                         'star5' => fn ($v) => '5-star only',
                         'series' => fn ($v) => optional($series->firstWhere('slug', $v))->name ?? $v,
                     ];

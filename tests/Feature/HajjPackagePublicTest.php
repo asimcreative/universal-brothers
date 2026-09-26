@@ -7,6 +7,7 @@ use App\Models\Package;
 use App\Models\PackageCategory;
 use App\Support\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 /**
@@ -29,6 +30,48 @@ class HajjPackagePublicTest extends TestCase
         parent::setUp();
         Office::factory()->create();
         $this->hajj = PackageCategory::factory()->create(['name' => 'Hajj', 'slug' => 'hajj']);
+    }
+
+    /**
+     * The whole page, not just the room table.
+     *
+     * The hero, the sticky enquiry box and the action bar read the stored
+     * `starting_price` column — one number in one currency — so a visitor who
+     * chose rupees was shown "US$10,450" at the top of a page quoting rupees
+     * underneath. The optional extras were worse: the upgrade and transport
+     * rows held a single dollar figure each, because they were read out of
+     * the US$ brochure, and no amount of choosing a currency changed them.
+     */
+    public function test_every_price_on_the_detail_page_follows_the_chosen_currency(): void
+    {
+        Artisan::call('db:seed');
+        $package = Package::where('code', 'UB001')->firstOrFail();
+
+        $expectations = [
+            // currency => [the "From" figure, the Kaba view supplement, the Jeddah taxi]
+            'PKR' => ['PKR 4,640,000', 'PKR 616,000', 'PKR 46,000'],
+            'SAR' => ['SAR 59,500', 'SAR 8,000', 'SAR 600'],
+            'USD' => ['US$16,300', 'US$2,200', 'US$165'],
+        ];
+
+        foreach ($expectations as $currency => [$from, $kabaView, $taxi]) {
+            $response = $this->withSession([Currency::SESSION_KEY => $currency])
+                ->get('/hajj/'.$package->slug)
+                ->assertOk();
+
+            $response->assertSee($from);       // hero, sticky box and action bar
+            $response->assertSee($kabaView);   // optional upgrades
+            $response->assertSee($taxi);       // transport
+
+            // And none of the figures belonging to the other two lists.
+            foreach ($expectations as $other => [$otherFrom, $otherKaba, $otherTaxi]) {
+                if ($other === $currency) {
+                    continue;
+                }
+                $response->assertDontSee($otherFrom);
+                $response->assertDontSee($otherKaba);
+            }
+        }
     }
 
     private function buildPackage(array $overrides = []): Package

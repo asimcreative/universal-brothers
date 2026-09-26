@@ -25,9 +25,14 @@
             @if(!is_null($package->has_aziziya))<span class="pkg-badge pkg-badge-outline">{{ $package->has_aziziya ? 'With Aziziya' : 'Non-Aziziya' }}</span>@endif
         </div>
 
-        @if($package->starting_price)
+        {{-- These packages are published in a single currency, unlike the
+             Hajj brochures. So the price is shown in the currency it is
+             actually published in, formatted by the one place that knows how
+             each is written. Nothing here is converted, and nothing is
+             blanked because the reader happens to be browsing in another. --}}
+        @if($package->starting_price !== null)
             <p class="package-hero-price">
-                <span>From</span>{{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($package->starting_price) }}
+                <span>From</span>{{ \App\Support\Currency::format($package->starting_price, $package->currency) }}
                 <small>per person</small>
             </p>
         @endif
@@ -82,7 +87,7 @@
                                                     <span class="small text-muted">{{ $label }} Per Person</span>
                                                     <span class="fw-semibold">
                                                         @if($price->price !== null)
-                                                            {{ $package->currency === 'USD' ? 'US$' : 'PKR ' }}{{ number_format($price->price) }}
+                                                            {{ \App\Support\Currency::format($price->price, $package->currency) }}
                                                         @else
                                                             N/A
                                                         @endif

@@ -36,8 +36,14 @@
                         <span class="hajj-related-name">{{ $ubRelated->name }}</span>
                         <span class="hajj-related-meta">
                             @if($ubRelated->duration_label){{ $ubRelated->duration_label }}@endif
-                            @if($ubRelated->starting_price)
-                                <span class="hajj-related-price">from {{ $ubRelated->currency === 'USD' ? 'US$' : $ubRelated->currency.' ' }}{{ number_format($ubRelated->starting_price) }}</span>
+                            @php($ubRelatedFrom = $ubRelated->startingPriceIn(\App\Support\Currency::current()))
+                            @if($ubRelatedFrom)
+                                {{-- The currency the visitor is reading, like every other
+                                     price on the page. This used to print the stored
+                                     `starting_price` with its own currency's symbol, so a
+                                     reader in rupees met a row of dollar figures under a
+                                     rupee price table. --}}
+                                <span class="hajj-related-price">from {{ \App\Support\Currency::format($ubRelatedFrom) }}</span>
                             @endif
                         </span>
                         <span class="hajj-related-go" aria-hidden="true">View Details<i class="bi bi-arrow-right"></i></span>

@@ -92,7 +92,7 @@ class HajjPackagePresenter
                 'subtitle' => $variant->label ?: $hotels->first()?->hotel_name,
                 'hotels' => $hotels,
                 'rooms' => $rooms,
-                'fromPrice' => $this->lowestUsd($rooms),
+                'fromPrice' => $this->lowestIn($rooms),
                 // The cheapest room ITSELF, not just its dollar figure. The
                 // option card's "From" line used to be given the USD number
                 // alone, so it had no PKR or SAR value to switch to and went to
@@ -118,7 +118,7 @@ class HajjPackagePresenter
                 'subtitle' => null,
                 'hotels' => collect(),
                 'rooms' => $unscoped,
-                'fromPrice' => $this->lowestUsd($unscoped),
+                'fromPrice' => $this->lowestIn($unscoped),
                 'fromRoom' => $this->cheapestRoom($unscoped),
                 'roomCount' => $unscoped->count(),
             ]);
@@ -201,23 +201,30 @@ class HajjPackagePresenter
     /**
      * The cheapest available room in a group, by its USD price.
      *
-     * USD is the ordering key because it is the one currency every package has
-     * always carried; the row that wins then supplies all three of its own
-     * figures, so the "From" line switches currency like everything else.
+     * Ordered by the currency being read, not by dollars. The three brochures
+     * are separately printed price lists rather than conversions of one
+     * another, so the room that is cheapest in dollars need not be the one
+     * that is cheapest in rupees — and a page that says "from" about one room
+     * while quoting another's figure is simply wrong.
      */
-    public function cheapestRoom(Collection $rooms): mixed
+    public function cheapestRoom(Collection $rooms, ?string $currency = null): mixed
     {
+        $column = Currency::column($currency ?? Currency::current());
+
         return $rooms
-            ->filter(fn ($r) => $r->is_available && ! is_null($r->price_usd))
-            ->sortBy(fn ($r) => (float) $r->price_usd)
+            ->filter(fn ($r) => $r->is_available && ! is_null($r->{$column}))
+            ->sortBy(fn ($r) => (float) $r->{$column})
             ->first();
     }
 
-    public function lowestUsd(Collection $rooms): ?float
+    /** The lowest available room price in the currency being read. */
+    public function lowestIn(Collection $rooms, ?string $currency = null): ?float
     {
+        $column = Currency::column($currency ?? Currency::current());
+
         $prices = $rooms
-            ->filter(fn ($r) => $r->is_available && ! is_null($r->price_usd))
-            ->map(fn ($r) => (float) $r->price_usd);
+            ->filter(fn ($r) => $r->is_available && ! is_null($r->{$column}))
+            ->map(fn ($r) => (float) $r->{$column});
 
         return $prices->isNotEmpty() ? $prices->min() : null;
     }
@@ -225,12 +232,12 @@ class HajjPackagePresenter
     /**
      * Which currencies this package actually holds prices in.
      *
-     * Across the live catalogue every one of the 63 room options carries a USD
-     * price and none carries SAR or PKR — the brochure is USD-only. The
-     * switcher itself is always rendered (the admin can add the other columns
-     * at any time, and the feature-test fixture does exactly that), but knowing
-     * which currencies are really populated lets the page tell the customer
-     * plainly rather than silently blanking every price.
+     * Every room option across the 26 brochure packages now carries all
+     * three, so in practice this returns all three — but a package added from
+     * a single price list will not, and knowing which are really populated
+     * lets the page say so plainly rather than silently blanking a price.
+     * (This read "the brochure is USD-only" until the September brochures
+     * arrived, which is the kind of claim worth re-checking, not trusting.)
      *
      * @return array<string, bool>
      */
@@ -418,16 +425,17 @@ class HajjPackagePresenter
      */
     public function startingFrom(): ?array
     {
-        if (! is_null($this->package->starting_price)) {
-            return [
-                'amount' => (float) $this->package->starting_price,
-                'currency' => $this->package->currency ?: 'USD',
-            ];
-        }
+        // `starting_price` used to answer this and cannot: it holds one
+        // number in one currency, so the hero, the sticky box, the action bar
+        // and the page's structured data all quoted dollars to a visitor
+        // reading in rupees — directly above a room table quoting rupees.
+        // `startingPriceIn` reads the room options for the currency actually
+        // in force, and falls back to the stored column only when that column
+        // is in the currency being asked for.
+        $currency = Currency::current();
+        $amount = $this->package->startingPriceIn($currency);
 
-        $lowest = $this->lowestUsd($this->package->roomOptions);
-
-        return is_null($lowest) ? null : ['amount' => $lowest, 'currency' => 'USD'];
+        return is_null($amount) ? null : ['amount' => $amount, 'currency' => $currency];
     }
 
     /**
@@ -505,10 +513,15 @@ class HajjPackagePresenter
      */
     public function money(float|int|string $amount, ?string $currency): string
     {
-        $symbols = ['USD' => 'US$', 'SAR' => 'SAR ', 'PKR' => 'PKR '];
-        $code = strtoupper((string) ($currency ?: 'USD'));
+        // Defaults to the currency being read rather than to dollars: a row
+        // that stores no currency of its own belongs to the page it is on.
+        // A row that DOES store one — a transport leg priced in riyals, say —
+        // keeps it, because nothing here is ever converted.
+        $code = strtoupper((string) ($currency ?: Currency::current()));
 
-        return ($symbols[$code] ?? $code.' ').number_format((float) $amount);
+        return in_array($code, Currency::SUPPORTED, true)
+            ? (string) Currency::format($amount, $code)
+            : $code.' '.number_format((float) $amount);
     }
 
     /**

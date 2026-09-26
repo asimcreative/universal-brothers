@@ -8,6 +8,7 @@ use App\Models\PackageItineraryDay;
 use App\Models\PackageRoomOption;
 use App\Models\PackageVariant;
 use Database\Seeders\HajjBrochureCorrectionSeeder;
+use App\Support\Currency;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -252,11 +253,25 @@ class HajjBrochureCorrectionTest extends TestCase
         }
 
         $package = Package::where('code', 'UB010')->firstOrFail();
-        $response = $this->get(route('packages.show', ['category' => 'hajj', 'package' => $package->slug]));
 
-        $response->assertOk();
-        $response->assertSee('"price":12200', false);
-        $response->assertDontSee('"price":12750', false);
+        // The Offer now states the price in the currency the page is being
+        // read in, and says which one it is. It used to publish the dollar
+        // figure with `priceCurrency: USD` to every visitor, including one
+        // reading a page quoting rupees — a structured-data claim that
+        // contradicted the page carrying it.
+        $dollars = $this->withSession([Currency::SESSION_KEY => 'USD'])
+            ->get(route('packages.show', ['category' => 'hajj', 'package' => $package->slug]));
+        $dollars->assertOk();
+        $dollars->assertSee('"price":12200', false);
+        $dollars->assertSee('"priceCurrency":"USD"', false);
+        $dollars->assertDontSee('"price":12750', false);
+
+        $rupees = $this->withSession([Currency::SESSION_KEY => 'PKR'])
+            ->get(route('packages.show', ['category' => 'hajj', 'package' => $package->slug]));
+        $rupees->assertOk();
+        $rupees->assertSee('"price":'.$package->startingPriceIn('PKR'), false);
+        $rupees->assertSee('"priceCurrency":"PKR"', false);
+        $rupees->assertDontSee('"priceCurrency":"USD"', false);
     }
 
     public function test_the_correction_seeder_repairs_a_stale_starting_price(): void
